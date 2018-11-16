@@ -20,22 +20,19 @@ class JointsLoader:
         else:
             return None
 
-    num_joints = 18
+    num_joints = 3
 
     num_joints_and_bkg = num_joints + 1
 
-    num_connections = 19
+    num_connections = 2
 
-    idx_in_coco = [0, lambda x: JointsLoader._get_neck(x, 5, 6), 6, 8,
-                   10, 5, 7, 9, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3]
+    idx_in_coco = [0, 1, 2]
 
     idx_in_coco_str = [
-        'Nose','Neck','RShoulder','RElbow','RWrist','LShoulder','LElbow','LWrist',
-        'RHip','RKnee','RAnkle','LHip','LKnee','LAnkle','REye','LEye','REar','LEar']
+        'top','body','tail']
 
     joint_pairs = list(zip(
-        [1, 8, 9, 1, 11, 12, 1, 2, 3, 2, 1, 5, 6, 5, 1, 0, 0, 14, 15],
-        [8, 9, 10, 11, 12, 13, 2, 3, 4, 16, 5, 6, 7, 17, 0, 14, 15, 16, 17]))
+        [1, 0, 1, 1, 1, 2]))
 
     @staticmethod
     def from_coco_keypoints(all_keypoints, w ,h):
@@ -185,6 +182,7 @@ class CocoDataFlow(RNGDataFlow):
             for id in list(persons_ids):
                 person_meta = anns[id]
 
+                '''
                 if person_meta["iscrowd"]:
                     masks.append(self.coco.annToRLE(person_meta))
                     continue
@@ -215,7 +213,7 @@ class CocoDataFlow(RNGDataFlow):
                     # unlabeled people
                     masks.append(self.coco.annToRLE(person_meta))
                     continue
-
+                '''
                 pers = Meta(
                     img_path=img_path,
                     height=h,

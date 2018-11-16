@@ -13,12 +13,14 @@ from training.augmentors import ScaleAug, RotateAug, CropAug, FlipAug, \
 from training.dataflow import CocoDataFlow, JointsLoader
 from training.label_maps import create_heatmap, create_paf
 
+KEY_POINT_NUM=3+1
+KEY_POINT_LINK=2
 
 ALL_PAF_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), 38, axis=2)
+    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_LINK, axis=2)
 
 ALL_HEATMAP_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), 19, axis=2)
+    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
 
 AUGMENTORS_LIST = [
         ScaleAug(scale_min=0.5,
@@ -34,7 +36,7 @@ AUGMENTORS_LIST = [
         CropAug(368, 368, center_perterb_max=40, border_value=(128, 128, 128),
                  mask_border_val=1),
 
-        FlipAug(num_parts=18, prob=0.5),
+        FlipAug(num_parts=KEY_POINT_NUM-1, prob=0.5),
     ]
 
 
@@ -163,8 +165,8 @@ def build_sample(components):
         mask_paf = ALL_PAF_MASK
         mask_heatmap = ALL_HEATMAP_MASK
     else:
-        mask_paf = create_all_mask(meta.mask, 38, stride=8)
-        mask_heatmap = create_all_mask(meta.mask, 19, stride=8)
+        mask_paf = create_all_mask(meta.mask, KEY_POINT_LINK, stride=8)
+        mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=8)
 
     heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, 46, 46,
                              meta.aug_joints, 7.0, stride=8)

@@ -184,8 +184,8 @@ if __name__ == '__main__':
     # prepare generators
 
     curr_dir = os.path.dirname(__file__)
-    annot_path = os.path.join(curr_dir, '../dataset/annotations/person_keypoints_train2017.json')
-    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train2017/'))
+    annot_path = os.path.join(curr_dir, '../dataset/annotations/my_person_keypoints.json')
+    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
 
     # get dataflow of samples
 
