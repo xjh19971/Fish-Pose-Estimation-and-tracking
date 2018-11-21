@@ -105,8 +105,8 @@ def augment(components):
 
         # after flipping horizontaly the left side joints and right side joints are also
         # flipped so we need to recover their orginal orientation.
-        if isinstance(aug, FlipAug):
-            aug_joints = aug.recover_left_right(aug_joints, params)
+        '''if isinstance(aug, FlipAug):
+            aug_joints = aug.recover_left_right(aug_joints, params)'''
 
         # augment center position
         aug_center = aug.augment_coords(aug_center, params)

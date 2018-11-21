@@ -22,7 +22,7 @@ class AugImgMetadata:
         return AugImgMetadata(new_img, new_mask, self.center, self.scale)
 
 
-def joints_to_point8(joints, num_p=18):
+def joints_to_point8(joints, num_p=3):
     """
     Converts joints structure to Nx2 nparray (format expected by tensorpack augmentors)
     Nx2 = floating point nparray where each row is (x, y)
@@ -45,7 +45,7 @@ def joints_to_point8(joints, num_p=18):
     return segment
 
 
-def point8_to_joints(points, num_p=18):
+def point8_to_joints(points, num_p=3):
     """
     Converts Nx2 nparray to the list of joints
 

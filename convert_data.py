@@ -35,8 +35,8 @@ for onesize in size:
 images = []
 for myname in name:
     temp = {}
-    temp['width'] = mysize[name.index(myname)][1]
-    temp['height'] = mysize[name.index(myname)][2]
+    temp['width'] = int(mysize[name.index(myname)][1])
+    temp['height'] = int(mysize[name.index(myname)][2])
     temp['file_name'] =myname
     temp['id'] = myname[:-4]
     images.append(temp)
@@ -52,21 +52,28 @@ temp['keypoints']=['top','body','tail']
 temp['skeleton']=[[1,2],[2,3]]
 cates_new.append(temp)
 dataset['categories'] = cates_new
-
+sum_n = 0
 #make the anotations for coco
 Annotations=[]
 for myjoints in joint:
     myjoint=myjoints.replace('[','').replace(']','').replace(' ','').split(',')
     myjointintalone=list(map(eval, myjoint))
     n=0
-    sum_n=0
     points=[]
     l3 = {}
+    maxx=-1
+    minx=10000
+    maxy=-1
+    miny=10000
     for num in range(0,len(myjointintalone),3):
         temp=myjointintalone[num:num + 3]
         x=temp[1]
         y=temp[2]
         v=2
+        if(x>maxx):maxx=x
+        if(x<minx):minx=x
+        if (y > maxy): maxy = y
+        if (y < miny): miny = y
         points.append(x)
         points.append(y)
         points.append(v)
@@ -78,9 +85,10 @@ for myjoints in joint:
             l3['category_id'] = 1
             l3['id'] = sum_n
             l3['segmentation'] = [[1, 1, 2, 2, 3, 3]]
-            l3['bbox']=[1,1,1,1]
+            l3['bbox']=[minx,miny,maxx-minx,maxy-miny]
             l3['num_keypoints'] = 3
             l3['iscrowd'] = 0
+            l3['area']=(maxx-minx)*(maxy-miny)
             Annotations.append(l3)
             l3 = {}
             points=[]

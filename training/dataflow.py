@@ -32,7 +32,7 @@ class JointsLoader:
         'top','body','tail']
 
     joint_pairs = list(zip(
-        [1, 0, 1, 1, 1, 2]))
+        [0,1],[1,2]))
 
     @staticmethod
     def from_coco_keypoints(all_keypoints, w ,h):
@@ -163,7 +163,7 @@ class CocoDataFlow(RNGDataFlow):
             img_file = img_meta['file_name']
             h, w = img_meta['height'], img_meta['width']
             img_path = os.path.join(self.img_dir, img_file)
-            ann_ids = self.coco.getAnnIds(imgIds=img_id)
+            ann_ids = self.coco.getAnnIds(imgIds=[img_id])
             anns = self.coco.loadAnns(ann_ids)
 
             total_keypoints = sum([ann.get('num_keypoints', 0) for ann in anns])
@@ -193,10 +193,10 @@ class CocoDataFlow(RNGDataFlow):
                 if person_meta["num_keypoints"] < 5 or person_meta["area"] < 32 * 32:
                     masks.append(self.coco.annToRLE(person_meta))
                     continue
-
+                '''
                 person_center = [person_meta["bbox"][0] + person_meta["bbox"][2] / 2,
                                  person_meta["bbox"][1] + person_meta["bbox"][3] / 2]
-
+                '''
                 # skip this person if the distance to existing person is too small
 
                 too_close = False
