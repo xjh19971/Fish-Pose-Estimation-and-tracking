@@ -18,13 +18,13 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 10
-base_lr = 4e-5 # 2e-5
-momentum = 0.9
+batch_size = 32
+base_lr = 1.28e-4 # 2e-5
+momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
 gamma = 0.333
-stepsize = 136106 #68053   // after each stepsize iterations update learning rate: lr=lr*gamma
+stepsize =  68053#   // after each stepsize iterations update learning rate: lr=lr*gamma
 max_iter = 100 # 600000
 
 weights_best_file = "weights.best.h5"
@@ -73,7 +73,7 @@ def restore_weights(weights_best_file, model):
     else:
         print("Loading resnet weights...")
 
-        vgg_model = ResNet50(include_top=False, weights='imagenet')
+        vgg_model = ResNet50(include_top=False)
 
         '''for layer in model.layers:
             if layer.name in from_vgg:
