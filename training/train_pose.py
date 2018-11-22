@@ -7,7 +7,7 @@ from functools import partial
 
 import keras.backend as K
 from keras.applications.vgg19 import VGG19
-from keras.applications.resnet50 import RESNET50
+from keras.applications.resnet50 import ResNet50
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, CSVLogger, TensorBoard
 from keras.layers.convolutional import Conv2D
 
@@ -73,7 +73,7 @@ def restore_weights(weights_best_file, model):
     else:
         print("Loading resnet weights...")
 
-        vgg_model = RESNET50(include_top=False, weights='imagenet')
+        vgg_model = ResNet50(include_top=False, weights='imagenet')
 
         '''for layer in model.layers:
             if layer.name in from_vgg:
