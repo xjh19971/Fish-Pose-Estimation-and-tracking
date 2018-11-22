@@ -17,7 +17,7 @@ KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2
 
 ALL_PAF_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_LINK, axis=2)
+    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
 
 ALL_HEATMAP_MASK = np.repeat(
     np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
