@@ -186,7 +186,7 @@ class CocoDataFlow(RNGDataFlow):
                 if person_meta["iscrowd"]:
                     masks.append(self.coco.annToRLE(person_meta))
                     continue
-
+                
                 # skip this person if parts number is too low or if
                 # segmentation area is too small
 
