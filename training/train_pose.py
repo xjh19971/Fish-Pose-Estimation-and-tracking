@@ -71,16 +71,16 @@ def restore_weights(weights_best_file, model):
 
         return get_last_epoch() + 1
     else:
-        print("Loading resnet weights...")
+        print("Loading VGG weights...")
 
-        vgg_model = ResNet50(include_top=False)
+        vgg_model = VGG19(include_top=False,weights='imagenet')
 
-        '''for layer in model.layers:
+        for layer in model.layers:
             if layer.name in from_vgg:
                 vgg_layer_name = from_vgg[layer.name]
-                layer.set_weights(vgg_model.get_layer(vgg_layer_name).get_weights())'''
+                layer.set_weights(vgg_model.get_layer(vgg_layer_name).get_weights())
 
-        print("Loaded RESNEY50 layer")
+        print("Loaded VGG layer")
         return 0
 
 

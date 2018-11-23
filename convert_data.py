@@ -55,11 +55,11 @@ dataset['categories'] = cates_new
 
 #make the anotations for coco
 Annotations=[]
+sum_n=0
 for myjoints in joint:
     myjoint=myjoints.replace('[','').replace(']','').replace(' ','').split(',')
     myjointintalone=list(map(eval, myjoint))
     n=0
-    sum_n=0
     points=[]
     l3 = {}
     maxx = -1
@@ -85,7 +85,7 @@ for myjoints in joint:
             l3['image_id'] = name[joint.index(myjoints)][:-4]
             l3['category_id'] = 1
             l3['id'] = sum_n
-            l3['segmentation'] = [[1, 1, 2, 2, 3, 3]]
+            l3['segmentation'] = [[minx, miny, 2, 2, 3, 3]]
             l3['bbox']=[minx,miny,maxx-minx,maxy-miny]
             l3['num_keypoints'] = 3
             l3['iscrowd'] = 0

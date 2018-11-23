@@ -181,7 +181,6 @@ class CocoDataFlow(RNGDataFlow):
 
             for id in list(persons_ids):
                 person_meta = anns[id]
-
                 '''
                 if person_meta["iscrowd"]:
                     masks.append(self.coco.annToRLE(person_meta))
