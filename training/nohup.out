@@ -1,0 +1,14 @@
+nohup: ignoring input
+Using TensorFlow backend.
+Loading resnet weights...
+2018-11-22 11:27:52.155156: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+2018-11-22 11:27:52.546567: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:897] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2018-11-22 11:27:52.546921: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1405] Found device 0 with properties: 
+name: Tesla P100-PCIE-16GB major: 6 minor: 0 memoryClockRate(GHz): 1.3285
+pciBusID: 0000:00:04.0
+totalMemory: 15.90GiB freeMemory: 15.61GiB
+2018-11-22 11:27:52.546939: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1484] Adding visible gpu devices: 0
+2018-11-22 11:27:52.925597: I tensorflow/core/common_runtime/gpu/gpu_device.cc:965] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-11-22 11:27:52.925651: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971]      0 
+2018-11-22 11:27:52.925659: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] 0:   N 
+2018-11-22 11:27:52.925907: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1097] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 15129 MB memory) -> physical GPU (device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:00:04.0, compute capability: 6.0)
