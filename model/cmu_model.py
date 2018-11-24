@@ -6,7 +6,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layer import  BatchNormalization
+from keras.layers import  BatchNormalization
 
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
