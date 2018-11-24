@@ -21,12 +21,12 @@ ALL_PAF_MASK = np.repeat(
 
 ALL_HEATMAP_MASK = np.repeat(
     np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
-
-AUGMENTORS_LIST = [
-        ScaleAug(scale_min=0.5,
+'''ScaleAug(scale_min=0.5,
                  scale_max=1.1,
                  target_dist=0.6,
-                 interp=cv2.INTER_CUBIC),
+                 interp=cv2.INTER_CUBIC),'''
+AUGMENTORS_LIST = [
+
 
         RotateAug(rotate_max_deg=40,
                   interp=cv2.INTER_CUBIC,
