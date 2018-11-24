@@ -18,13 +18,13 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 16
-base_lr = 6.4e-5 # 2e-5
+batch_size = 32
+base_lr = 4e-5 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
 gamma = 0.333
-stepsize =  136106 #   // after each stepsize iterations update learning rate: lr=lr*gamma
+stepsize =  68036 #   // after each stepsize iterations update learning rate: lr=lr*gamma
 max_iter = 100 # 600000
 
 weights_best_file = "weights.best.h5"
