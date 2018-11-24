@@ -140,10 +140,10 @@ def build_debug_sample(components):
 
 
 if __name__ == '__main__':
-    batch_size = 10
+    batch_size = 1
     curr_dir = os.path.dirname(__file__)
-    annot_path = os.path.join(curr_dir, '../dataset/annotations/person_keypoints_val2017.json')
-    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/val2017/'))
+    annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
+    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
     df = CocoDataFlow((368, 368), annot_path, img_dir)#, select_ids=[1000])
     df.prepare()
     df = MapData(df, read_img)
@@ -157,5 +157,5 @@ if __name__ == '__main__':
     gen = df.get_data()
 
     for g in gen:
-        show_image_mask_center_of_main_person(g)
-        #show_image_heatmap_paf(g)
+        #show_image_mask_center_of_main_person(g)
+        show_image_heatmap_paf(g)

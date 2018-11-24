@@ -220,7 +220,7 @@ class CocoDataFlow(RNGDataFlow):
                     center=np.expand_dims(person_center, axis=0),
                     bbox=person_meta["bbox"],
                     area=person_meta["area"],
-                    scale=person_meta["bbox"][3] / self.target_size[0],
+                    scale=max(person_meta["bbox"][3] / self.target_size[0],person_meta["bbox"][2] / self.target_size[1]),
                     num_keypoints=person_meta["num_keypoints"])
 
                 keypoints.append(person_meta["keypoints"])
