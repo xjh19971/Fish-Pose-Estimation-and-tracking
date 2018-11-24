@@ -7,6 +7,7 @@ from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
 from keras.layers import  BatchNormalization
+import keras.backend as K
 
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
@@ -17,7 +18,7 @@ def relu(x): return Activation('relu')(x)
 def conv(x, nf, ks, name, weight_decay):
     kernel_reg = l2(weight_decay[0]) if weight_decay else None
     bias_reg = l2(weight_decay[1]) if weight_decay else None
-    if keras.image_data_format() == 'channels_last':
+    if K.image_data_format() == 'channels_last':
         bn_axis = 3
     else:
         bn_axis = 1
