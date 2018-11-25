@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7005fc9d-e37d-4b43-9f32-773f9171a0bb" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/model/cmu_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/cmu_model_resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model_resnet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/train_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/training/train_pose.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -49,12 +48,12 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="2632" />
+          <entry key="py" value="2639" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="2632" />
+          <entry key="Python" value="2639" />
         </counts>
       </usages-collector>
     </session>
@@ -70,7 +69,7 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="132">
@@ -103,11 +102,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/training/train_pose.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="229">
-              <caret line="16" column="27" selection-start-line="16" selection-start-column="27" selection-end-line="16" selection-end-column="27" />
+            <state relative-caret-position="184">
+              <caret line="22" column="17" selection-start-line="22" selection-start-column="17" selection-end-line="22" selection-end-column="17" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -227,9 +226,9 @@
         <option value="$PROJECT_DIR$/training/dataset_inspect.py" />
         <option value="$PROJECT_DIR$/training/dataset.py" />
         <option value="$PROJECT_DIR$/training/dataflow.py" />
-        <option value="$PROJECT_DIR$/training/train_pose.py" />
         <option value="$PROJECT_DIR$/model/cmu_model.py" />
         <option value="$PROJECT_DIR$/model/cmu_model_resnet.py" />
+        <option value="$PROJECT_DIR$/training/train_pose.py" />
       </list>
     </option>
   </component>
@@ -828,16 +827,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/training/train_pose.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="16" column="27" selection-start-line="16" selection-start-column="27" selection-end-line="16" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/site-packages/keras/layers/merge.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-285">
@@ -861,6 +850,16 @@
           <caret line="177" selection-start-line="177" selection-end-line="177" />
           <folding>
             <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/training/train_pose.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="184">
+          <caret line="22" column="17" selection-start-line="22" selection-start-column="17" selection-end-line="22" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
