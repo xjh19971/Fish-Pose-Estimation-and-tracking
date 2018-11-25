@@ -14,7 +14,7 @@ from keras.utils.data_utils import get_file
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from model.cmu_model import get_training_model
+from model.cmu_model_resnet import get_training_model
 from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
@@ -26,7 +26,7 @@ weight_decay = 5e-4
 lr_policy =  "step"
 gamma = 0.333
 stepsize =  136106 #   // after each stepsize iterations update learning rate: lr=lr*gamma
-max_iter = 100 # 600000
+max_iter = 2000 # 600000
 
 weights_best_file = "weights.best.h5"
 training_log = "training.csv"

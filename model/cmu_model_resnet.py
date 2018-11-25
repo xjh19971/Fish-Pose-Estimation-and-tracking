@@ -1,8 +1,8 @@
 from keras.models import Model
 from keras.layers.merge import Concatenate
-from keras.layers import Activation, Input, Lambda
+from keras.layers import Activation, Input, Lambda,ZeroPadding2D
 from keras.layers.convolutional import Conv2D
-from keras.layers.pooling import MaxPooling2D,ZeroPadding2D
+from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
@@ -169,7 +169,7 @@ def vgg_block(x, weight_decay):
         bn_axis = 1
 
     x = ZeroPadding2D((3, 3))(x)  # 对图片界面填充0，保证特征图的大小#
-    x = conv(x,64, (7, 7), strides=(2, 2), name='conv1')(x)  # 定义卷积层#
+    x = conv(x,64, (7, 7), strides=(2, 2), name='conv1',weight_decay=(weight_decay,0))(x)  # 定义卷积层#
     x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
     x = relu(x)  # 激活函数#
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
