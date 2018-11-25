@@ -127,9 +127,9 @@ def get_training_model(weight_decay):
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
-    img_input_shape = (None, None, 3)
-    vec_input_shape = (None, None, KEY_POINT_LINK)
-    heat_input_shape = (None, None, KEY_POINT_NUM)
+    img_input_shape = (368, 368, 3)
+    vec_input_shape = (46, 46, KEY_POINT_LINK)
+    heat_input_shape = (46, 46, KEY_POINT_NUM)
 
     inputs = []
     outputs = []
@@ -177,7 +177,6 @@ def get_training_model(weight_decay):
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
 
     model = Model(inputs=inputs, outputs=outputs)
-    model.summary()
     return model
 
 

@@ -168,11 +168,12 @@ def vgg_block(x, weight_decay):
     else:
         bn_axis = 1
 
-    x = ZeroPadding2D((3, 3))(x)  # 对图片界面填充0，保证特征图的大小#
+    x = ZeroPadding2D((2, 2))(x)  # 对图片界面填充0，保证特征图的大小#
     x = conv(x,64, 7, strides=(2, 2), name='conv1',weight_decay=(weight_decay,0))  # 定义卷积层#
     x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
     x = Activation('relu')(x)  # 激活函数#
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
+
     # stage2#
     x = conv_block(x, 3, [64, 64, 256], stage=2, block='a',weight_decay=(weight_decay,0), strides=(1, 1))
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='b',weight_decay=(weight_decay,0))
@@ -236,10 +237,10 @@ def get_training_model(weight_decay):
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
-    #img_size=368
-    img_input_shape = (None, None, 3)
-    vec_input_shape = (None, None, KEY_POINT_LINK)
-    heat_input_shape = (None, None, KEY_POINT_NUM)
+    img_size=368
+    img_input_shape = (img_size, img_size, 3)
+    vec_input_shape = (46, 46, KEY_POINT_LINK)
+    heat_input_shape = (46, 46, KEY_POINT_NUM)
 
     inputs = []
     outputs = []
