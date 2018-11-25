@@ -169,9 +169,9 @@ def vgg_block(x, weight_decay):
         bn_axis = 1
 
     x = ZeroPadding2D((3, 3))(x)  # 对图片界面填充0，保证特征图的大小#
-    x = conv(x,64, 7, strides=(2, 2), name='conv1',weight_decay=(weight_decay,0))(x)  # 定义卷积层#
+    x = conv(x,64, 7, strides=(2, 2), name='conv1',weight_decay=(weight_decay,0))  # 定义卷积层#
     x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
-    x = relu(x)  # 激活函数#
+    x = Activation('relu')(x)  # 激活函数#
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
     # stage2#
     x = conv_block(x, 3, [64, 64, 256], stage=2, block='a',weight_decay=(weight_decay,0), strides=(1, 1))
