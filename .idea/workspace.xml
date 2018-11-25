@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7005fc9d-e37d-4b43-9f32-773f9171a0bb" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/model/cmu_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/cmu_model_resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model_resnet.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -34,7 +35,7 @@
           <entry key="json" value="4" />
           <entry key="md" value="1" />
           <entry key="my_person_annotation" value="1" />
-          <entry key="py" value="48" />
+          <entry key="py" value="49" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -43,17 +44,17 @@
           <entry key="JSON" value="4" />
           <entry key="Markdown" value="1" />
           <entry key="PLAIN_TEXT" value="2" />
-          <entry key="Python" value="48" />
+          <entry key="Python" value="49" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="2530" />
+          <entry key="py" value="2583" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="2530" />
+          <entry key="Python" value="2583" />
         </counts>
       </usages-collector>
     </session>
@@ -63,8 +64,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training/dataflow.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="7">
-              <caret line="222" column="96" selection-start-line="222" selection-start-column="96" selection-end-line="222" selection-end-column="96" />
+            <state relative-caret-position="18">
+              <caret line="126" column="15" selection-start-line="126" selection-start-column="15" selection-end-line="126" selection-end-column="15" />
             </state>
           </provider>
         </entry>
@@ -72,8 +73,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="183" column="109" selection-start-line="183" selection-start-column="109" selection-end-line="183" selection-end-column="109" />
+            <state relative-caret-position="252">
+              <caret line="244" column="16" lean-forward="true" selection-start-line="244" selection-start-column="16" selection-end-line="244" selection-end-column="16" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
               </folding>
@@ -84,8 +85,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/cmu_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-525">
-              <caret line="16" selection-start-line="16" selection-end-line="16" />
+            <state relative-caret-position="280">
+              <caret line="179" column="19" selection-start-line="179" selection-start-column="19" selection-end-line="179" selection-end-column="19" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
               </folding>
@@ -94,9 +95,18 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/site-packages/keras/layers/merge.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="43">
+              <caret line="60" selection-start-line="60" selection-end-line="60" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training/train_pose.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2565">
+            <state relative-caret-position="-2179">
               <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
@@ -117,20 +127,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training/dataset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1920">
-              <caret line="194" column="11" selection-start-line="194" selection-start-column="11" selection-end-line="194" selection-end-column="11" />
+            <state relative-caret-position="408">
+              <caret line="193" column="9" selection-start-line="193" selection-start-column="9" selection-end-line="193" selection-end-column="9" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/site-packages/tensorpack/dataflow/common.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4020">
-              <caret line="282" selection-start-line="282" selection-end-line="282" />
             </state>
           </provider>
         </entry>
@@ -156,8 +157,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training/dataset_inspect.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="665">
-              <caret line="147" column="8" selection-start-line="147" selection-start-column="8" selection-end-line="147" selection-end-column="8" />
+            <state relative-caret-position="117">
+              <caret line="58" column="42" selection-start-line="58" selection-start-column="31" selection-end-line="58" selection-end-column="42" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -169,9 +170,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>imgToAnns</find>
-      <find>img</find>
-      <find>aug_joints</find>
       <find>19</find>
       <find>18</find>
       <find>my</find>
@@ -198,16 +196,20 @@
       <find>scale</find>
       <find>1.0</find>
       <find>build_sample</find>
+      <find>input_shap</find>
+      <find>size</find>
+      <find>target_size</find>
+      <find>bn</find>
     </findStrings>
     <replaceStrings>
       <replace />
     </replaceStrings>
     <dirStrings>
-      <dir>$PROJECT_DIR$</dir>
-      <dir>$PROJECT_DIR$/training</dir>
       <dir>$PROJECT_DIR$/sample_images</dir>
       <dir>$PROJECT_DIR$/model</dir>
       <dir>$PROJECT_DIR$/dataset</dir>
+      <dir>$PROJECT_DIR$</dir>
+      <dir>$PROJECT_DIR$/training</dir>
     </dirStrings>
   </component>
   <component name="Git.Settings">
@@ -221,12 +223,12 @@
         <option value="$PROJECT_DIR$/../../test3.py" />
         <option value="$PROJECT_DIR$/../../test4.py" />
         <option value="$PROJECT_DIR$/convert_data.py" />
-        <option value="$PROJECT_DIR$/model/cmu_model.py" />
         <option value="$PROJECT_DIR$/training/dataset_inspect.ipynb" />
         <option value="$PROJECT_DIR$/training/dataset_inspect.py" />
         <option value="$PROJECT_DIR$/training/dataset.py" />
         <option value="$PROJECT_DIR$/training/dataflow.py" />
         <option value="$PROJECT_DIR$/training/train_pose.py" />
+        <option value="$PROJECT_DIR$/model/cmu_model.py" />
         <option value="$PROJECT_DIR$/model/cmu_model_resnet.py" />
       </list>
     </option>
@@ -474,7 +476,7 @@
     <frame x="67" y="25" width="1299" height="743" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18025078" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18025078" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="0" show_stripe_button="false" />
@@ -485,7 +487,7 @@
       <window_info anchor="bottom" id="Find" order="5" />
       <window_info anchor="bottom" id="Run" order="6" weight="0.32864866" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32952693" />
-      <window_info anchor="bottom" id="Debug" order="8" visible="true" weight="0.08646003" />
+      <window_info active="true" anchor="bottom" id="Debug" order="8" visible="true" weight="0.17128874" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="10" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -550,16 +552,6 @@
           <option name="timeStamp" value="66" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/training/dataset.py</url>
-          <line>173</line>
-          <option name="timeStamp" value="69" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/training/dataset.py</url>
-          <line>174</line>
-          <option name="timeStamp" value="70" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/training/label_maps.py</url>
           <line>50</line>
           <option name="timeStamp" value="71" />
@@ -573,6 +565,21 @@
           <url>file://$PROJECT_DIR$/training/dataflow.py</url>
           <line>221</line>
           <option name="timeStamp" value="73" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/model/cmu_model_resnet.py</url>
+          <line>290</line>
+          <option name="timeStamp" value="75" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/model/cmu_model.py</url>
+          <line>179</line>
+          <option name="timeStamp" value="79" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/model/cmu_model_resnet.py</url>
+          <line>180</line>
+          <option name="timeStamp" value="82" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -772,7 +779,13 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/training/optimizers.py">
-      <provider selected="true" editor-type-id="text-editor" />
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/training/training.csv">
       <provider selected="true" editor-type-id="text-editor" />
@@ -798,20 +811,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/training/dataset_inspect.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="665">
-          <caret line="147" column="8" selection-start-line="147" selection-start-column="8" selection-end-line="147" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/training/augmentors.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3810">
           <caret line="259" selection-start-line="259" selection-end-line="259" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/training/dataset_inspect.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="117">
+          <caret line="58" column="42" selection-start-line="58" selection-start-column="31" selection-end-line="58" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -824,34 +837,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/training/dataset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1920">
-          <caret line="194" column="11" selection-start-line="194" selection-start-column="11" selection-end-line="194" selection-end-column="11" />
+        <state relative-caret-position="408">
+          <caret line="193" column="9" selection-start-line="193" selection-start-column="9" selection-end-line="193" selection-end-column="9" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model/cmu_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-525">
-          <caret line="16" selection-start-line="16" selection-end-line="16" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/training/dataflow.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7">
-          <caret line="222" column="96" selection-start-line="222" selection-start-column="96" selection-end-line="222" selection-end-column="96" />
+        <state relative-caret-position="18">
+          <caret line="126" column="15" selection-start-line="126" selection-start-column="15" selection-end-line="126" selection-end-column="15" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/training/train_pose.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2565">
+        <state relative-caret-position="-2179">
           <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
@@ -859,10 +862,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/model/cmu_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="179" column="19" selection-start-line="179" selection-start-column="19" selection-end-line="179" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/site-packages/keras/layers/merge.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="43">
+          <caret line="60" selection-start-line="60" selection-end-line="60" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="183" column="109" selection-start-line="183" selection-start-column="109" selection-end-line="183" selection-end-column="109" />
+        <state relative-caret-position="252">
+          <caret line="244" column="16" lean-forward="true" selection-start-line="244" selection-start-column="16" selection-end-line="244" selection-end-column="16" />
           <folding>
             <element signature="e#0#30#0" expanded="true" />
           </folding>

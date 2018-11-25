@@ -177,7 +177,7 @@ def get_training_model(weight_decay):
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
 
     model = Model(inputs=inputs, outputs=outputs)
-
+    model.summary()
     return model
 
 
