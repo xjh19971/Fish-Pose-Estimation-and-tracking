@@ -10,6 +10,7 @@ from keras.applications.vgg19 import VGG19
 from keras.applications.resnet50 import ResNet50
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, CSVLogger, TensorBoard
 from keras.layers.convolutional import Conv2D
+from keras.utils.data_utils import get_file
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -18,13 +19,13 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 32
-base_lr = 4e-5 # 2e-5
+batch_size = 16
+base_lr = 6.4e-5 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
 gamma = 0.333
-stepsize =  68036 #   // after each stepsize iterations update learning rate: lr=lr*gamma
+stepsize =  136106 #   // after each stepsize iterations update learning rate: lr=lr*gamma
 max_iter = 100 # 600000
 
 weights_best_file = "weights.best.h5"
@@ -71,7 +72,7 @@ def restore_weights(weights_best_file, model):
 
         return get_last_epoch() + 1
     else:
-        print("Loading VGG weights...")
+        '''print("Loading VGG weights...")
 
         vgg_model = VGG19(include_top=False,weights='imagenet')
 
@@ -81,6 +82,15 @@ def restore_weights(weights_best_file, model):
                 layer.set_weights(vgg_model.get_layer(vgg_layer_name).get_weights())
 
         print("Loaded VGG layer")
+        '''
+        print("Loading Resnet weights...")
+        WEIGHTS_PATH='https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
+        weights_path = get_file('resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
+                                WEIGHTS_PATH,
+                                cache_subdir='models',
+                                md5_hash='a268eb855778b3df3c7506639542a6af')
+        model.load_weights(weights_path,by_name=True)
+        print("Loaded Resnet layer")
         return 0
 
 
