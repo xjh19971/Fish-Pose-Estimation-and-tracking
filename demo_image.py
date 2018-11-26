@@ -13,21 +13,13 @@ from model.cmu_model import get_testing_model
 
 
 # find connection in the specified sequence, center 29 is in the position 15
-limbSeq = [[2, 3], [2, 6], [3, 4], [4, 5], [6, 7], [7, 8], [2, 9], [9, 10], \
-           [10, 11], [2, 12], [12, 13], [13, 14], [2, 1], [1, 15], [15, 17], \
-           [1, 16], [16, 18], [3, 17], [6, 18]]
+limbSeq = [[1,2],[2,3]]
 
 # the middle joints heatmap correpondence
-mapIdx = [[31, 32], [39, 40], [33, 34], [35, 36], [41, 42], [43, 44], [19, 20], [21, 22], \
-          [23, 24], [25, 26], [27, 28], [29, 30], [47, 48], [49, 50], [53, 54], [51, 52], \
-          [55, 56], [37, 38], [45, 46]]
+mapIdx = [[2,3],[4,5]]
 
 # visualize
-colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0],
-          [0, 255, 0], \
-          [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255],
-          [85, 0, 255], \
-          [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
+colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
 
 def process (input_image, params, model_params):
@@ -35,8 +27,8 @@ def process (input_image, params, model_params):
     oriImg = cv2.imread(input_image)  # B,G,R order
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in params['scale_search']]
 
-    heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 19))
-    paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 38))
+    heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
+    paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
 
     for m in range(len(multiplier)):
         scale = multiplier[m]
@@ -69,7 +61,7 @@ def process (input_image, params, model_params):
     all_peaks = []
     peak_counter = 0
 
-    for part in range(18):
+    for part in [0,1,2]:
         map_ori = heatmap_avg[:, :, part]
         map = gaussian_filter(map_ori, sigma=3)
 
@@ -97,7 +89,7 @@ def process (input_image, params, model_params):
     mid_num = 10
 
     for k in range(len(mapIdx)):
-        score_mid = paf_avg[:, :, [x - 19 for x in mapIdx[k]]]
+        score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
         candB = all_peaks[limbSeq[k][1] - 1]
         nA = len(candA)
@@ -150,7 +142,7 @@ def process (input_image, params, model_params):
 
     # last number in each row is the total parts number of that person
     # the second last number in each row is the score of the overall configuration
-    subset = -1 * np.ones((0, 20))
+    subset = -1 * np.ones((0, 5))
     candidate = np.array([item for sublist in all_peaks for item in sublist])
 
     for k in range(len(mapIdx)):
@@ -187,8 +179,8 @@ def process (input_image, params, model_params):
                         subset[j1][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
 
                 # if find no partA in the subset, create a new subset
-                elif not found and k < 17:
-                    row = -1 * np.ones(20)
+                elif not found and k < 2:
+                    row = -1 * np.ones(5)
                     row[indexA] = partAs[i]
                     row[indexB] = partBs[i]
                     row[-1] = 2
@@ -199,18 +191,18 @@ def process (input_image, params, model_params):
     # delete some rows of subset which has few parts occur
     deleteIdx = [];
     for i in range(len(subset)):
-        if subset[i][-1] < 4 or subset[i][-2] / subset[i][-1] < 0.4:
+        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.4:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = cv2.imread(input_image)  # B,G,R order
-    for i in range(18):
+    for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
             cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
 
     stickwidth = 4
 
-    for i in range(17):
+    for i in range(2):
         for n in range(len(subset)):
             index = subset[n][np.array(limbSeq[i]) - 1]
             if -1 in index:
