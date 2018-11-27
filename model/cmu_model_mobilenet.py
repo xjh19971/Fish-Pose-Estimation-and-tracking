@@ -4,10 +4,13 @@ from keras.layers import Activation, Input, Lambda,ZeroPadding2D
 from keras.layers.convolutional import Conv2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
-from keras.regularizers import l2,relu6,DepthwiseConv2D
+from keras.regularizers import l2
 from keras.initializers import random_normal,constant
 from keras.layers import  BatchNormalization,add
+from keras.applications.mobilenet_v2 import relu6, DepthwiseConv2D
 import keras.backend as K
+from keras.layers import ReLU
+
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
 

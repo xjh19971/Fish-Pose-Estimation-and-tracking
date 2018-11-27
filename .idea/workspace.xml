@@ -2,14 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7005fc9d-e37d-4b43-9f32-773f9171a0bb" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/model/cmu_model_mobilenet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo_video.py" beforeDir="false" afterPath="$PROJECT_DIR$/demo_video.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/cmu_model_resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model_resnet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/training/logs/events.out.tfevents.1543027136.ubuntu" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/training/logs/events.out.tfevents.1543027458.ubuntu" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/training/logs/events.out.tfevents.1543032351.ubuntu" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/training/train_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/training/train_pose.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/cmu_model_mobilenet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model_mobilenet.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -59,12 +52,12 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="2923" />
+          <entry key="py" value="2996" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="2923" />
+          <entry key="Python" value="2996" />
         </counts>
       </usages-collector>
     </session>
@@ -83,26 +76,20 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="169" column="68" selection-start-line="169" selection-start-column="68" selection-end-line="169" selection-end-column="68" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-165">
+              <caret line="10" column="25" lean-forward="true" selection-start-line="9" selection-start-column="52" selection-end-line="10" selection-end-column="25" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training/train_pose.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="195">
-              <caret line="91" column="31" selection-start-line="91" selection-start-column="31" selection-end-line="91" selection-end-column="31" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="90">
+              <caret line="12" column="45" selection-start-line="12" selection-start-column="45" selection-end-line="12" selection-end-column="45" />
             </state>
           </provider>
         </entry>
@@ -186,7 +173,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>res</find>
       <find>masks</find>
       <find>aug_center</find>
       <find>anns</find>
@@ -216,6 +202,7 @@
       <find>6</find>
       <find>stage</find>
       <find>3</find>
+      <find>save</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -248,8 +235,8 @@
         <option value="$PROJECT_DIR$/demo_image.py" />
         <option value="$PROJECT_DIR$/demo_video.py" />
         <option value="$PROJECT_DIR$/model/cmu_model_resnet.py" />
-        <option value="$PROJECT_DIR$/model/cmu_model_mobilenet.py" />
         <option value="$PROJECT_DIR$/training/train_pose.py" />
+        <option value="$PROJECT_DIR$/model/cmu_model_mobilenet.py" />
       </list>
     </option>
   </component>
@@ -982,16 +969,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="169" column="68" selection-start-line="169" selection-start-column="68" selection-end-line="169" selection-end-column="68" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="313">
@@ -1004,11 +981,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/training/train_pose.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="91" column="31" selection-start-line="91" selection-start-column="31" selection-end-line="91" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="90">
+          <caret line="12" column="45" selection-start-line="12" selection-start-column="45" selection-end-line="12" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-165">
+          <caret line="10" column="25" lean-forward="true" selection-start-line="9" selection-start-column="52" selection-end-line="10" selection-end-column="25" />
         </state>
       </provider>
     </entry>
