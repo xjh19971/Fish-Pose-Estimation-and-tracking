@@ -168,7 +168,6 @@ def vgg_block(x, weight_decay):
     x = _inverted_residual_block(x, 24, (3, 3), t=6, strides=2, n=2)
     x = _inverted_residual_block(x, 32, (3, 3), t=6, strides=2, n=3)
     x = _inverted_residual_block(x, 64, (3, 3), t=6, strides=2, n=4)
-    x = _inverted_residual_block(x, 96, (3, 3), t=6, strides=1, n=3)
 
     return x
 
