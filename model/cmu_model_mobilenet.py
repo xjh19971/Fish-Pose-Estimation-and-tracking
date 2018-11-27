@@ -6,10 +6,8 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization,add,ReLU
-from keras.applications.mobilenet import relu6, DepthwiseConv2D
+from keras.layers import  BatchNormalization,add,ReLU,DepthwiseConv2D
 import keras.backend as K
-from keras.layers import ReLU
 
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
