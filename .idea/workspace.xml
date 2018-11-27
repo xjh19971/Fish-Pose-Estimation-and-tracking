@@ -67,7 +67,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="313">
+            <state relative-caret-position="1305">
               <caret line="87" column="65" lean-forward="true" selection-start-line="87" selection-start-column="4" selection-end-line="87" selection-end-column="65" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
@@ -79,8 +79,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-165">
-              <caret line="10" column="25" lean-forward="true" selection-start-line="9" selection-start-column="52" selection-end-line="10" selection-end-column="25" />
+            <state relative-caret-position="-720">
+              <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
             </state>
           </provider>
         </entry>
@@ -88,7 +88,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/training/train_pose.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
+            <state relative-caret-position="180">
               <caret line="12" column="45" selection-start-line="12" selection-start-column="45" selection-end-line="12" selection-end-column="45" />
             </state>
           </provider>
@@ -173,7 +173,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>masks</find>
       <find>aug_center</find>
       <find>anns</find>
       <find>vgg_model</find>
@@ -201,8 +200,9 @@
       <find>STAGE_NUM</find>
       <find>6</find>
       <find>stage</find>
-      <find>3</find>
+      <find>relu6</find>
       <find>save</find>
+      <find>3</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -512,7 +512,7 @@
     <frame x="67" y="25" width="1299" height="743" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18025078" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18025078" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Thumbnails" weight="0.32952693" />
@@ -524,7 +524,7 @@
       <window_info anchor="bottom" id="Find" order="5" />
       <window_info anchor="bottom" id="Run" order="6" weight="0.14681892" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32952693" />
-      <window_info active="true" anchor="bottom" id="Debug" order="8" visible="true" weight="0.039151713" />
+      <window_info anchor="bottom" id="Debug" order="8" visible="true" weight="0.039151713" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="10" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -969,9 +969,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/training/train_pose.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="45" selection-start-line="12" selection-start-column="45" selection-end-line="12" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="313">
+        <state relative-caret-position="1305">
           <caret line="87" column="65" lean-forward="true" selection-start-line="87" selection-start-column="4" selection-end-line="87" selection-end-column="65" />
           <folding>
             <element signature="e#0#30#0" expanded="true" />
@@ -979,17 +986,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/training/train_pose.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="12" column="45" selection-start-line="12" selection-start-column="45" selection-end-line="12" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-165">
-          <caret line="10" column="25" lean-forward="true" selection-start-line="9" selection-start-column="52" selection-end-line="10" selection-end-column="25" />
+        <state relative-caret-position="-720">
+          <caret line="9" column="33" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
         </state>
       </provider>
     </entry>
