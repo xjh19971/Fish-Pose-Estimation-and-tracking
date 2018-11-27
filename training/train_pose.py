@@ -8,13 +8,15 @@ from functools import partial
 import keras.backend as K
 from keras.applications.vgg19 import VGG19
 from keras.applications.resnet50 import ResNet50
+from keras.applications.mobilenet_v2 import MobileNetV2
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, CSVLogger, TensorBoard
 from keras.layers.convolutional import Conv2D
 from keras.utils.data_utils import get_file
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from model.cmu_model_resnet import get_training_model
+#from model.cmu_model_resnet import get_training_model
+from model.cmu_model_mobilenet import get_training_model
 from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
@@ -25,8 +27,8 @@ momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
 gamma = 0.333
-stepsize =  4000 #   // after each stepsize iterations update learning rate: lr=lr*gamma
-max_iter = 2000 # 600000
+stepsize =  30000 #   // after each stepsize iterations update learning rate: lr=lr*gamma
+max_iter = 2500 # 600000
 
 weights_best_file = "weights.best.h5"
 training_log = "training.csv"
@@ -83,14 +85,12 @@ def restore_weights(weights_best_file, model):
 
         print("Loaded VGG layer")
         '''
-        print("Loading Resnet weights...")
-        WEIGHTS_PATH='https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
-        weights_path = get_file('resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
-                                WEIGHTS_PATH,
-                                cache_subdir='models',
-                                md5_hash='a268eb855778b3df3c7506639542a6af')
-        model.load_weights(weights_path,by_name=True)
-        print("Loaded Resnet layer")
+        print("Loading mobilenet weights...")
+        base_model=MobileNetV2(include_top=False,weights='imagenet')
+        WEIGHTS_PATH='./mobilenetv2_weight.h5'
+        base_model.save_weights(WEIGHTS_PATH)
+        model.load_weights(WEIGHTS_PATH,by_name=True)
+        print("Loaded mobilenet layer")
         return 0
 
 

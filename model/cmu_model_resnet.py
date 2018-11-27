@@ -10,7 +10,6 @@ from keras.layers import  BatchNormalization,add
 import keras.backend as K
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
-STAGE_NUM=6
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block, weight_decay):
@@ -293,7 +292,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = STAGE_NUM
+    stages = 6
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
