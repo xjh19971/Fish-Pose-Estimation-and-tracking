@@ -21,8 +21,8 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 25
-base_lr = 1.2e-4 # 2e-5
+batch_size = 20
+base_lr = 8e-5 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
