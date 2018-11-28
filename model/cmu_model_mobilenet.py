@@ -1,7 +1,7 @@
 from keras.models import Model
 from keras.layers.merge import Concatenate
 from keras.layers import Activation, Input, Lambda,ZeroPadding2D
-from keras.layers.convolutional import Conv2D
+from keras.layers.convolutional import Conv2D,SeparableConv2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
@@ -121,18 +121,18 @@ def conv(x, nf, ks, name,  weight_decay, strides = None):
     bias_reg = l2(weight_decay[1]) if weight_decay else None
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     if strides == None:
-        x = Conv2D(nf, (ks, ks), padding='same', name=name,
+        x = SeparableConv2D(nf, (ks, ks), padding='same', name=name,
                kernel_regularizer=kernel_reg,
                bias_regularizer=bias_reg,
                kernel_initializer=random_normal(stddev=0.01),
                bias_initializer=constant(0.0))(x)
     else:
-        x = Conv2D(nf, (ks, ks), padding='same', name=name,strides=strides,
+        x = SeparableConv2D(nf, (ks, ks), padding='same', name=name,strides=strides,
                kernel_regularizer=kernel_reg,
                bias_regularizer=bias_reg,
                kernel_initializer=random_normal(stddev=0.01),
                bias_initializer=constant(0.0))(x)
-    x=BatchNormalization(axis=channel_axis)(x)
+    #x=BatchNormalization(axis=channel_axis)(x)
     return x
 
 

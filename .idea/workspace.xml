@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="7005fc9d-e37d-4b43-9f32-773f9171a0bb" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/model/cmu_model_mobilenet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model_mobilenet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/training/train_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/training/train_pose.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -53,12 +52,12 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="3589" />
+          <entry key="py" value="3610" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="3589" />
+          <entry key="Python" value="3610" />
         </counts>
       </usages-collector>
     </session>
@@ -80,11 +79,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="191">
-              <caret line="132" column="49" lean-forward="true" selection-start-line="132" selection-start-column="49" selection-end-line="132" selection-end-column="49" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="45">
+              <caret line="3" column="61" selection-start-line="3" selection-start-column="61" selection-end-line="3" selection-end-column="61" />
             </state>
           </provider>
         </entry>
@@ -607,7 +603,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/model/cmu_model_mobilenet.py</url>
-          <line>290</line>
+          <line>292</line>
           <option name="timeStamp" value="122" />
         </line-breakpoint>
       </breakpoints>
@@ -988,11 +984,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="191">
-          <caret line="132" column="49" lean-forward="true" selection-start-line="132" selection-start-column="49" selection-end-line="132" selection-end-column="49" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="45">
+          <caret line="3" column="61" selection-start-line="3" selection-start-column="61" selection-end-line="3" selection-end-column="61" />
         </state>
       </provider>
     </entry>
