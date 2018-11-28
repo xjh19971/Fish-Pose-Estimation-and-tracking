@@ -36,7 +36,7 @@ def _conv_block(inputs, filters, kernel, strides, name, first=False):
     else:
         bn_name = base_name+'_BN'
     relu_name = base_name + '_relu'
-    x = Conv2D(filters, kernel, padding='same', strides=strides, use_bias=False,name=base_name)(inputs)
+    x = Conv2D(filters, kernel, padding='same', strides=strides, name=base_name)(inputs)
     x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
     return ReLU(6.,name=relu_name)(x)
 
@@ -72,12 +72,12 @@ def _bottleneck(inputs, filters, kernel, t, s, r=False,block=None):
     base_depth_name=base_name+'_depthwise'
     bn_name = base_depth_name + '_BN'
     relu_name = base_depth_name + '_relu'
-    x = DepthwiseConv2D(kernel, strides=(s, s), depth_multiplier=1, padding='same',use_bias=False,name=base_depth_name)(x)
+    x = DepthwiseConv2D(kernel, strides=(s, s), depth_multiplier=1, padding='same',name=base_depth_name)(x)
     x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
     x = ReLU(6.,name=relu_name)(x)
     base_proj_name=base_name+'_project'
     bn_name = base_proj_name + '_BN'
-    x = Conv2D(filters, (1, 1), strides=(1, 1), padding='same',use_bias=False,name=base_proj_name)(x)
+    x = Conv2D(filters, (1, 1), strides=(1, 1), padding='same',name=base_proj_name)(x)
     x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
 
     if r:
@@ -131,6 +131,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None):
                bias_regularizer=bias_reg,
                kernel_initializer=random_normal(stddev=0.01),
                bias_initializer=constant(0.0))(x)
+    x=BatchNormalization(axis=channel_axis)(x)
     return x
 
 

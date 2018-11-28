@@ -123,9 +123,9 @@ def get_lr_multipliers(model):
             # vgg
             else:
                 kernel_name = layer.weights[0].name
-                #bias_name = layer.weights[1].name
+                bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 1
-                #lr_mult[bias_name] = 2
+                lr_mult[bias_name] = 2
 
     return lr_mult
 
