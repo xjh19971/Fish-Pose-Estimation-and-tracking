@@ -13,7 +13,7 @@ KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
 
 
-def _conv_block(inputs, filters, kernel, strides):
+def _conv_block(inputs, filters, kernel, strides, name, first=False):
     """Convolution Block
     This function defines a 2D convolution operation with BN and relu6.
     # Arguments
@@ -30,13 +30,18 @@ def _conv_block(inputs, filters, kernel, strides):
     """
 
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    base_name=name
+    if first==True:
+        bn_name='bn_'+base_name
+    else:
+        bn_name = base_name+'_BN'
+    relu_name = base_name + '_relu'
+    x = Conv2D(filters, kernel, padding='same', strides=strides,name=base_name)(inputs)
+    x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
+    return ReLU(6.,name=relu_name)(x)
 
-    x = Conv2D(filters, kernel, padding='same', strides=strides)(inputs)
-    x = BatchNormalization(axis=channel_axis)(x)
-    return ReLU(6.)(x)
 
-
-def _bottleneck(inputs, filters, kernel, t, s, r=False):
+def _bottleneck(inputs, filters, kernel, t, s, r=False,block=None):
     """Bottleneck
     This function defines a basic bottleneck structure.
     # Arguments
@@ -56,22 +61,31 @@ def _bottleneck(inputs, filters, kernel, t, s, r=False):
 
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     tchannel = K.int_shape(inputs)[channel_axis] * t
-
-    x = _conv_block(inputs, tchannel, (1, 1), (1, 1))
-
-    x = DepthwiseConv2D(kernel, strides=(s, s), depth_multiplier=1, padding='same')(x)
-    x = BatchNormalization(axis=channel_axis)(x)
-    x = ReLU(6.)(x)
-
-    x = Conv2D(filters, (1, 1), strides=(1, 1), padding='same')(x)
-    x = BatchNormalization(axis=channel_axis)(x)
+    if t==1:
+        base_name='expanded_conv'
+    else:
+        base_name='block_'+str(block)
+    if t!=1:
+        x = _conv_block(inputs, tchannel, (1, 1), (1, 1),name=base_name+'_expand')
+    else:
+        x = inputs
+    base_depth_name=base_name+'_depthwise'
+    bn_name = base_depth_name + '_BN'
+    relu_name = base_depth_name + '_relu'
+    x = DepthwiseConv2D(kernel, strides=(s, s), depth_multiplier=1, padding='same',name=base_depth_name)(x)
+    x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
+    x = ReLU(6.,name=relu_name)(x)
+    base_proj_name=base_name+'_project'
+    bn_name = base_proj_name + '_BN'
+    x = Conv2D(filters, (1, 1), strides=(1, 1), padding='same',name=base_proj_name)(x)
+    x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
 
     if r:
-        x = add([x, inputs])
+        x = add([x, inputs],name=base_name+'_add')
     return x
 
 
-def _inverted_residual_block(inputs, filters, kernel, t, strides, n):
+def _inverted_residual_block(inputs, filters, kernel, t, strides, n, block):
     """Inverted Residual Block
     This function defines a sequence of 1 or more identical layers.
     # Arguments
@@ -89,10 +103,10 @@ def _inverted_residual_block(inputs, filters, kernel, t, strides, n):
         Output tensor.
     """
 
-    x = _bottleneck(inputs, filters, kernel, t, strides)
+    x = _bottleneck(inputs, filters, kernel, t, strides,block=block)
 
     for i in range(1, n):
-        x = _bottleneck(x, filters, kernel, t, 1, True)
+        x = _bottleneck(x, filters, kernel, t, 1, True,block=block+i)
 
     return x
 
@@ -162,13 +176,13 @@ def vgg_block(x, weight_decay):
     x = relu(x)
     x = conv(x, 128, 3, "conv4_4_CPM", (weight_decay, 0))
     x = relu(x)'''
-    x = _conv_block(x, 32, (3, 3), strides=(2, 2))
+    x = _conv_block(x, 32, (3, 3), strides=(2, 2),name='Conv1',first=True)
 
-    x = _inverted_residual_block(x, 16, (3, 3), t=1, strides=1, n=1)
-    x = _inverted_residual_block(x, 24, (3, 3), t=6, strides=2, n=2)
-    x = _inverted_residual_block(x, 32, (3, 3), t=6, strides=2, n=3)
-    x = _inverted_residual_block(x, 64, (3, 3), t=6, strides=1, n=4)
-    x = _inverted_residual_block(x, 96, (3, 3), t=6, strides=1, n=3)
+    x = _inverted_residual_block(x, 16, (3, 3), t=1, strides=1, n=1,block=0)
+    x = _inverted_residual_block(x, 24, (3, 3), t=6, strides=2, n=2,block=1)
+    x = _inverted_residual_block(x, 32, (3, 3), t=6, strides=2, n=3,block=1+2)
+    x = _inverted_residual_block(x, 64, (3, 3), t=6, strides=1, n=4,block=1+2+3)
+    x = _inverted_residual_block(x, 96, (3, 3), t=6, strides=1, n=3,block=1+2+3+4)
     return x
 
 

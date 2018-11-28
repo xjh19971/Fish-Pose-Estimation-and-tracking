@@ -85,12 +85,12 @@ def restore_weights(weights_best_file, model):
 
         print("Loaded VGG layer")
         '''
-        print("not Loading mobilenet weights...")
-        #base_model=MobileNetV2(include_top=False,weights='imagenet')
-        #WEIGHTS_PATH='./mobilenetv2_weight.h5'
-        #base_model.save_weights(WEIGHTS_PATH)
-        #model.load_weights(WEIGHTS_PATH,by_name=True)
-        #print("Loaded mobilenet layer")
+        print("Loading mobilenet weights...")
+        base_model=MobileNetV2(include_top=False,weights='imagenet')
+        WEIGHTS_PATH='./mobilenetv2_weight.h5'
+        base_model.save_weights(WEIGHTS_PATH)
+        model.load_weights(WEIGHTS_PATH,by_name=True)
+        print("Loaded mobilenet layer")
         return 0
 
 
