@@ -132,7 +132,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None):
                bias_regularizer=bias_reg,
                kernel_initializer=random_normal(stddev=0.01),
                bias_initializer=constant(0.0))(x)
-    #x=BatchNormalization(axis=channel_axis)(x)
+    x=BatchNormalization(axis=channel_axis)(x)
     return x
 
 
