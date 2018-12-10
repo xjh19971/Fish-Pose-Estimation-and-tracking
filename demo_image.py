@@ -87,18 +87,30 @@ def process (input_image, params, model_params):
     connection_all = []
     special_k = []
     mid_num = 10
-
+    limit=[[40,10],[60,20]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
         candB = all_peaks[limbSeq[k][1] - 1]
         nA = len(candA)
         nB = len(candB)
-        indexA, indexB = limbSeq[k]
+        candlist=[]
         if (nA != 0 and nB != 0):
-            connection_candidate = []
             for i in range(nA):
+                tempcand=[]
                 for j in range(nB):
+                    vecx1 = candA[i][0]-candB[j][0]
+                    vecy1 = candA[i][1]-candB[j][1]
+                    disx = abs(vecx1)
+                    disy = abs(vecy1)
+                    r = math.sqrt(disx * disx + disy * disy)
+                    if(r<limit[k][0] and r>limit[k][1]):
+                        tempcand.append(j)
+                candlist.append(tempcand)
+            indexA, indexB = limbSeq[k]
+            connection_candidate = []
+            for i in range(len(candlist)):
+                for j in candlist[i]:
                     vec = np.subtract(candB[j][:2], candA[i][:2])
                     norm = math.sqrt(vec[0] * vec[0] + vec[1] * vec[1])
                     # failure case when 2 body parts overlaps
@@ -191,14 +203,19 @@ def process (input_image, params, model_params):
     # delete some rows of subset which has few parts occur
     deleteIdx = [];
     for i in range(len(subset)):
-        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.4:
+        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.2:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = cv2.imread(input_image)  # B,G,R order
-    for i in [0,1,2]:
+    '''for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
+            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)'''
+    for i in [0,1,2]:
+        for n in range(len(subset)):
+            idx=int(subset[n][i])
+            if int(subset[n][i])!=-1:
+                cv2.circle(canvas, all_peaks[i][idx-all_peaks[i][0][3]][0:2], 4, colors[i], thickness=-1)
 
     stickwidth = 4
 
@@ -233,7 +250,7 @@ if __name__ == '__main__':
     output = args.output
     keras_weights_file = args.model
 
-    tic = time.time()
+
     print('start processing...')
 
     # load model
@@ -247,6 +264,7 @@ if __name__ == '__main__':
     params, model_params = config_reader()
 
     # generate image with body parts
+    tic = time.time()
     canvas = process(input_image, params, model_params)
 
     toc = time.time()
