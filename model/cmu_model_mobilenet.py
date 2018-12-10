@@ -6,111 +6,87 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization,add,ReLU,DepthwiseConv2D
+from keras.layers import  BatchNormalization,add
 import keras.backend as K
+from keras.applications.mobilenet import relu6, DepthwiseConv2D
 
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
 
 
-def _conv_block(inputs, filters, kernel, strides, name, first=False):
-    """Convolution Block
-    This function defines a 2D convolution operation with BN and relu6.
-    # Arguments
-        inputs: Tensor, input tensor of conv layer.
-        filters: Integer, the dimensionality of the output space.
-        kernel: An integer or tuple/list of 2 integers, specifying the
-            width and height of the 2D convolution window.
-        strides: An integer or tuple/list of 2 integers,
-            specifying the strides of the convolution along the width and height.
-            Can be a single integer to specify the same value for
-            all spatial dimensions.
-    # Returns
-        Output tensor.
-    """
+def Relu6(x, **kwargs):
+    return Activation(relu6, **kwargs)(x)
 
+def InvertedResidualBlock(x, expand, out_channels, repeats, stride, weight_decay, block_id):
+    '''
+    This function defines a sequence of 1 or more identical layers, referring to Table 2 in the original paper.
+    :param x: Input Keras tensor in (B, H, W, C_in)
+    :param expand: expansion factor in bottlenect residual block
+    :param out_channels: number of channels in the output tensor
+    :param repeats: number of times to repeat the inverted residual blocks including the one that changes the dimensions.
+    :param stride: stride for the 1x1 convolution
+    :param weight_decay: hyperparameter for the l2 penalty
+    :param block_id: as its name tells
+    :return: Output tensor (B, H_new, W_new, out_channels)
+    '''
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    base_name=name
-    if first==True:
-        bn_name='bn_'+base_name
-    else:
-        bn_name = base_name+'_BN'
-    relu_name = base_name + '_relu'
-    x = Conv2D(filters, kernel, padding='same', strides=strides, name=base_name)(inputs)
-    x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
-    return ReLU(6.,name=relu_name)(x)
+    in_channels = K.int_shape(x)[channel_axis]
+    x = Conv2D(expand * in_channels, 1, padding='same', strides=stride, use_bias=False,
+                kernel_regularizer=l2(weight_decay), name='conv_%d_0' % block_id)(x)
+    x = BatchNormalization(epsilon=1e-5, momentum=0.9, name='conv_%d_0_bn' % block_id)(x)
+    x = Relu6(x, name='conv_%d_0_act_1' % block_id)
+    x = DepthwiseConv2D((3, 3),
+                        padding='same',
+                        depth_multiplier=1,
+                        strides=1,
+                        use_bias=False,
+                        kernel_regularizer=l2(weight_decay),
+                        name='conv_dw_%d_0' % block_id )(x)
+    x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9, name='conv_dw_%d_0_bn' % block_id)(x)
+    x = Relu6(x, name='conv_%d_0_act_2' % block_id)
+    x = Conv2D(out_channels, 1, padding='same', strides=1, use_bias=False,
+               kernel_regularizer=l2(weight_decay), name='conv_bottleneck_%d_0' % block_id)(x)
+    x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9, name='conv_bottlenet_%d_0_bn' % block_id)(x)
 
-
-def _bottleneck(inputs, filters, kernel, t, s, r=False,block=None):
-    """Bottleneck
-    This function defines a basic bottleneck structure.
-    # Arguments
-        inputs: Tensor, input tensor of conv layer.
-        filters: Integer, the dimensionality of the output space.
-        kernel: An integer or tuple/list of 2 integers, specifying the
-            width and height of the 2D convolution window.
-        t: Integer, expansion factor.
-            t is always applied to the input size.
-        s: An integer or tuple/list of 2 integers,specifying the strides
-            of the convolution along the width and height.Can be a single
-            integer to specify the same value for all spatial dimensions.
-        r: Boolean, Whether to use the residuals.
-    # Returns
-        Output tensor.
-    """
-
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    tchannel = K.int_shape(inputs)[channel_axis] * t
-    if t==1:
-        base_name='expanded_conv'
-    else:
-        base_name='block_'+str(block)
-    if t!=1:
-        x = _conv_block(inputs, tchannel, (1, 1), (1, 1),name=base_name+'_expand')
-    else:
-        x = inputs
-    base_depth_name=base_name+'_depthwise'
-    bn_name = base_depth_name + '_BN'
-    relu_name = base_depth_name + '_relu'
-    x = DepthwiseConv2D(kernel, strides=(s, s), depth_multiplier=1, padding='same',name=base_depth_name)(x)
-    x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
-    x = ReLU(6.,name=relu_name)(x)
-    base_proj_name=base_name+'_project'
-    bn_name = base_proj_name + '_BN'
-    x = Conv2D(filters, (1, 1), strides=(1, 1), padding='same',name=base_proj_name)(x)
-    x = BatchNormalization(axis=channel_axis,name=bn_name)(x)
-
-    if r:
-        x = add([x, inputs],name=base_name+'_add')
+    for i in range(1, repeats):
+        x1 = Conv2D(expand*out_channels, 1, padding='same', strides=1, use_bias=False,
+                    kernel_regularizer=l2(weight_decay), name='conv_%d_%d' % (block_id, i))(x)
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5,momentum=0.9,name='conv_%d_%d_bn' % (block_id, i))(x1)
+        x1 = Relu6(x1,name='conv_%d_%d_act_1' % (block_id, i))
+        x1 = DepthwiseConv2D((3, 3),
+                            padding='same',
+                            depth_multiplier=1,
+                            strides=1,
+                            use_bias=False,
+                            kernel_regularizer=l2(weight_decay),
+                            name='conv_dw_%d_%d' % (block_id, i))(x1)
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5,momentum=0.9, name='conv_dw_%d_%d_bn' % (block_id, i))(x1)
+        x1 = Relu6(x1, name='conv_dw_%d_%d_act_2' % (block_id, i))
+        x1 = Conv2D(out_channels, 1, padding='same', strides=1, use_bias=False,
+                    kernel_regularizer=l2(weight_decay),name='conv_bottleneck_%d_%d' % (block_id, i))(x1)
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9, name='conv_bottlenet_%d_%d_bn' % (block_id, i))(x1)
+        x = add([x, x1], name='block_%d_%d_output' % (block_id, i))
     return x
 
-
-def _inverted_residual_block(inputs, filters, kernel, t, strides, n, block):
-    """Inverted Residual Block
-    This function defines a sequence of 1 or more identical layers.
-    # Arguments
-        inputs: Tensor, input tensor of conv layer.
-        filters: Integer, the dimensionality of the output space.
-        kernel: An integer or tuple/list of 2 integers, specifying the
-            width and height of the 2D convolution window.
-        t: Integer, expansion factor.
-            t is always applied to the input size.
-        s: An integer or tuple/list of 2 integers,specifying the strides
-            of the convolution along the width and height.Can be a single
-            integer to specify the same value for all spatial dimensions.
-        n: Integer, layer repeat times.
-    # Returns
-        Output tensor.
-    """
-
-    x = _bottleneck(inputs, filters, kernel, t, strides,block=block)
-
-    for i in range(1, n):
-        x = _bottleneck(x, filters, kernel, t, 1, True,block=block+i)
-
-    return x
-
-
+def conv_block(inputs, filters, weight_decay, name, kernel=(3, 3), strides=(1, 1)):
+    '''
+    Normal convolution block performs conv+bn+relu6 operations.
+    :param inputs: Input Keras tensor in (B, H, W, C_in)
+    :param filters: number of filters in the convolution layer
+    :param name: name for the convolutional layer
+    :param kernel: kernel size
+    :param strides: strides for convolution
+    :return: Output tensor in (B, H_new, W_new, filters)
+    '''
+    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    x = Conv2D(filters, kernel,
+               padding='same',
+               use_bias=False,
+               kernel_regularizer=l2(weight_decay),
+               strides=strides,
+               name=name)(inputs)
+    x = BatchNormalization(axis=channel_axis, epsilon=1e-5,momentum=0.9,name=name+'_bn')(x)
+    return Relu6(x, name=name+'_relu')
 
 
 def relu(x): return Activation('relu')(x)
@@ -178,13 +154,13 @@ def vgg_block(x, weight_decay):
     x = relu(x)
     x = conv(x, 128, 3, "conv4_4_CPM", (weight_decay, 0))
     x = relu(x)'''
-    x = _conv_block(x, 32, (3, 3), strides=(2, 2),name='Conv1',first=True)
 
-    x = _inverted_residual_block(x, 16, (3, 3), t=1, strides=1, n=1,block=0)
-    x = _inverted_residual_block(x, 24, (3, 3), t=6, strides=2, n=2,block=1)
-    x = _inverted_residual_block(x, 32, (3, 3), t=6, strides=2, n=3,block=1+2)
-    x = _inverted_residual_block(x, 64, (3, 3), t=6, strides=1, n=4,block=1+2+3)
-    x = _inverted_residual_block(x, 96, (3, 3), t=6, strides=1, n=3,block=1+2+3+4)
+    x = conv_block(x, 32, weight_decay=weight_decay, name='conv1', strides=(2, 2))
+    x = InvertedResidualBlock(x, expand=1, out_channels=16, repeats=1, stride=1, weight_decay=weight_decay, block_id=1)
+    x = InvertedResidualBlock(x, expand=6, out_channels=24, repeats=2, stride=2, weight_decay=weight_decay, block_id=2)
+    x = InvertedResidualBlock(x, expand=6, out_channels=32, repeats=3, stride=2, weight_decay=weight_decay, block_id=3)
+    x = InvertedResidualBlock(x, expand=6, out_channels=64, repeats=4, stride=2, weight_decay=weight_decay, block_id=4)
+    x = InvertedResidualBlock(x, expand=6, out_channels=96, repeats=3, stride=1, weight_decay=weight_decay, block_id=5)
     return x
 
 
