@@ -212,9 +212,13 @@ def batch_dataflow(df, batch_size):
     :return: dataflow of batches
     """
     df = BatchData(df, batch_size, use_list=False)
+    #df = MapData(df, lambda x: (
+    #    [x[0], x[1], x[2]],
+    #    [x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4]])
+    #             )
     df = MapData(df, lambda x: (
         [x[0], x[1], x[2]],
-        [x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4]])
+        [x[3], x[4], x[3], x[4], x[3], x[4]])
                  )
     df.reset_state()
     return df
