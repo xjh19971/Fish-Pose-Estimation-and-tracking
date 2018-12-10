@@ -6,16 +6,16 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization,add
+from keras.layers import  BatchNormalization,add,ReLU
 import keras.backend as K
-from keras.applications.mobilenet import relu6, DepthwiseConv2D
+from keras.applications.mobilenet import  DepthwiseConv2D
 
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
 
 
 def Relu6(x, **kwargs):
-    return Activation(relu6, **kwargs)(x)
+    return ReLU(6.,name=relu_name)(x)
 
 def InvertedResidualBlock(x, expand, out_channels, repeats, stride, weight_decay, block_id):
     '''
