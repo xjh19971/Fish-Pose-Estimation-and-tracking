@@ -158,7 +158,7 @@ def vgg_block(x, weight_decay):
     x = InvertedResidualBlock(x, expand=1, out_channels=16, repeats=1, stride=1, weight_decay=weight_decay, block_id=1)
     x = InvertedResidualBlock(x, expand=6, out_channels=24, repeats=2, stride=2, weight_decay=weight_decay, block_id=2)
     x = InvertedResidualBlock(x, expand=6, out_channels=32, repeats=3, stride=2, weight_decay=weight_decay, block_id=3)
-    x = InvertedResidualBlock(x, expand=6, out_channels=64, repeats=4, stride=2, weight_decay=weight_decay, block_id=4)
+    x = InvertedResidualBlock(x, expand=6, out_channels=64, repeats=4, stride=1, weight_decay=weight_decay, block_id=4)
     x = InvertedResidualBlock(x, expand=6, out_channels=96, repeats=3, stride=1, weight_decay=weight_decay, block_id=5)
     return x
 
