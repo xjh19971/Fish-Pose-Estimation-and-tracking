@@ -14,7 +14,7 @@ KEY_POINT_LINK=2*2
 
 
 def Relu6(x, **kwargs):
-    return ReLU(6.,name=relu_name)(x)
+    return ReLU(6.)(x)
 
 def InvertedResidualBlock(x, expand, out_channels, repeats, stride, weight_decay, block_id):
     '''
