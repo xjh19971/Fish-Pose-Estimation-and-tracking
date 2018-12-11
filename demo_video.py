@@ -95,18 +95,30 @@ def process (input_image, params, model_params):
     connection_all = []
     special_k = []
     mid_num = 10
-
+    limit = [[40, 10], [60, 20]]
     for k in range(len(mapIdx)):
-        score_mid = paf_avg[:, :, [x - 19 for x in mapIdx[k]]]
+        score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
         candB = all_peaks[limbSeq[k][1] - 1]
         nA = len(candA)
         nB = len(candB)
-        indexA, indexB = limbSeq[k]
+        candlist = []
         if (nA != 0 and nB != 0):
-            connection_candidate = []
             for i in range(nA):
+                tempcand = []
                 for j in range(nB):
+                    vecx1 = candA[i][0] - candB[j][0]
+                    vecy1 = candA[i][1] - candB[j][1]
+                    disx = abs(vecx1)
+                    disy = abs(vecy1)
+                    r = math.sqrt(disx * disx + disy * disy)
+                    if (r < limit[k][0] and r > limit[k][1]):
+                        tempcand.append(j)
+                candlist.append(tempcand)
+            indexA, indexB = limbSeq[k]
+            connection_candidate = []
+            for i in range(len(candlist)):
+                for j in candlist[i]:
                     vec = np.subtract(candB[j][:2], candA[i][:2])
                     norm = math.sqrt(vec[0] * vec[0] + vec[1] * vec[1])
                     # failure case when 2 body parts overlaps

@@ -9,7 +9,7 @@ import util
 from config_reader import config_reader
 from scipy.ndimage.filters import gaussian_filter
 
-from model.cmu_model import get_testing_model
+from model.cmu_model_mobilenet import get_testing_model
 
 
 # find connection in the specified sequence, center 29 is in the position 15
