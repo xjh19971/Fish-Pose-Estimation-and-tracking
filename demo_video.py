@@ -263,7 +263,7 @@ if __name__ == '__main__':
     # Video input
     video = args.video
     video_path = 'videos/'
-    video_file = video_path + video
+    video_file =  video
 
     # Output location
     output_path = 'videos/outputs/'
