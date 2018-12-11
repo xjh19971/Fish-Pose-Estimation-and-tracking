@@ -11,7 +11,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from model.cmu_model import get_testing_model
+from model.cmu_model_mobilenet import get_testing_model
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
