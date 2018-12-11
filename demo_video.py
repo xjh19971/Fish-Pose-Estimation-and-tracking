@@ -30,8 +30,8 @@ def process (input_image, params, model_params):
 
     oriImg = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
 
-    scale_search = [1, .5, 1.5, 2] # [.5, 1, 1.5, 2]
-    scale_search = scale_search[0:process_speed]
+    scale_search = [2.5] # [.5, 1, 1.5, 2]
+    #scale_search = scale_search[0:process_speed]
 
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
 
