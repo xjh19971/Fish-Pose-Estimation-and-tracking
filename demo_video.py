@@ -199,8 +199,8 @@ def process (input_image, params, model_params):
                         subset[j1][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
 
                 # if find no partA in the subset, create a new subset
-                elif not found and k < 17:
-                    row = -1 * np.ones(20)
+                elif not found and k < 2:
+                    row = -1 * np.ones(5)
                     row[indexA] = partAs[i]
                     row[indexB] = partBs[i]
                     row[-1] = 2
