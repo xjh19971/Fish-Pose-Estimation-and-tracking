@@ -4,9 +4,8 @@
     <list default="true" id="7005fc9d-e37d-4b43-9f32-773f9171a0bb" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config" beforeDir="false" afterPath="$PROJECT_DIR$/config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/demo_image.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/cmu_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/cmu_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/training/train_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/training/train_pose.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_person_annotation" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_person_annotation.json" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -35,15 +34,16 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="config" value="2" />
-          <entry key="csv" value="1" />
+          <entry key="INFO" value="1" />
+          <entry key="config" value="3" />
+          <entry key="csv" value="2" />
           <entry key="ipynb" value="2" />
           <entry key="json" value="4" />
           <entry key="md" value="1" />
           <entry key="my_person_annotation" value="1" />
           <entry key="out" value="1" />
-          <entry key="py" value="74" />
-          <entry key="sh" value="1" />
+          <entry key="py" value="81" />
+          <entry key="sh" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -51,20 +51,21 @@
           <entry key="IPNB" value="2" />
           <entry key="JSON" value="4" />
           <entry key="Markdown" value="1" />
-          <entry key="PLAIN_TEXT" value="6" />
-          <entry key="Python" value="74" />
+          <entry key="PLAIN_TEXT" value="10" />
+          <entry key="Python" value="81" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="config" value="24" />
-          <entry key="py" value="3990" />
+          <entry key="config" value="66" />
+          <entry key="py" value="4027" />
+          <entry key="txt" value="15" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="24" />
-          <entry key="Python" value="3990" />
+          <entry key="PLAIN_TEXT" value="81" />
+          <entry key="Python" value="4027" />
         </counts>
       </usages-collector>
     </session>
@@ -72,22 +73,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model/cmu_model_resnet.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret line="87" column="65" selection-start-line="87" selection-start-column="4" selection-end-line="87" selection-end-column="65" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1245">
-              <caret line="134" column="4" selection-start-line="134" selection-start-column="4" selection-end-line="134" selection-end-column="4" />
+            <state relative-caret-position="-2470">
+              <caret line="104" column="12" selection-start-line="104" selection-start-column="12" selection-end-line="104" selection-end-column="12" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
               </folding>
@@ -98,8 +87,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/demo_image.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="89" column="16" selection-start-line="89" selection-start-column="16" selection-end-line="89" selection-end-column="16" />
+            <state relative-caret-position="1620">
+              <caret line="126" column="5" selection-start-line="126" selection-start-column="5" selection-end-line="126" selection-end-column="5" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -108,10 +97,43 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/demo_camera.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-405">
+              <caret line="9" column="49" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/demo_video.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="3034">
+              <caret line="282" selection-start-line="282" selection-end-line="282" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/util.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-825">
+              <caret line="6" column="36" selection-start-line="6" selection-start-column="36" selection-end-line="6" selection-end-column="36" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config_reader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
+            <state relative-caret-position="55">
+              <caret line="19" selection-start-line="19" selection-end-line="19" />
             </state>
           </provider>
         </entry>
@@ -119,38 +141,17 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/config">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+            <state relative-caret-position="180">
+              <caret line="15" column="16" selection-start-line="15" selection-start-column="16" selection-end-line="15" selection-end-column="16" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model/cmu_model.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-362">
-              <caret line="125" column="14" selection-start-line="125" selection-start-column="14" selection-end-line="125" selection-end-column="14" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/site-packages/keras/engine/saving.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="293">
-              <caret line="1040" column="33" lean-forward="true" selection-start-line="1040" selection-start-column="33" selection-end-line="1040" selection-end-column="33" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/training/train_pose.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-930">
-              <caret line="153" column="46" selection-start-line="153" selection-start-column="46" selection-end-line="153" selection-end-column="46" />
+            <state relative-caret-position="800">
+              <caret line="126" selection-start-line="126" selection-end-line="126" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -159,12 +160,20 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/training/dataflow.py">
+        <entry file="file://$PROJECT_DIR$/training/dataset.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="493">
-              <caret line="225" column="48" selection-start-line="225" selection-start-column="48" selection-end-line="225" selection-end-column="48" />
+            <state relative-caret-position="516">
+              <caret line="220" column="42" selection-start-line="220" selection-start-column="42" selection-end-line="220" selection-end-column="42" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
             </state>
           </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/training/training.csv">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
     </leaf>
@@ -178,12 +187,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>center</find>
-      <find>augment_return_params</find>
-      <find>augment_coords</find>
-      <find>cv2</find>
-      <find>target_dist</find>
-      <find>scale</find>
       <find>1.0</find>
       <find>build_sample</find>
       <find>input_shap</find>
@@ -199,7 +202,6 @@
       <find>PAF</find>
       <find>standardize_input_data</find>
       <find>STAGE_NUM</find>
-      <find>6</find>
       <find>stage</find>
       <find>relu6</find>
       <find>save</find>
@@ -208,6 +210,13 @@
       <find>get_lr_multipliers</find>
       <find>inputs</find>
       <find>time</find>
+      <find>6</find>
+      <find>ds</find>
+      <find>bias_name</find>
+      <find>re</find>
+      <find>Ipython</find>
+      <find>util</find>
+      <find>np.vstack</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -215,10 +224,10 @@
     <dirStrings>
       <dir>$PROJECT_DIR$/sample_images</dir>
       <dir>$PROJECT_DIR$/dataset</dir>
-      <dir>$PROJECT_DIR$</dir>
       <dir>$PROJECT_DIR$/training/.ipynb_checkpoints</dir>
-      <dir>$PROJECT_DIR$/training</dir>
       <dir>$PROJECT_DIR$/model</dir>
+      <dir>$PROJECT_DIR$/training</dir>
+      <dir>$PROJECT_DIR$</dir>
     </dirStrings>
   </component>
   <component name="Git.Settings">
@@ -234,15 +243,15 @@
         <option value="$PROJECT_DIR$/convert_data.py" />
         <option value="$PROJECT_DIR$/training/dataset_inspect.ipynb" />
         <option value="$PROJECT_DIR$/training/dataset_inspect.py" />
-        <option value="$PROJECT_DIR$/training/dataset.py" />
         <option value="$PROJECT_DIR$/training/dataflow.py" />
-        <option value="$PROJECT_DIR$/demo_video.py" />
         <option value="$PROJECT_DIR$/model/cmu_model_resnet.py" />
-        <option value="$PROJECT_DIR$/model/cmu_model_mobilenet.py" />
-        <option value="$PROJECT_DIR$/config" />
-        <option value="$PROJECT_DIR$/demo_image.py" />
         <option value="$PROJECT_DIR$/model/cmu_model.py" />
+        <option value="$PROJECT_DIR$/training/dataset.py" />
         <option value="$PROJECT_DIR$/training/train_pose.py" />
+        <option value="$PROJECT_DIR$/model/cmu_model_mobilenet.py" />
+        <option value="$PROJECT_DIR$/demo_image.py" />
+        <option value="$PROJECT_DIR$/config" />
+        <option value="$PROJECT_DIR$/demo_video.py" />
       </list>
     </option>
   </component>
@@ -268,6 +277,38 @@
             <path>
               <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="b2602c69:ProjectViewProjectNode" />
               <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset" type="462c0819:PsiDirectoryNode" />
+              <item name="coco" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset" type="462c0819:PsiDirectoryNode" />
+              <item name="cocoapi" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset" type="462c0819:PsiDirectoryNode" />
+              <item name="cocoapi" type="462c0819:PsiDirectoryNode" />
+              <item name="PythonAPI" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="462c0819:PsiDirectoryNode" />
+              <item name="dataset" type="462c0819:PsiDirectoryNode" />
+              <item name="cocoapi" type="462c0819:PsiDirectoryNode" />
+              <item name="PythonAPI" type="462c0819:PsiDirectoryNode" />
+              <item name="pycocotools" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="b2602c69:ProjectViewProjectNode" />
+              <item name="keras_Realtime_Multi-Person_Pose_Estimation" type="462c0819:PsiDirectoryNode" />
               <item name="model" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -284,7 +325,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///home/xjh/temp/keras_Realtime_Multi-Person_Pose_Estimation/convert_data.py" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/training/dataset_inspect.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/demo_video.py" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -305,7 +346,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.tra">
+  <component name="RunManager" selected="Python.test">
     <configuration name="Unnamed" type="JupiterNotebook" factoryName="Jupyter Notebook">
       <module name="keras_Realtime_Multi-Person_Pose_Estimation" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -461,8 +502,8 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/demo_image.py" />
-      <option name="PARAMETERS" value="--image=00083.jpg --model=weights_VGG19.best.h5" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/demo_video.py" />
+      <option name="PARAMETERS" value="--video=3.avi --model=weights.best.h5" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -514,6 +555,14 @@
       <option name="presentableId" value="Default" />
       <updated>1542354282802</updated>
     </task>
+    <task id="LOCAL-00001" summary="stage=3+cut">
+      <created>1544422320073</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1544422320073</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TodoView" selected-index="1">
@@ -526,10 +575,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
+    <frame x="67" y="25" width="1299" height="743" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.20491803" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.29388714" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="0" show_stripe_button="false" />
@@ -538,7 +587,27 @@
       <window_info anchor="bottom" id="Event Log" order="3" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="4" />
       <window_info anchor="bottom" id="Find" order="5" />
-      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.3783784" />
+      <window_info anchor="bottom" id="Run" order="6" weight="0.37683523" />
+      <window_info anchor="bottom" id="TODO" order="7" weight="0.32952693" />
+      <window_info active="true" anchor="bottom" id="Debug" order="8" visible="true" weight="0.3964111" />
+      <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="10" weight="0.4" />
+      <window_info anchor="bottom" id="Thumbnails" order="11" weight="0.32952693" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+    <layout-to-restore>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.20491803" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Version Control" order="0" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Python Console" order="1" weight="0.32626426" />
+      <window_info anchor="bottom" id="Terminal" order="2" weight="0.32952693" />
+      <window_info anchor="bottom" id="Event Log" order="3" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="4" />
+      <window_info anchor="bottom" id="Find" order="5" />
+      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.3783784" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32952693" />
       <window_info anchor="bottom" id="Debug" order="8" weight="0.36" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
@@ -547,10 +616,14 @@
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-    </layout>
+    </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="stage=3+cut" />
+    <option name="LAST_COMMIT_MESSAGE" value="stage=3+cut" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -604,11 +677,6 @@
           <url>file://$PROJECT_DIR$/convert_data.py</url>
           <line>68</line>
           <option name="timeStamp" value="66" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/model/cmu_model_mobilenet.py</url>
-          <line>292</line>
-          <option name="timeStamp" value="122" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -688,14 +756,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/dataset/my_person_annotation" />
-    <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/codecs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="323" selection-start-line="323" selection-end-line="323" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dataset/cocoapi/PythonAPI/build/lib.linux-x86_64-3.6/pycocotools/coco.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1755">
@@ -818,9 +878,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/training/training.csv">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../anaconda3/envs/fish/lib/python3.6/site-packages/tensorpack/dataflow/common.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4020">
@@ -859,9 +916,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/demo_camera.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/demo.ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
@@ -871,13 +925,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/dump_caffe_layers.py">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/demo_video.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="248" column="32" selection-start-line="248" selection-start-column="32" selection-end-line="248" selection-end-column="32" />
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/model/get_caffe_model.sh">
       <provider selected="true" editor-type-id="text-editor" />
@@ -903,6 +950,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
           <caret line="10" column="40" selection-start-line="10" selection-start-column="40" selection-end-line="10" selection-end-column="40" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -910,23 +960,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="705">
           <caret line="50" selection-start-line="50" selection-end-line="50" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/training/dataset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1875">
-          <caret line="138" column="7" selection-start-line="138" selection-start-column="7" selection-end-line="138" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/training/dataset_inspect.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-390">
-          <caret line="33" column="60" lean-forward="true" selection-start-line="33" selection-start-column="60" selection-end-line="33" selection-end-column="60" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -941,30 +974,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="237">
           <caret line="1165" selection-start-line="1165" selection-end-line="1165" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config_reader.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1245">
-          <caret line="134" column="4" selection-start-line="134" selection-start-column="4" selection-end-line="134" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -992,19 +1001,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/demo_image.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="89" column="16" selection-start-line="89" selection-start-column="16" selection-end-line="89" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model/cmu_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-362">
+        <state relative-caret-position="268">
           <caret line="125" column="14" selection-start-line="125" selection-start-column="14" selection-end-line="125" selection-end-column="14" />
           <folding>
             <element signature="e#0#30#0" expanded="true" />
@@ -1012,12 +1011,107 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/dataset/coco/INFO">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dataset/get_dataset.sh">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dataset/cocoapi/PythonAPI/pycocotools/mask.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-747" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/training/dataset_inspect.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="268">
+          <caret line="125" column="25" selection-start-line="125" selection-start-column="25" selection-end-line="125" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/training/dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="516">
+          <caret line="220" column="42" selection-start-line="220" selection-start-column="42" selection-end-line="220" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/training/training.csv">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/training/train_pose.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-930">
-          <caret line="153" column="46" selection-start-line="153" selection-start-column="46" selection-end-line="153" selection-end-column="46" />
+        <state relative-caret-position="800">
+          <caret line="126" selection-start-line="126" selection-end-line="126" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model/cmu_model_mobilenet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2470">
+          <caret line="104" column="12" selection-start-line="104" selection-start-column="12" selection-end-line="104" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config_reader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="55">
+          <caret line="19" selection-start-line="19" selection-end-line="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/util.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-825">
+          <caret line="6" column="36" selection-start-line="6" selection-start-column="36" selection-end-line="6" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="15" column="16" selection-start-line="15" selection-start-column="16" selection-end-line="15" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo_image.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1620">
+          <caret line="126" column="5" selection-start-line="126" selection-start-column="5" selection-end-line="126" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo_camera.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-405">
+          <caret line="9" column="49" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/demo_video.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3034">
+          <caret line="282" selection-start-line="282" selection-end-line="282" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
