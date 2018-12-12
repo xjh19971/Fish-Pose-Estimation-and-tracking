@@ -26,9 +26,9 @@ base_lr = 1.28e-4 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
-gamma = 0.333
-stepsize =  30000 #   // after each stepsize iterations update learning rate: lr=lr*gamma
-max_iter = 2500 # 600000
+gamma = 0.5
+stepsize =  50000 #   // after each stepsize iterations update learning rate: lr=lr*gamma
+max_iter = 2000 # 600000
 
 weights_best_file = "weights.best.h5"
 training_log = "training.csv"
