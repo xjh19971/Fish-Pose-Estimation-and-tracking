@@ -1,13 +1,15 @@
+import argparse
+import math
 import os
 import sys
-import argparse
-import cv2
-import math
 import time
+
+import cv2
 import numpy as np
+from scipy.ndimage.filters import gaussian_filter
+
 import util
 from config_reader import config_reader
-from scipy.ndimage.filters import gaussian_filter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -28,16 +30,13 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
 def process (input_image, params, model_params):
 
-    oriImg = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
-
-    scale_search = [2.5] # [.5, 1, 1.5, 2]
-    #scale_search = scale_search[0:process_speed]
-
-    multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
+    oriImg = input_image  # B,G,R order
+    multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in params['scale_search']]
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
 
+    t1=time.time()
     for m in range(len(multiplier)):
         scale = multiplier[m]
 
@@ -68,7 +67,7 @@ def process (input_image, params, model_params):
 
     all_peaks = []
     peak_counter = 0
-
+    t2 = time.time()
     for part in [0,1,2]:
         map_ori = heatmap_avg[:, :, part]
         map = gaussian_filter(map_ori, sigma=3)
@@ -91,28 +90,28 @@ def process (input_image, params, model_params):
 
         all_peaks.append(peaks_with_score_and_id)
         peak_counter += len(peaks)
-
+    t3 = time.time()
     connection_all = []
     special_k = []
     mid_num = 10
-    limit = [[40, 10], [60, 20]]
+    limit=[[60,10],[80,10]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
         candB = all_peaks[limbSeq[k][1] - 1]
         nA = len(candA)
         nB = len(candB)
-        candlist = []
+        candlist=[]
         if (nA != 0 and nB != 0):
             for i in range(nA):
-                tempcand = []
+                tempcand=[]
                 for j in range(nB):
-                    vecx1 = candA[i][0] - candB[j][0]
-                    vecy1 = candA[i][1] - candB[j][1]
+                    vecx1 = candA[i][0]-candB[j][0]
+                    vecy1 = candA[i][1]-candB[j][1]
                     disx = abs(vecx1)
                     disy = abs(vecy1)
                     r = math.sqrt(disx * disx + disy * disy)
-                    if (r < limit[k][0] and r > limit[k][1]):
+                    if(r<limit[k][0] and r>limit[k][1]):
                         tempcand.append(j)
                 candlist.append(tempcand)
             indexA, indexB = limbSeq[k]
@@ -165,6 +164,7 @@ def process (input_image, params, model_params):
     subset = -1 * np.ones((0, 5))
     candidate = np.array([item for sublist in all_peaks for item in sublist])
 
+    t4 = time.time()
     for k in range(len(mapIdx)):
         if k not in special_k:
             partAs = connection_all[k][:, 0]
@@ -211,15 +211,20 @@ def process (input_image, params, model_params):
     # delete some rows of subset which has few parts occur
     deleteIdx = [];
     for i in range(len(subset)):
-        if subset[i][-1] < 4 or subset[i][-2] / subset[i][-1] < 0.4:
+        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.2:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
-    canvas = input_image
-
-    for i in [0,1,2]:
+    canvas = input_image  # B,G,R order
+    '''for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
+            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)'''
+    t5=time.time()
+    for i in [0,1,2]:
+        for n in range(len(subset)):
+            idx=int(subset[n][i])
+            if int(subset[n][i])!=-1:
+                cv2.circle(canvas, all_peaks[i][idx-all_peaks[i][0][3]][0:2], 4, colors[i], thickness=-1)
 
     stickwidth = 4
 
@@ -291,7 +296,7 @@ if __name__ == '__main__':
     # Video writer
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_output,fourcc, output_fps, (input_image.shape[1], input_image.shape[0]))
+    out = cv2.VideoWriter(video_output,fourcc, output_fps, (750, 480))
 
     i = 0 # default is 0
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
@@ -300,12 +305,12 @@ if __name__ == '__main__':
             tic = time.time()
 
             # generate image with body parts
+            input_image_test=cv2.resize(input_image,(750,480),interpolation=cv2.INTER_CUBIC)
             canvas = process(input_image, params, model_params)
 
             print('Processing frame: ', i)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
-
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
