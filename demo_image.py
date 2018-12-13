@@ -8,10 +8,10 @@ import numpy as np
 import util
 from config_reader import config_reader
 from scipy.ndimage.filters import gaussian_filter
-
+import tensorflow.contrib.tensorrt as trt
 from model.cmu_model_mobilenet import get_testing_model
-
-
+import tensorflow as tf
+from keras import backend as K
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1,2],[2,3]]
 
@@ -21,6 +21,35 @@ mapIdx = [[2,3],[4,5]]
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
+def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True,input_names=None):
+    """
+    Freezes the state of a session into a pruned computation graph.
+
+    Creates a new computation graph where variable nodes are replaced by
+    constants taking their current value in the session. The new graph will be
+    pruned so subgraphs that are not necessary to compute the requested
+    outputs are removed.
+    @param session The TensorFlow session to be frozen.
+    @param keep_var_names A list of variable names that should not be frozen,
+                          or None to freeze all the variables in the graph.
+    @param output_names Names of the relevant graph outputs.
+    @param clear_devices Remove the device directives from the graph for better portability.
+    @return The frozen graph definition.
+    """
+    from tensorflow.python.framework.graph_util import convert_variables_to_constants
+    graph = session.graph
+    with graph.as_default():
+        freeze_var_names = list(set(v.op.name for v in tf.global_variables()).difference(keep_var_names or []))
+        output_names = output_names or []
+        output_names += [v.op.name for v in tf.global_variables()]
+        # Graph -> GraphDef ProtoBuf
+        input_graph_def = graph.as_graph_def()
+        if clear_devices:
+            for node in input_graph_def.node:
+                node.device = ""
+        frozen_graph = convert_variables_to_constants(session, input_graph_def,
+                                                      output_names, freeze_var_names)
+        return frozen_graph,output_names,input_names
 
 def process (input_image, params, model_params):
 
@@ -30,6 +59,36 @@ def process (input_image, params, model_params):
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
 
+    K.set_learning_phase(0)
+    # load model
+
+    # authors of original model don't use
+    # vgg normalization (subtracting mean) on input images
+    model = get_testing_model()
+    model.load_weights(keras_weights_file)
+    frozen_graph,output_names,input_names = freeze_session(K.get_session(),
+                                  output_names=[out.op.name for out in model.outputs],
+                                  input_names=[out.op.name for out in model.inputs])
+    #tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
+
+    trt_graph = trt.create_inference_graph(
+        input_graph_def=frozen_graph,
+        outputs=output_names,
+        max_batch_size=1,
+        max_workspace_size_bytes=1 << 25,
+        precision_mode='FP16',
+        minimum_segment_size=50
+    )
+
+    #with open('trt_model.pb', 'wb') as f:
+    #    f.write(trt_graph.SerializeToString())
+    tf_config = tf.ConfigProto()
+    tf_config.gpu_options.allow_growth = True
+    tf_sess = tf.Session(config=tf_config)
+    tf.import_graph_def(trt_graph, name='')
+    tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
+    tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0]+':0')
+    tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1]+':0')
     for m in range(len(multiplier)):
         scale = multiplier[m]
 
@@ -38,9 +97,11 @@ def process (input_image, params, model_params):
                                                           model_params['padValue'])
 
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
-
-        output_blobs = model.predict(input_img)
-
+        tf_paf, tf_heatmapt = tf_sess.run([tf_paf, tf_heatmap],
+                                            feed_dict={
+                                                tf_input: input_image[None, ...]
+                                                             })
+        output_blobs=[tf_paf,tf_heatmap]
         # extract outputs, resize, and remove padding
         heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
         heatmap = cv2.resize(heatmap, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
@@ -87,7 +148,7 @@ def process (input_image, params, model_params):
     connection_all = []
     special_k = []
     mid_num = 10
-    limit=[[40,10],[60,20]]
+    limit=[[60,10],[80,10]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
@@ -257,8 +318,8 @@ if __name__ == '__main__':
 
     # authors of original model don't use
     # vgg normalization (subtracting mean) on input images
-    model = get_testing_model()
-    model.load_weights(keras_weights_file)
+    #model = get_testing_model()
+    #model.load_weights(keras_weights_file)
 
     # load config
     params, model_params = config_reader()
