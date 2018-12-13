@@ -273,7 +273,7 @@ if __name__ == '__main__':
     # Output location
     output_path = 'videos/outputs/'
     output_format = '.mp4'
-    video_output = output_path + video + str(start_datetime) + output_format
+    video_output = video + str(start_datetime) + output_format
 
     # load model
     # authors of original model don't use
