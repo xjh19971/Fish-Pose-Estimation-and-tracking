@@ -51,7 +51,7 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
                                                       output_names, freeze_var_names)
         return frozen_graph,output_names,input_names
 
-def process (input_image, params, model_params):
+def process (input_image, params, model_params,tf_sess):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in params['scale_search']]
@@ -59,49 +59,21 @@ def process (input_image, params, model_params):
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
 
-    K.set_learning_phase(0)
-    # load model
 
-    # authors of original model don't use
-    # vgg normalization (subtracting mean) on input images
-    model = get_testing_model()
-    model.load_weights(keras_weights_file)
-    frozen_graph,output_names,input_names = freeze_session(K.get_session(),
-                                  output_names=[out.op.name for out in model.outputs],
-                                  input_names=[out.op.name for out in model.inputs])
-    #tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
-
-    trt_graph = trt.create_inference_graph(
-        input_graph_def=frozen_graph,
-        outputs=output_names,
-        max_batch_size=1,
-        max_workspace_size_bytes=1 << 25,
-        precision_mode='FP16',
-        minimum_segment_size=50
-    )
-
-    #with open('trt_model.pb', 'wb') as f:
-    #    f.write(trt_graph.SerializeToString())
-    tf_config = tf.ConfigProto()
-    tf_config.gpu_options.allow_growth = True
-    tf_sess = tf.Session(config=tf_config)
-    tf.import_graph_def(trt_graph, name='')
-    tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
-    tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0]+':0')
-    tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1]+':0')
     for m in range(len(multiplier)):
         scale = multiplier[m]
 
         imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
         imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
                                                           model_params['padValue'])
-
+        tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
+        tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
+        tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
         tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
                                             feed_dict={
-                                                tf_input: input_image[None, ...]
+                                                tf_input: input_img[None, ...]
                                                              })
-        tf_sess.close()
         output_blobs=[tf_paf,tf_heatmap]
         # extract outputs, resize, and remove padding
         heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
@@ -324,14 +296,38 @@ if __name__ == '__main__':
 
     # load config
     params, model_params = config_reader()
+    K.set_learning_phase(0)
+    # load model
 
+    # authors of original model don't use
+    # vgg normalization (subtracting mean) on input images
+    model = get_testing_model()
+    model.load_weights(keras_weights_file)
+    frozen_graph, output_names, input_names = freeze_session(K.get_session(),
+                                                             output_names=[out.op.name for out in model.outputs],
+                                                             input_names=[out.op.name for out in model.inputs])
+    # tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
+
+    trt_graph = trt.create_inference_graph(
+        input_graph_def=frozen_graph,
+        outputs=output_names,
+        max_batch_size=1,
+        max_workspace_size_bytes=1 << 25,
+        precision_mode='FP16',
+        minimum_segment_size=50
+    )
+    tf_config = tf.ConfigProto()
+    tf_config.gpu_options.allow_growth = True
+    tf_sess = tf.Session(config=tf_config)
+    tf.import_graph_def(trt_graph, name='')
+    # with open('trt_model.pb', 'wb') as f:
+    #    f.write(trt_graph.SerializeToString())
     # generate image with body parts
     tic = time.time()
-    canvas = process(input_image, params, model_params)
-
+    canvas = process(input_image, params, model_params,tf_sess)
     toc = time.time()
     print ('processing time is %.5f' % (toc - tic))
-
+    tf_sess.close()
     cv2.imwrite(output, canvas)
 
     cv2.destroyAllWindows()
