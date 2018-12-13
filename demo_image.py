@@ -97,10 +97,11 @@ def process (input_image, params, model_params):
                                                           model_params['padValue'])
 
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
-        tf_paf, tf_heatmapt = tf_sess.run([tf_paf, tf_heatmap],
+        tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
                                             feed_dict={
                                                 tf_input: input_image[None, ...]
                                                              })
+        tf_sess.close()
         output_blobs=[tf_paf,tf_heatmap]
         # extract outputs, resize, and remove padding
         heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
