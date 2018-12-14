@@ -31,8 +31,7 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 input_names=['input_1']
 output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
 
-reduce_them = mod1.get_function("reduce_them")
-mask_them=mod2.get_function("mask_them")
+
 def process (input_image, params, model_params,tf_sess):
 
     oriImg = input_image  # B,G,R order
