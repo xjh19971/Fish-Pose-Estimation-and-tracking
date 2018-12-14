@@ -3,9 +3,6 @@ import math
 import os
 import sys
 import time
-import pycuda.autoinit
-import pycuda.driver as drv
-
 
 
 
@@ -33,27 +30,7 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
 input_names=['input_1']
 output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
-from pycuda.compiler import SourceModule
-mod1 = SourceModule("""
-__global__ void reduce_them(float *dest, float *a, float *b)
-{
-  const int i = threadIdx.x;
-  dest[i] = a[i] - b[i];
-}
-""")
-mod2 = SourceModule("""
-__global__ void mask_them(int *dest, float *a, float *b)
-{
-    const int i = threadIdx.x;
-    if((i+1)%blockDim.x!=0)
-        if(a[i]>0&&a[i+1]<0&&b[i]>0&&b[i+1]<0)
-            dest[i]=1
-        else
-            dest[i]=0
-    else
-        dest[i]=0
-}
-""")
+
 reduce_them = mod1.get_function("reduce_them")
 mask_them=mod2.get_function("mask_them")
 def process (input_image, params, model_params,tf_sess):
@@ -106,18 +83,17 @@ def process (input_image, params, model_params,tf_sess):
     for part in [0,1,2]:
         map_ori = np.array(heatmap_avg[:, :, part]).astype(np.float32)
         #map = gaussian_filter(map_ori, sigma=3)
-        mapx=np.zeros_like(map_ori[1:,:])
-        mapy=np.zeros_like(map_ori[:,1:])
-        reduce_them(
-            drv.Out(mapx), drv.In(map_ori[1:,:]), drv.In(map_ori[:-1,:]),
-            block=(400, 1, 1), grid=(1, 1))
-        reduce_them(
-            drv.Out(mapy), drv.In(map_ori[:,1:]), drv.In(map_ori[:,:-1]),
-            block=(400, 1, 1), grid=(1, 1))
-        mapy=mapy.T
-        peaks_binary=np.zeros_like(mapx).astype(np.int)
-        mask_them(drv.Out(peaks_binary), drv.In(mapx), drv.In(mapy),
-            block=(400, 1, 1), grid=(1, 1))
+        a = np.array(map_ori[1:, :]).astype(np.float32)
+        b = np.array(map_ori[:-1, :]).astype(np.float32)
+        c = np.array(map_ori[:, 1:]).astype(np.float32)
+        d = np.array(map_ori[:, :-1]).astype(np.float32)
+        padx = np.zeros([1, 750])
+        pady = np.zeros([480, 1])
+        mapx = np.vstack((np.subtract(a, b), padx))
+        mapy = np.hstack((np.subtract(c, d), pady))
+        mask1 = np.vstack((np.logical_and(mapx[:-1, :] > 0, mapx[1:, :] < 0), padx))
+        mask2 = np.hstack((np.logical_and(mapy[:, :-1] > 0, mapy[:, 1:] < 0), pady))
+        peaks_binary = np.logical_and.reduce((mask1, mask2, map_ori > params['thre2']))
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
         peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
         id = range(peak_counter, peak_counter + len(peaks))
