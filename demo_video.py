@@ -7,13 +7,12 @@ import time
 import cv2
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
-
+import tensorflow as tf
 import util
 from config_reader import config_reader
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from model.cmu_model_mobilenet import get_testing_model
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
@@ -27,8 +26,9 @@ mapIdx = [[2,3],[4,5]]
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
-
-def process (input_image, params, model_params):
+input_names=['input_1']
+output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
+def process (input_image, params, model_params,tf_sess):
 
     oriImg = input_image  # B,G,R order
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in params['scale_search']]
@@ -45,8 +45,14 @@ def process (input_image, params, model_params):
                                                           model_params['padValue'])
 
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
-
-        output_blobs = model.predict(input_img)
+        tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
+        tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
+        tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
+        tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
+                                         feed_dict={
+                                             tf_input: input_img
+                                         })
+        output_blobs = [tf_paf, tf_heatmap]
 
         # extract outputs, resize, and remove padding
         heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
@@ -278,8 +284,6 @@ if __name__ == '__main__':
     # load model
     # authors of original model don't use
     # vgg normalization (subtracting mean) on input images
-    model = get_testing_model()
-    model.load_weights(keras_weights_file)
 
     # load config
     params, model_params = config_reader()
@@ -298,18 +302,32 @@ if __name__ == '__main__':
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output,fourcc, output_fps, (input_image.shape[1], input_image.shape[0]))
 
-    i = 0 # default is 0
-    while(cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i%frame_rate_ratio == 0:
+    tf_config = tf.ConfigProto()
+    tf_config.gpu_options.allow_growth = True
+    with tf.Graph().as_default():
+        output_graph_def = tf.GraphDef()
 
-            tic = time.time()
+        with open('tf_model.pb', "rb") as f:
+            output_graph_def.ParseFromString(f.read())
+            _ = tf.import_graph_def(output_graph_def, name="")
 
-            # generate image with body parts
-            canvas = process(input_image, params, model_params)
+        with tf.Session() as sess:
+            init = tf.global_variables_initializer()
+            sess.run(init)
 
-            print('Processing frame: ', i)
-            toc = time.time()
-            print ('processing time is %.5f' % (toc - tic))
-            out.write(canvas)
-        ret_val, input_image = cam.read()
-        i += 1
+            tf_sess = tf.Session(config=tf_config)
+            i = 0 # default is 0
+            while(cam.isOpened()) and ret_val == True and i < ending_frame:
+                if i%frame_rate_ratio == 0:
+
+                    tic = time.time()
+
+                    # generate image with body parts
+                    canvas = process(input_image, params, model_params)
+
+                    print('Processing frame: ', i)
+                    toc = time.time()
+                    print ('processing time is %.5f' % (toc - tic))
+                    out.write(canvas)
+                ret_val, input_image = cam.read()
+                i += 1
