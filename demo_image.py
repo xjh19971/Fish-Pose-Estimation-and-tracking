@@ -67,13 +67,14 @@ def process (input_image, params, model_params,tf_sess):
     peak_counter = 0
     for part in [0,1,2]:
         map_ori = heatmap_avg[:, :, part]
+        mapshape=map_ori.shape
         # map = gaussian_filter(map_ori, sigma=3)
         a = np.array(map_ori[1:, :]).astype(np.float32)
         b = np.array(map_ori[:-1, :]).astype(np.float32)
         c = np.array(map_ori[:, 1:]).astype(np.float32)
         d = np.array(map_ori[:, :-1]).astype(np.float32)
-        padx = np.zeros([1, 750])
-        pady = np.zeros([480, 1])
+        padx = np.zeros([1, mapshape[1]])
+        pady = np.zeros([mapshape[0], 1])
         mapx = np.vstack((np.subtract(a, b),padx))
         mapy = np.hstack((np.subtract(c, d),pady))
         mask1=np.vstack((np.logical_and(mapx[:-1,:]>0,mapx[1:,:]<0),padx))
