@@ -1,8 +1,9 @@
-import argparse
+
 import argparse
 import math
 import time
-
+import pycuda.autoinit
+import pycuda.driver as drv
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -19,7 +20,29 @@ mapIdx = [[2,3],[4,5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
-
+from pycuda.compiler import SourceModule
+mod1 = SourceModule("""
+__global__ void reduce_them(float *dest, float *a, float *b)
+{
+  const int i = threadIdx.x;
+  dest[i] = a[i] - b[i];
+}
+""")
+mod2 = SourceModule("""
+__global__ void mask_them(int *dest, float *a, float *b)
+{
+    const int i = threadIdx.x;
+    if((i+1)%blockDim.x!=0)
+        if(a[i]>0&&a[i+1]<0&&b[i]>0&&b[i+1]<0)
+            dest[i]=1
+        else
+            dest[i]=0
+    else
+        dest[i]=0
+}
+""")
+reduce_them = mod1.get_function("reduce_them")
+mask_them=mod2.get_function("mask_them")
 input_names=['input_1']
 output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
 def process (input_image, params, model_params,tf_sess):
@@ -29,14 +52,14 @@ def process (input_image, params, model_params,tf_sess):
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
-
-
+    t1 = time.time()
     for m in range(len(multiplier)):
         scale = multiplier[m]
 
         imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
         imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
                                                           model_params['padValue'])
+
         tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
         tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
         tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
@@ -62,25 +85,25 @@ def process (input_image, params, model_params,tf_sess):
 
         heatmap_avg = heatmap_avg + heatmap / len(multiplier)
         paf_avg = paf_avg + paf / len(multiplier)
-
+    t2 = time.time()
     all_peaks = []
     peak_counter = 0
 
     for part in [0,1,2]:
         map_ori = heatmap_avg[:, :, part]
-        map = gaussian_filter(map_ori, sigma=3)
-
-        map_left = np.zeros(map.shape)
-        map_left[1:, :] = map[:-1, :]
-        map_right = np.zeros(map.shape)
-        map_right[:-1, :] = map[1:, :]
-        map_up = np.zeros(map.shape)
-        map_up[:, 1:] = map[:, :-1]
-        map_down = np.zeros(map.shape)
-        map_down[:, :-1] = map[:, 1:]
-
-        peaks_binary = np.logical_and.reduce(
-            (map >= map_left, map >= map_right, map >= map_up, map >= map_down, map > params['thre1']))
+        # map = gaussian_filter(map_ori, sigma=3)
+        mapx = np.zeros_like(map_ori[1:, :])
+        mapy = np.zeros_like(map_ori[:, 1:])
+        reduce_them(
+            drv.Out(mapx), drv.In(map_ori[1:, :]), drv.In(map_ori[:-1, :]),
+            block=(400, 1, 1), grid=(1, 1))
+        reduce_them(
+            drv.Out(mapy), drv.In(map_ori[:, 1:]), drv.In(map_ori[:, :-1]),
+            block=(400, 1, 1), grid=(1, 1))
+        mapy = mapy.T
+        peaks_binary = np.zeros_like(mapx).astype(np.int)
+        mask_them(drv.Out(peaks_binary), drv.In(mapx), drv.In(mapy),
+                  block=(400, 1, 1), grid=(1, 1))
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
         peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
         id = range(peak_counter, peak_counter + len(peaks))
@@ -88,7 +111,7 @@ def process (input_image, params, model_params,tf_sess):
 
         all_peaks.append(peaks_with_score_and_id)
         peak_counter += len(peaks)
-
+    t3 = time.time()
     connection_all = []
     special_k = []
     mid_num = 10
@@ -156,7 +179,7 @@ def process (input_image, params, model_params,tf_sess):
         else:
             special_k.append(k)
             connection_all.append([])
-
+    t4 = time.time()
     # last number in each row is the total parts number of that person
     # the second last number in each row is the score of the overall configuration
     subset = -1 * np.ones((0, 5))
@@ -211,7 +234,7 @@ def process (input_image, params, model_params,tf_sess):
         if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.2:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
-
+    t5 = time.time()
     canvas = cv2.imread(input_image)  # B,G,R order
     '''for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
@@ -241,7 +264,7 @@ def process (input_image, params, model_params,tf_sess):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return canvas
+    return canvas,t1,t2,t3,t4,t5
 
 
 if __name__ == '__main__':
@@ -249,9 +272,9 @@ if __name__ == '__main__':
     parser.add_argument('--image', type=str, required=True, help='input image')
     #parser.add_argument('--output', type=str, default='result.png', help='output image')
     #parser.add_argument('--model', type=str, default='model/keras/model.h5', help='path to the weights file')
-
     args = parser.parse_args()
     input_image = args.image
+
     #output = args.output
     #keras_weights_file = args.model
 
@@ -272,7 +295,7 @@ if __name__ == '__main__':
     # vgg normalization (subtracting mean) on input images
 
     tf_config = tf.ConfigProto()
-    #tf_config.gpu_options.allow_growth = True
+    tf_config.gpu_options.allow_growth = True
     with tf.Graph().as_default():
         output_graph_def = tf.GraphDef()
 
@@ -290,9 +313,12 @@ if __name__ == '__main__':
     #    f.write(trt_graph.SerializeToString())
     # generate image with body parts
             tic = time.time()
-            canvas = process(input_image, params, model_params,tf_sess)
+            canvas,t1,t2,t3,t4,t5 = process(input_image, params, model_params,tf_sess)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
+            print(
+                'processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
+                    toc - t5))
             tf_sess.close()
             cv2.imwrite('result.png', canvas)
 

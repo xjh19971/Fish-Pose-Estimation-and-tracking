@@ -3,6 +3,11 @@ import math
 import os
 import sys
 import time
+import pycuda.autoinit
+import pycuda.driver as drv
+
+
+
 
 import cv2
 import numpy as np
@@ -28,6 +33,29 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
 input_names=['input_1']
 output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
+from pycuda.compiler import SourceModule
+mod1 = SourceModule("""
+__global__ void reduce_them(float *dest, float *a, float *b)
+{
+  const int i = threadIdx.x;
+  dest[i] = a[i] - b[i];
+}
+""")
+mod2 = SourceModule("""
+__global__ void mask_them(int *dest, float *a, float *b)
+{
+    const int i = threadIdx.x;
+    if((i+1)%blockDim.x!=0)
+        if(a[i]>0&&a[i+1]<0&&b[i]>0&&b[i+1]<0)
+            dest[i]=1
+        else
+            dest[i]=0
+    else
+        dest[i]=0
+}
+""")
+reduce_them = mod1.get_function("reduce_them")
+mask_them=mod2.get_function("mask_them")
 def process (input_image, params, model_params,tf_sess):
 
     oriImg = input_image  # B,G,R order
@@ -35,6 +63,7 @@ def process (input_image, params, model_params,tf_sess):
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
+
 
     t1=time.time()
     for m in range(len(multiplier)):
@@ -75,20 +104,20 @@ def process (input_image, params, model_params,tf_sess):
     peak_counter = 0
     t2 = time.time()
     for part in [0,1,2]:
-        map_ori = heatmap_avg[:, :, part]
-        map = gaussian_filter(map_ori, sigma=3)
-
-        map_left = np.zeros(map.shape)
-        map_left[1:, :] = map[:-1, :]
-        map_right = np.zeros(map.shape)
-        map_right[:-1, :] = map[1:, :]
-        map_up = np.zeros(map.shape)
-        map_up[:, 1:] = map[:, :-1]
-        map_down = np.zeros(map.shape)
-        map_down[:, :-1] = map[:, 1:]
-
-        peaks_binary = np.logical_and.reduce(
-            (map >= map_left, map >= map_right, map >= map_up, map >= map_down, map > params['thre1']))
+        map_ori = np.array(heatmap_avg[:, :, part]).astype(np.float32)
+        #map = gaussian_filter(map_ori, sigma=3)
+        mapx=np.zeros_like(map_ori[1:,:])
+        mapy=np.zeros_like(map_ori[:,1:])
+        reduce_them(
+            drv.Out(mapx), drv.In(map_ori[1:,:]), drv.In(map_ori[:-1,:]),
+            block=(400, 1, 1), grid=(1, 1))
+        reduce_them(
+            drv.Out(mapy), drv.In(map_ori[:,1:]), drv.In(map_ori[:,:-1]),
+            block=(400, 1, 1), grid=(1, 1))
+        mapy=mapy.T
+        peaks_binary=np.zeros_like(mapx).astype(np.int)
+        mask_them(drv.Out(peaks_binary), drv.In(mapx), drv.In(mapy),
+            block=(400, 1, 1), grid=(1, 1))
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
         peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
         id = range(peak_counter, peak_counter + len(peaks))
