@@ -323,7 +323,7 @@ if __name__ == '__main__':
                     tic = time.time()
 
                     # generate image with body parts
-                    canvas = process(input_image, params, model_params)
+                    canvas = process(input_image, params, model_params,tf_sess)
 
                     print('Processing frame: ', i)
                     toc = time.time()
