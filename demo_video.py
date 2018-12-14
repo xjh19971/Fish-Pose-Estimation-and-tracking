@@ -251,7 +251,7 @@ def process (input_image, params, model_params,tf_sess):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return canvas
+    return canvas,t1,t2,t3,t4,t5
 
 
 if __name__ == '__main__':
@@ -323,11 +323,12 @@ if __name__ == '__main__':
                     tic = time.time()
 
                     # generate image with body parts
-                    canvas = process(input_image, params, model_params,tf_sess)
+                    canvas,t1,t2,t3,t4,t5 = process(input_image, params, model_params,tf_sess)
 
                     print('Processing frame: ', i)
                     toc = time.time()
                     print ('processing time is %.5f' % (toc - tic))
+                    print('processing time is '+str(t1-tic)+str(t2-t1)+str(t3-t2)+str(t4-t3)+str(t5-t4)+str(toc-t5))
                     out.write(canvas)
                 ret_val, input_image = cam.read()
                 i += 1
