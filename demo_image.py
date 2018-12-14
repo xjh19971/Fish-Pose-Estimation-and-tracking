@@ -1,17 +1,16 @@
-import os
-import sys
 import argparse
-import cv2
+import argparse
 import math
 import time
+
+import cv2
 import numpy as np
+import tensorflow as tf
+from scipy.ndimage.filters import gaussian_filter
+
 import util
 from config_reader import config_reader
-from scipy.ndimage.filters import gaussian_filter
-import tensorflow.contrib.tensorrt as trt
-from model.cmu_model_mobilenet import get_testing_model
-import tensorflow as tf
-from keras import backend as K
+
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1,2],[2,3]]
 
@@ -21,36 +20,8 @@ mapIdx = [[2,3],[4,5]]
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
-def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True,input_names=None):
-    """
-    Freezes the state of a session into a pruned computation graph.
-
-    Creates a new computation graph where variable nodes are replaced by
-    constants taking their current value in the session. The new graph will be
-    pruned so subgraphs that are not necessary to compute the requested
-    outputs are removed.
-    @param session The TensorFlow session to be frozen.
-    @param keep_var_names A list of variable names that should not be frozen,
-                          or None to freeze all the variables in the graph.
-    @param output_names Names of the relevant graph outputs.
-    @param clear_devices Remove the device directives from the graph for better portability.
-    @return The frozen graph definition.
-    """
-    from tensorflow.python.framework.graph_util import convert_variables_to_constants
-    graph = session.graph
-    with graph.as_default():
-        freeze_var_names = list(set(v.op.name for v in tf.global_variables()).difference(keep_var_names or []))
-        output_names = output_names or []
-        output_names += [v.op.name for v in tf.global_variables()]
-        # Graph -> GraphDef ProtoBuf
-        input_graph_def = graph.as_graph_def()
-        if clear_devices:
-            for node in input_graph_def.node:
-                node.device = ""
-        frozen_graph = convert_variables_to_constants(session, input_graph_def,
-                                                      output_names, freeze_var_names)
-        return frozen_graph,output_names,input_names
-
+input_names=['input_1']
+output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
 def process (input_image, params, model_params,tf_sess):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
@@ -72,7 +43,7 @@ def process (input_image, params, model_params,tf_sess):
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
         tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
                                             feed_dict={
-                                                tf_input: input_img[None, ...]
+                                                tf_input: input_img
                                                              })
         output_blobs=[tf_paf,tf_heatmap]
         # extract outputs, resize, and remove padding
@@ -276,14 +247,13 @@ def process (input_image, params, model_params,tf_sess):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--image', type=str, required=True, help='input image')
-    parser.add_argument('--output', type=str, default='result.png', help='output image')
-    parser.add_argument('--model', type=str, default='model/keras/model.h5', help='path to the weights file')
+    #parser.add_argument('--output', type=str, default='result.png', help='output image')
+    #parser.add_argument('--model', type=str, default='model/keras/model.h5', help='path to the weights file')
 
     args = parser.parse_args()
     input_image = args.image
-    output = args.output
-    keras_weights_file = args.model
-
+    #output = args.output
+    #keras_weights_file = args.model
 
     print('start processing...')
 
@@ -296,41 +266,34 @@ if __name__ == '__main__':
 
     # load config
     params, model_params = config_reader()
-    K.set_learning_phase(0)
     # load model
 
     # authors of original model don't use
     # vgg normalization (subtracting mean) on input images
-    model = get_testing_model()
-    model.load_weights(keras_weights_file)
-    frozen_graph, output_names, input_names = freeze_session(K.get_session(),
-                                                             output_names=[out.op.name for out in model.outputs],
-                                                             input_names=[out.op.name for out in model.inputs])
-    # tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
 
-    trt_graph = trt.create_inference_graph(
-        input_graph_def=frozen_graph,
-        outputs=output_names,
-        max_batch_size=1,
-        max_workspace_size_bytes=1 << 25,
-        precision_mode='FP16',
-        minimum_segment_size=50
-    )
     tf_config = tf.ConfigProto()
-    tf_config.gpu_options.allow_growth = True
-    tf_sess = tf.Session(config=tf_config)
-    tf.import_graph_def(trt_graph, name='')
+    #tf_config.gpu_options.allow_growth = True
+    with tf.Graph().as_default():
+        output_graph_def = tf.GraphDef()
+
+        with open('tf_model.pb', "rb") as f:
+            output_graph_def.ParseFromString(f.read())
+            _ = tf.import_graph_def(output_graph_def, name="")
+
+        with tf.Session() as sess:
+            init = tf.global_variables_initializer()
+            sess.run(init)
+
+            tf_sess = tf.Session(config=tf_config)
+
     # with open('trt_model.pb', 'wb') as f:
     #    f.write(trt_graph.SerializeToString())
     # generate image with body parts
-    tic = time.time()
-    canvas = process(input_image, params, model_params,tf_sess)
-    toc = time.time()
-    print ('processing time is %.5f' % (toc - tic))
-    tf_sess.close()
-    cv2.imwrite(output, canvas)
-
-    cv2.destroyAllWindows()
-
+            tic = time.time()
+            canvas = process(input_image, params, model_params,tf_sess)
+            toc = time.time()
+            print ('processing time is %.5f' % (toc - tic))
+            tf_sess.close()
+            cv2.imwrite('result.png', canvas)
 
 
