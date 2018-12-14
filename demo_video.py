@@ -331,3 +331,4 @@ if __name__ == '__main__':
                     out.write(canvas)
                 ret_val, input_image = cam.read()
                 i += 1
+        tf_sess.close()
