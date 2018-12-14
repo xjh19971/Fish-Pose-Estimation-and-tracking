@@ -67,11 +67,13 @@ if __name__ == '__main__':
                                                              output_names=[out.op.name for out in model.outputs],
                                                              input_names=[out.op.name for out in model.inputs])
     tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
-    '''    trt_graph = trt.create_inference_graph(
+    trt_graph = trt.create_inference_graph(
         input_graph_def=frozen_graph,
         outputs=output_names,
         max_batch_size=1,
         max_workspace_size_bytes=1 << 25,
         precision_mode='FP16',
         minimum_segment_size=50
-    )'''
+    )
+    tf.train.write_graph(trt_graph, ".", "tf_model.pb", as_text=False)
+
