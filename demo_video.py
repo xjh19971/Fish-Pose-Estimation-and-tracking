@@ -27,7 +27,9 @@ mapIdx = [[2,3],[4,5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
-
+filt=   [[0.0751,    0.1238 ,   0.0751,],
+    [0.1238,    0.2042,    0.1238,],
+    [0.0751,    0.1238 ,   0.0751,]]
 input_names=['input_1']
 output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
 
@@ -337,19 +339,30 @@ if __name__ == '__main__':
             sess1 = tf.Session(config=tf_config)
     with sess2.as_default():
         with sess2.graph.as_default():
-            map_ori=tf.placeholder(tf.float32,shape=[None,None],name='input')
-            mapshape = tf.shape(map_ori)
+            map_ori2=tf.placeholder(tf.float32,shape=[None,None],name='input')
+            mapshape = tf.shape(map_ori2)
+            w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
+            map_ori1=tf.expand_dims(map_ori2,-1)
+            map_ori=tf.nn.conv2d(map_ori1,w,1,'SAME')
             # map = gaussian_filter(map_ori, sigma=3)
+            a=map_ori[1:, :]
+            b=map_ori[:-1, :]
+            c=map_ori[:,1:]
+            d=map_ori[:, :-1]
             padx = tf.zeros([1, mapshape[1]])
             pady = tf.zeros([mapshape[0], 1])
-            mapx = tf.concat([np.subtract(map_ori[1:, :], map_ori[:-1, :]), padx],0)
-            mapy = tf.concat([np.subtract(map_ori[:,1:], map_ori[:, :-1]), pady],1)
+            mapx = tf.concat([np.subtract(a, b), padx],0)
+            mapy = tf.concat([np.subtract(c, d), pady],1)
             padxb = tf.cast(padx,dtype=tf.bool)
             padyb = tf.cast(pady, dtype=tf.bool)
-            A = tf.expand_dims(tf.concat([mapx[:-1, :] > 0,padxb],0),-1)
-            B = tf.expand_dims(tf.concat([mapx[1:, :] < 0,padxb],0),-1)
-            C = tf.expand_dims(tf.concat([mapy[:, :-1] > 0,padyb],1),-1)
-            D = tf.expand_dims(tf.concat([mapy[:, 1:] < 0,padyb],1),-1)
+            tempa=mapx[:-1, :] > 0
+            tempb=mapx[1:, :] < 0
+            tempc=mapy[:, :-1] > 0
+            tempd=mapy[:, 1:] < 0
+            A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
+            B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
+            C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
+            D = tf.expand_dims(tf.concat([tempd,padyb],1),-1)
             E = tf.expand_dims(map_ori>0.05,-1)
             mask= tf.reduce_all(tf.concat([A,B,C,D,E],2),2,name='output')
             #mask1 = tf.concat([tf.cond(tf.cond(mapx[:-1, :] > 0,lambda :1,lambda :0) and tf.cond(mapx[1:, :] < 0,lambda :1,lambda :0),lambda :1,lambda :0), padx],0)
