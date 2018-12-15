@@ -206,12 +206,12 @@ def get_training_model(weight_decay):
 
     # stage 1 - branch 1 (PAF)
     stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, weight_decay)
-    w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1,True)
-
+    #w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1,True)
+    w1=stage1_branch1_out
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
-    w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2,False)
-
+    #w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2,False)
+    w2=stage2_branch1_out
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
     outputs.append(w1)
@@ -221,12 +221,12 @@ def get_training_model(weight_decay):
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
         stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
-        w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1,is_weight=True)
-
+        #w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1,is_weight=True)
+        w1=stageT_branch1_out
         # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
-        w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2,is_weight=False)
-
+        #w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2,is_weight=False)
+        w2=stageT_branch2_out
         outputs.append(w1)
         outputs.append(w2)
 
