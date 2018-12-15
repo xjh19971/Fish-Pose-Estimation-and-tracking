@@ -90,7 +90,7 @@ def conv_block(inputs, filters, weight_decay, name, kernel=(3, 3), strides=(1, 1
 def relu(x): return Activation('relu')(x)
 
 
-def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
+def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 3,change=False):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
     if change is False:
