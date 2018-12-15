@@ -2,16 +2,12 @@ import math
 import os
 import re
 import sys
-import pandas
 from functools import partial
 
 import keras.backend as K
-from keras.applications.vgg19 import VGG19
-from keras.applications.resnet50 import ResNet50
-from keras.applications.mobilenet_v2 import MobileNetV2
+import pandas
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, CSVLogger, TensorBoard
 from keras.layers.convolutional import Conv2D
-from keras.utils.data_utils import get_file
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
