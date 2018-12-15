@@ -84,35 +84,13 @@ def process (input_image, params, model_params,tf_sess):
     all_peaks = []
     peak_counter = 0
     t2 = time.time()
+    input = sess2.graph.get_tensor_by_name('input:0')
+    output = sess2.graph.get_tensor_by_name('output:0')
+    peaks_binary = sess2.run(output, feed_dict={input: heatmap_avg[:, :, :]})
     for part in [0,1,2]:
-        '''
-        map_ori = np.array(heatmap_avg[:, :, part]).astype(np.float32)
-        mapshape=map_ori.shape
-        # map = gaussian_filter(map_ori, sigma=3)
-        a = np.array(map_ori[1:, :]).astype(np.float32)
-        b = np.array(map_ori[:-1, :]).astype(np.float32)
-        c = np.array(map_ori[:, 1:]).astype(np.float32)
-        d = np.array(map_ori[:, :-1]).astype(np.float32)
-        padx = np.zeros([1, mapshape[1]])
-        pady = np.zeros([mapshape[0], 1])
-        mapx = np.vstack((np.subtract(a, b), padx))
-        mapy = np.hstack((np.subtract(c, d), pady))
-        mask1 = np.vstack((np.logical_and(mapx[:-1, :] > 0, mapx[1:, :] < 0), padx))
-        mask2 = np.hstack((np.logical_and(mapy[:, :-1] > 0, mapy[:, 1:] < 0), pady))
-        peaks_binary = np.logical_and.reduce((mask1, mask2, map_ori > params['thre2']))
+        #,mapx[1:,:]<0,mapy[:,:-1]>0,mapy[:,1:]>0,map_ori>params['thre2']
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
-        peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
-        id = range(peak_counter, peak_counter + len(peaks))
-        peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
-
-        all_peaks.append(peaks_with_score_and_id)
-        peak_counter += len(peaks)'''
-        input = sess2.graph.get_tensor_by_name('input:0')
-        output = sess2.graph.get_tensor_by_name('output:0')
-        peaks_binary = sess2.run(output, feed_dict={input: heatmap_avg[:, :, part]})
-        # ,mapx[1:,:]<0,mapy[:,:-1]>0,mapy[:,1:]>0,map_ori>params['thre2']
-        peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
-        peaks_with_score = [x + (heatmap_avg[x[1], x[0], part],) for x in peaks]
+        peaks_with_score = [x + (heatmap_avg[x[1], x[0],part],) for x in peaks]
         id = range(peak_counter, peak_counter + len(peaks))
         peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
 
@@ -339,36 +317,37 @@ if __name__ == '__main__':
             sess1 = tf.Session(config=tf_config)
     with sess2.as_default():
         with sess2.graph.as_default():
-            map_ori2=tf.placeholder(tf.float32,shape=[None,None],name='input')
-            mapshape = tf.shape(map_ori2)
-            w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
-            map_ori1=tf.expand_dims(map_ori2,-1)
-            map_ori=tf.nn.conv2d(map_ori1,w,[1,1],'SAME')
-            # map = gaussian_filter(map_ori, sigma=3)
-            a=map_ori[1:, :]
-            b=map_ori[:-1, :]
-            c=map_ori[:,1:]
-            d=map_ori[:, :-1]
-            padx = tf.zeros([1, mapshape[1]])
-            pady = tf.zeros([mapshape[0], 1])
-            mapx = tf.concat([np.subtract(a, b), padx],0)
-            mapy = tf.concat([np.subtract(c, d), pady],1)
-            padxb = tf.cast(padx,dtype=tf.bool)
+            map_ori = tf.placeholder(tf.float32, shape=[None, None, 3], name='input')
+            mapshape = tf.shape(map_ori)
+            '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
+            map_ori2 = tf.expand_dims(map_ori3, -1)
+            map_ori1 = tf.expand_dims(map_ori2, 1)
+            map_ori = tf.nn.conv2d(map_ori1, w, [1, 1], 'SAME')'''
+            a = map_ori[1:, :]
+            b = map_ori[:-1, :]
+            c = map_ori[:, 1:]
+            d = map_ori[:, :-1]
+            padx = tf.zeros([1, mapshape[1], 3])
+            pady = tf.zeros([mapshape[0], 1, 3])
+            mapx = tf.concat([np.subtract(a, b), padx], 0)
+            mapy = tf.concat([np.subtract(c, d), pady], 1)
+            padxb = tf.cast(padx, dtype=tf.bool)
             padyb = tf.cast(pady, dtype=tf.bool)
-            tempa=mapx[:-1, :] > 0
-            tempb=mapx[1:, :] < 0
-            tempc=mapy[:, :-1] > 0
-            tempd=mapy[:, 1:] < 0
-            A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
-            B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
-            C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
-            D = tf.expand_dims(tf.concat([tempd,padyb],1),-1)
-            E = tf.expand_dims(map_ori>0.05,-1)
-            mask= tf.reduce_all(tf.concat([A,B,C,D,E],2),2,name='output')
-            #mask1 = tf.concat([tf.cond(tf.cond(mapx[:-1, :] > 0,lambda :1,lambda :0) and tf.cond(mapx[1:, :] < 0,lambda :1,lambda :0),lambda :1,lambda :0), padx],0)
-            #mask2 = tf.concat([tf.cond(mapy[:, :-1] > 0 and mapy[:, 1:] < 0,1,0), pady],1)
-            #peaks_binary = tf.cond(mask1 and mask2 and map_ori>0.05,1,0)
-            #output = tf.Variable(peaks_binary,validate_shape=False,name='output')
+            tempa = mapx[:-1, :] > 0
+            tempb = mapx[1:, :] < 0
+            tempc = mapy[:, :-1] > 0
+            tempd = mapy[:, 1:] < 0
+            tempe = map_ori > 0.05
+            A = tf.expand_dims(tf.concat([tempa, padxb], 0), -1)
+            B = tf.expand_dims(tf.concat([tempb, padxb], 0), -1)
+            C = tf.expand_dims(tf.concat([tempc, padyb], 1), -1)
+            D = tf.expand_dims(tf.concat([tempd, padyb], 1), -1)
+            E = tf.expand_dims(tempe, -1)
+            mask = tf.reduce_all(tf.concat([A, B, C, D, E], 3), 3, name='output')
+            # mask1 = tf.concat([tf.cond(tf.cond(mapx[:-1, :] > 0,lambda :1,lambda :0) and tf.cond(mapx[1:, :] < 0,lambda :1,lambda :0),lambda :1,lambda :0), padx],0)
+            # mask2 = tf.concat([tf.cond(mapy[:, :-1] > 0 and mapy[:, 1:] < 0,1,0), pady],1)
+            # peaks_binary = tf.cond(mask1 and mask2 and map_ori>0.05,1,0)
+            # output = tf.Variable(peaks_binary,validate_shape=False,name='output')
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
