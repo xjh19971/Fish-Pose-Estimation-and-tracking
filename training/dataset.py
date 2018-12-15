@@ -28,7 +28,7 @@ AUGMENTORS_LIST = [
                  scale_max=1.1,
                  target_dist=0.6,
                  interp=cv2.INTER_CUBIC),
-        RotateAug(rotate_max_deg=40,
+        RotateAug(rotate_max_deg=180,
                   interp=cv2.INTER_CUBIC,
                   border=cv2.BORDER_CONSTANT,
                   border_value=(128, 128, 128), mask_border_val=1),
