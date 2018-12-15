@@ -91,27 +91,46 @@ def conv_block(inputs, filters, weight_decay, name, kernel=(3, 3), strides=(1, 1
 def relu(x): return Activation('relu')(x)
 
 
-def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6):
+def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
-    x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
+    if change is False:
+        x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
                 kernel_regularizer=l2(weight_decay))(x)
-    x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
-    x1 = Relu6(x1)
-    x1 = DepthwiseConv2D((ks,ks),
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
+        x1 = Relu6(x1)
+        x1 = DepthwiseConv2D((ks,ks),
                          padding='same',
                          depth_multiplier=1,
                          strides=1,
                          use_bias=False,
                          kernel_regularizer=l2(weight_decay),
                         )(x1)
-    x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
-    x1 = Relu6(x1)
-    x1 = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
+        x1 = Relu6(x1)
+        x1 = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
                 kernel_regularizer=l2(weight_decay))(x1)
-    x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x1)
-    x = add([x, x1])
+        x = add([x, x1])
+    else:
+        x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
+                    kernel_regularizer=l2(weight_decay))(x)
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
+        x1 = Relu6(x1)
+        x1 = DepthwiseConv2D((ks, ks),
+                             padding='same',
+                             depth_multiplier=1,
+                             strides=1,
+                             use_bias=False,
+                             kernel_regularizer=l2(weight_decay),
+                             )(x1)
+        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
+        x1 = Relu6(x1)
+        x1 = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
+                    kernel_regularizer=l2(weight_decay))(x1)
+        x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
+                                )(x1)
 
     return x
 
@@ -134,22 +153,22 @@ def vgg_block(x, weight_decay):
 
 def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
-    x = conv(x, 128, 3, "Mconv1_stage1_L%d" % branch, weight_decay)
+    x = conv(x, 128, 3, "Mconv1_stage1_L%d" % branch, weight_decay,change=True)
     x = relu(x)
     x = conv(x, 128, 3, "Mconv2_stage1_L%d" % branch, weight_decay)
     x = relu(x)
     x = conv(x, 128, 3, "Mconv3_stage1_L%d" % branch, weight_decay)
     x = relu(x)
-    x = conv(x, 512, 1, "Mconv4_stage1_L%d" % branch, weight_decay)
+    x = conv(x, 512, 1, "Mconv4_stage1_L%d" % branch, weight_decay,change=True)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay)
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True)
 
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     # Block 1
-    x = conv(x, 128, 7, "Mconv1_stage%d_L%d" % (stage, branch), weight_decay)
+    x = conv(x, 128, 7, "Mconv1_stage%d_L%d" % (stage, branch), weight_decay,change=True)
     x = relu(x)
     x = conv(x, 128, 7, "Mconv2_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
@@ -161,7 +180,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = relu(x)
     x = conv(x, 128, 1, "Mconv6_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay)
+    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True)
 
     return x
 
