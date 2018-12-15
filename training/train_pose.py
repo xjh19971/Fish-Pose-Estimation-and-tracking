@@ -16,7 +16,7 @@ from keras.utils.data_utils import get_file
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 #from model.cmu_model_resnet import get_training_model
-from model.cmu_model_mobilenet import get_training_model
+from model.cmu_model_mobilenet_improve import get_training_model
 from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 

@@ -134,34 +134,34 @@ def vgg_block(x, weight_decay):
 
 def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
-    x = conv(x, 128, 3, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv1_stage1_L%d" % branch, weight_decay)
     x = relu(x)
-    x = conv(x, 128, 3, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv2_stage1_L%d" % branch, weight_decay)
     x = relu(x)
-    x = conv(x, 128, 3, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv3_stage1_L%d" % branch, weight_decay)
     x = relu(x)
-    x = conv(x, 512, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 512, 1, "Mconv4_stage1_L%d" % branch, weight_decay)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay)
 
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     # Block 1
-    x = conv(x, 128, 7, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 7, "Mconv1_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 7, "Mconv2_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 7, "Mconv3_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 7, "Mconv4_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 7, "Mconv5_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, 128, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 1, "Mconv6_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay)
 
     return x
 
