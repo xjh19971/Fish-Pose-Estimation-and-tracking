@@ -211,7 +211,7 @@ def get_training_model(weight_decay):
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
     #w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2,False)
-    w2=stage2_branch1_out
+    w2=stage1_branch1_out
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
     outputs.append(w1)
