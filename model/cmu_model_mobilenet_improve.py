@@ -111,8 +111,8 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
                 kernel_regularizer=l2(weight_decay))(x)
     x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x)
-    x = Relu6(x)
     x= add([input,x])
+    x = Relu6(x)
     return x
 
 
