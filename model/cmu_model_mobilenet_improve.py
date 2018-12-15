@@ -138,6 +138,7 @@ def vgg_block(x, weight_decay):
 
 def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
+    stage=1
     x = conv(x, 64, 3, "Mconv1_stage1_L%d" % branch, weight_decay,change=True)
     x = relu(x)
     x = conv(x, 64, 3, "Mconv2_stage1_L%d" % branch, weight_decay)
@@ -146,7 +147,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = relu(x)
     x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, weight_decay,change=True)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,lname="weight_stage%d_L%d" % (1, branch))
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,lname="weight_stage%d_L%d" % (stage, branch))
 
     return x
 
