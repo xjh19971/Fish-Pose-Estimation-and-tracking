@@ -81,25 +81,28 @@ def process (input_image, params, model_params,tf_sess):
         heatmap_avg = heatmap_avg + heatmap / len(multiplier)
         paf_avg = paf_avg + paf / len(multiplier)
 
-    all_peaks = []
-    peak_counter = 0
     t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
-    output = sess2.graph.get_tensor_by_name('output:0')
-    peaks_binary = sess2.run(output, feed_dict={input: heatmap_avg[:, :, 0:3]})
-    for part in [0,1,2]:
-        #,mapx[1:,:]<0,mapy[:,:-1]>0,mapy[:,1:]>0,map_ori>params['thre2']
-        peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
-        peaks_with_score = [x + (heatmap_avg[x[1], x[0],part],) for x in peaks]
-        id = range(peak_counter, peak_counter + len(peaks))
-        peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
+    output0 = sess2.graph.get_tensor_by_name('output0:0')
+    output0 = sess2.run(output0, feed_dict={input: heatmap_avg[:, :, 0:3]})
+    all_peaks=[]
+    check=0
+    temp=output0[output0[:, 2] == 0].tolist()
+    temp=[[x[0],x[1],x[3],temp.index(x)+check] for x in temp]
+    check= check+len(temp)
+    all_peaks.append(temp)
+    temp = output0[output0[:, 2] == 1].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    check = check+len(temp)
+    all_peaks.append(temp)
+    temp = output0[output0[:, 2] == 2].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    all_peaks.append(temp)
 
-        all_peaks.append(peaks_with_score_and_id)
-        peak_counter += len(peaks)
     t3 = time.time()
     connection_all = []
     special_k = []
-    mid_num = 10
+    mid_num = 5
     limit=[[60,10],[80,10]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
@@ -230,7 +233,7 @@ def process (input_image, params, model_params,tf_sess):
         for n in range(len(subset)):
             idx=int(subset[n][i])
             if int(subset[n][i])!=-1:
-                cv2.circle(canvas, all_peaks[i][idx-all_peaks[i][0][3]][0:2], 4, colors[i], thickness=-1)
+                cv2.circle(canvas,tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2])), 4, colors[i], thickness=-1)
 
     stickwidth = 4
 
@@ -317,7 +320,7 @@ if __name__ == '__main__':
             sess1 = tf.Session(config=tf_config)
     with sess2.as_default():
         with sess2.graph.as_default():
-            map_ori = tf.placeholder(tf.float32, shape=[None, None, 3], name='input')
+            map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, 3], name='input'),perm=[1,0,2])
             mapshape = tf.shape(map_ori)
             '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
             map_ori2 = tf.expand_dims(map_ori3, -1)
@@ -325,29 +328,30 @@ if __name__ == '__main__':
             map_ori = tf.nn.conv2d(map_ori1, w, [1, 1], 'SAME')'''
             a = map_ori[1:, :]
             b = map_ori[:-1, :]
-            c = map_ori[:, 1:]
+            c = map_ori[:,1:]
             d = map_ori[:, :-1]
-            padx = tf.zeros([1, mapshape[1], 3])
-            pady = tf.zeros([mapshape[0], 1, 3])
-            mapx = tf.concat([np.subtract(a, b), padx], 0)
-            mapy = tf.concat([np.subtract(c, d), pady], 1)
-            padxb = tf.cast(padx, dtype=tf.bool)
+            padx = tf.zeros([1, mapshape[1],3])
+            pady = tf.zeros([mapshape[0], 1,3])
+            mapx = tf.concat([np.subtract(a, b), padx],0)
+            mapy = tf.concat([np.subtract(c, d), pady],1)
+            padxb = tf.cast(padx,dtype=tf.bool)
             padyb = tf.cast(pady, dtype=tf.bool)
-            tempa = mapx[:-1, :] > 0
-            tempb = mapx[1:, :] < 0
-            tempc = mapy[:, :-1] > 0
-            tempd = mapy[:, 1:] < 0
-            tempe = map_ori > 0.05
-            A = tf.expand_dims(tf.concat([tempa, padxb], 0), -1)
-            B = tf.expand_dims(tf.concat([tempb, padxb], 0), -1)
-            C = tf.expand_dims(tf.concat([tempc, padyb], 1), -1)
-            D = tf.expand_dims(tf.concat([tempd, padyb], 1), -1)
-            E = tf.expand_dims(tempe, -1)
-            mask = tf.reduce_all(tf.concat([A, B, C, D, E], 3), 3, name='output')
-            # mask1 = tf.concat([tf.cond(tf.cond(mapx[:-1, :] > 0,lambda :1,lambda :0) and tf.cond(mapx[1:, :] < 0,lambda :1,lambda :0),lambda :1,lambda :0), padx],0)
-            # mask2 = tf.concat([tf.cond(mapy[:, :-1] > 0 and mapy[:, 1:] < 0,1,0), pady],1)
-            # peaks_binary = tf.cond(mask1 and mask2 and map_ori>0.05,1,0)
-            # output = tf.Variable(peaks_binary,validate_shape=False,name='output')
+            tempa=mapx[:-1, :] > 0
+            tempb=mapx[1:, :] < 0
+            tempc=mapy[:, :-1] > 0
+            tempd=mapy[:, 1:] < 0
+            tempe=map_ori>0.05
+            A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
+            B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
+            C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
+            D = tf.expand_dims(tf.concat([tempd,padyb],1),-1)
+            E = tf.expand_dims(tempe,-1)
+            mask= tf.reduce_all(tf.concat([A,B,C,D,E],3),3)
+            xy=tf.where(mask)
+            floatxy=tf.cast(xy,tf.float32)
+            score=tf.expand_dims(tf.cast(tf.gather_nd(map_ori,xy),dtype=tf.float32),1)
+            output=tf.concat([floatxy,score],1,name='output0')
+            #output0=tf.concat([xy])
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
