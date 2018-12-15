@@ -115,7 +115,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,n
                             )(x)
     if name is not None:
         x = add([input, x],name=name)
-    else
+    else:
         x = add([input, x])
     return x
 
@@ -146,7 +146,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = relu(x)
     x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, weight_decay,change=True)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,name="weight_stage%d_L%d" % (stage, branch))
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,name="weight_stage%d_L%d" % (1, branch))
 
     return x
 
