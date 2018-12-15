@@ -93,11 +93,11 @@ def relu(x): return Activation('relu')(x)
 def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
-    '''if change is False:
+    if change is False:
         input = x
     else:
         input = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
-                kernel_regularizer=l2(weight_decay))(x)'''
+                kernel_regularizer=l2(weight_decay))(x)
     x = DepthwiseConv2D((ks, ks),
                          padding='same',
                          depth_multiplier=1,
@@ -112,7 +112,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
     x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x)
     x = Relu6(x)
-
+    x= add([input,x])
     return x
 
 
