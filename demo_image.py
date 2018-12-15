@@ -73,7 +73,7 @@ def process (input_image, params, model_params,tf_sess,sess2):
     peak_counter = 0
     input = sess2.graph.get_tensor_by_name('input:0')
     output = sess2.graph.get_tensor_by_name('output:0')
-    peaks_binary = sess2.run(output, feed_dict={input: heatmap_avg[:, :, :]})
+    peaks_binary = sess2.run(output, feed_dict={input: heatmap_avg[:, :, 0:2]})
     for part in [0,1,2]:
         #,mapx[1:,:]<0,mapy[:,:-1]>0,mapy[:,1:]>0,map_ori>params['thre2']
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
