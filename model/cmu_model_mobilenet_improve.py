@@ -90,7 +90,7 @@ def conv_block(inputs, filters, weight_decay, name, kernel=(3, 3), strides=(1, 1
 def relu(x): return Activation('relu')(x)
 
 
-def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,name=None):
+def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,lname=None):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
     if change is False:
@@ -113,8 +113,8 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,n
                 kernel_regularizer=l2(weight_decay))(x)
     x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x)
-    if name is not None:
-        x = add([input, x],name=name)
+    if lname is not None:
+        x = add([input, x],name=lname)
     else:
         x = add([input, x])
     return x
