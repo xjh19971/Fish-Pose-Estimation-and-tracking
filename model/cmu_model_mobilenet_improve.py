@@ -95,43 +95,28 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
     if change is False:
-        x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
+        input = x
+    else:
+        input = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
                 kernel_regularizer=l2(weight_decay))(x)
-        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
-        x1 = Relu6(x1)
-        x1 = DepthwiseConv2D((ks,ks),
+    x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
+                kernel_regularizer=l2(weight_decay))(x)
+    x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
+    x1 = Relu6(x1)
+    x1 = DepthwiseConv2D((ks, ks),
                          padding='same',
                          depth_multiplier=1,
                          strides=1,
                          use_bias=False,
                          kernel_regularizer=l2(weight_decay),
-                        )(x1)
-        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
-        x1 = Relu6(x1)
-        x1 = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
+                         )(x1)
+    x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
+    x1 = Relu6(x1)
+    x1 = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
                 kernel_regularizer=l2(weight_decay))(x1)
-        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
+    x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x1)
-        x = add([x, x1])
-    else:
-        x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
-                    kernel_regularizer=l2(weight_decay))(x)
-        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
-        x1 = Relu6(x1)
-        x1 = DepthwiseConv2D((ks, ks),
-                             padding='same',
-                             depth_multiplier=1,
-                             strides=1,
-                             use_bias=False,
-                             kernel_regularizer=l2(weight_decay),
-                             )(x1)
-        x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
-        x1 = Relu6(x1)
-        x1 = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
-                    kernel_regularizer=l2(weight_decay))(x1)
-        x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
-                                )(x1)
-
+    x = add([input, x1])
     return x
 
 
