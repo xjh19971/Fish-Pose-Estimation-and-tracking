@@ -343,7 +343,7 @@ if __name__ == '__main__':
             mapshape = tf.shape(map_ori2)
             w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
             map_ori1=tf.expand_dims(map_ori2,-1)
-            map_ori=tf.nn.conv2d(map_ori1,w,1,'SAME')
+            map_ori=tf.nn.conv2d(map_ori1,w,[1,1],'SAME')
             # map = gaussian_filter(map_ori, sigma=3)
             a=map_ori[1:, :]
             b=map_ori[:-1, :]
