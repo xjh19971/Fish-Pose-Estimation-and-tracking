@@ -146,7 +146,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = relu(x)
     x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, weight_decay,change=True)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,name="weight_stage%d_L%d" % (1, branch))
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,lname="weight_stage%d_L%d" % (1, branch))
 
     return x
 
@@ -165,7 +165,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = relu(x)
     x = conv(x, 64, 1, "Mconv6_stage%d_L%d" % (stage, branch), weight_decay)
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True,name="weight_stage%d_L%d" % (stage, branch))
+    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True,lname="weight_stage%d_L%d" % (stage, branch))
 
     return x
 
