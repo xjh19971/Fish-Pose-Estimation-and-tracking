@@ -340,14 +340,10 @@ if __name__ == '__main__':
             map_ori=tf.placeholder(tf.float32,shape=[None,None],name='input')
             mapshape = tf.shape(map_ori)
             # map = gaussian_filter(map_ori, sigma=3)
-            a = map_ori[1:, :]
-            b = map_ori[:-1, :]
-            c = map_ori[:,1:]
-            d = map_ori[:, :-1]
             padx = tf.zeros([1, mapshape[1]])
             pady = tf.zeros([mapshape[0], 1])
-            mapx = tf.concat([np.subtract(a, b), padx],0)
-            mapy = tf.concat([np.subtract(c, d), pady],1)
+            mapx = tf.concat([np.subtract(map_ori[1:, :], map_ori[:-1, :]), padx],0)
+            mapy = tf.concat([np.subtract(map_ori[:,1:], map_ori[:, :-1]), pady],1)
             padxb = tf.cast(padx,dtype=tf.bool)
             padyb = tf.cast(pady, dtype=tf.bool)
             A = tf.expand_dims(tf.concat([mapx[:-1, :] > 0,padxb],0),-1)
