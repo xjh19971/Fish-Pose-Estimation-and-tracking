@@ -31,7 +31,10 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 input_names=['input_1']
 output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
 
-
+g1 = tf.Graph()
+g2 = tf.Graph()
+sess1 = tf.Session(graph=g1)
+sess2 = tf.Session(graph=g2)
 def process (input_image, params, model_params,tf_sess):
 
     oriImg = input_image  # B,G,R order
@@ -80,6 +83,7 @@ def process (input_image, params, model_params,tf_sess):
     peak_counter = 0
     t2 = time.time()
     for part in [0,1,2]:
+        '''
         map_ori = np.array(heatmap_avg[:, :, part]).astype(np.float32)
         mapshape=map_ori.shape
         # map = gaussian_filter(map_ori, sigma=3)
@@ -96,6 +100,17 @@ def process (input_image, params, model_params,tf_sess):
         peaks_binary = np.logical_and.reduce((mask1, mask2, map_ori > params['thre2']))
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
         peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
+        id = range(peak_counter, peak_counter + len(peaks))
+        peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
+
+        all_peaks.append(peaks_with_score_and_id)
+        peak_counter += len(peaks)'''
+        input = sess2.graph.get_tensor_by_name('input:0')
+        output = sess2.graph.get_tensor_by_name('output:0')
+        peaks_binary = sess2.run(output, feed_dict={input: heatmap_avg[:, :, part]})
+        # ,mapx[1:,:]<0,mapy[:,:-1]>0,mapy[:,1:]>0,map_ori>params['thre2']
+        peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
+        peaks_with_score = [x + (heatmap_avg[x[1], x[0], part],) for x in peaks]
         id = range(peak_counter, peak_counter + len(peaks))
         peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
 
@@ -309,32 +324,60 @@ if __name__ == '__main__':
 
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.allow_growth = True
-    with tf.Graph().as_default():
-        output_graph_def = tf.GraphDef()
-
-        with open('tf_model.pb', "rb") as f:
-            output_graph_def.ParseFromString(f.read())
-            _ = tf.import_graph_def(output_graph_def, name="")
-
-        with tf.Session() as sess:
+    tf_config = tf.ConfigProto()
+    tf_config.gpu_options.allow_growth = True
+    with sess1.as_default():
+        with sess1.graph.as_default():
+            output_graph_def = tf.GraphDef()
+            with open('tf_model.pb', "rb") as f:
+                output_graph_def.ParseFromString(f.read())
+                _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
-            sess.run(init)
+            sess1.run(init)
+            sess1 = tf.Session(config=tf_config)
+    with sess2.as_default():
+        with sess2.graph.as_default():
+            map_ori=tf.placeholder(tf.float32,shape=[None,None],name='input')
+            mapshape = tf.shape(map_ori)
+            # map = gaussian_filter(map_ori, sigma=3)
+            a = map_ori[1:, :]
+            b = map_ori[:-1, :]
+            c = map_ori[:,1:]
+            d = map_ori[:, :-1]
+            padx = tf.zeros([1, mapshape[1]])
+            pady = tf.zeros([mapshape[0], 1])
+            mapx = tf.concat([np.subtract(a, b), padx],0)
+            mapy = tf.concat([np.subtract(c, d), pady],1)
+            padxb = tf.cast(padx,dtype=tf.bool)
+            padyb = tf.cast(pady, dtype=tf.bool)
+            A = tf.expand_dims(tf.concat([mapx[:-1, :] > 0,padxb],0),-1)
+            B = tf.expand_dims(tf.concat([mapx[1:, :] < 0,padxb],0),-1)
+            C = tf.expand_dims(tf.concat([mapy[:, :-1] > 0,padyb],1),-1)
+            D = tf.expand_dims(tf.concat([mapy[:, 1:] < 0,padyb],1),-1)
+            E = tf.expand_dims(map_ori>0.05,-1)
+            mask= tf.reduce_all(tf.concat([A,B,C,D,E],2),2,name='output')
+            #mask1 = tf.concat([tf.cond(tf.cond(mapx[:-1, :] > 0,lambda :1,lambda :0) and tf.cond(mapx[1:, :] < 0,lambda :1,lambda :0),lambda :1,lambda :0), padx],0)
+            #mask2 = tf.concat([tf.cond(mapy[:, :-1] > 0 and mapy[:, 1:] < 0,1,0), pady],1)
+            #peaks_binary = tf.cond(mask1 and mask2 and map_ori>0.05,1,0)
+            #output = tf.Variable(peaks_binary,validate_shape=False,name='output')
+            init = tf.global_variables_initializer()
+            sess2.run(init)
+            sess2 = tf.Session(config=tf_config)
+    i = 0 # default is 0
+    while(cam.isOpened()) and ret_val == True and i < ending_frame:
+        if i%frame_rate_ratio == 0:
 
-            tf_sess = tf.Session(config=tf_config)
-            i = 0 # default is 0
-            while(cam.isOpened()) and ret_val == True and i < ending_frame:
-                if i%frame_rate_ratio == 0:
-
-                    tic = time.time()
+            tic = time.time()
 
                     # generate image with body parts
-                    canvas,t1,t2,t3,t4,t5 = process(input_image, params, model_params,tf_sess)
+            canvas,t1,t2,t3,t4,t5 = process(input_image, params, model_params,sess1)
 
-                    print('Processing frame: ', i)
-                    toc = time.time()
-                    print ('processing time is %.5f' % (toc - tic))
-                    print('processing time is '+str(t1-tic)+str(t2-t1)+str(t3-t2)+str(t4-t3)+str(t5-t4)+str(toc-t5))
-                    out.write(canvas)
-                ret_val, input_image = cam.read()
-                i += 1
-        tf_sess.close()
+            print('Processing frame: ', i)
+            toc = time.time()
+            print ('processing time is %.5f' % (toc - tic))
+            print('processing time is '+str(t1-tic)+str(t2-t1)+str(t3-t2)+str(t4-t3)+str(t5-t4)+str(toc-t5))
+            out.write(canvas)
+        ret_val, input_image = cam.read()
+        i += 1
+    sess1.close()
+    sess2.close()
