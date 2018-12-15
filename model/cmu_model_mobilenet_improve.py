@@ -99,7 +99,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
         input = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
                 kernel_regularizer=l2(weight_decay))(x)'''
     x1 = Conv2D(expand * in_channels, 1, padding='same', strides=1, use_bias=False,
-                kernel_regularizer=l2(weight_decay))(input)
+                kernel_regularizer=l2(weight_decay))(x)
     x1 = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x1)
     x1 = Relu6(x1)
     x1 = DepthwiseConv2D((ks, ks),
