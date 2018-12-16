@@ -214,7 +214,7 @@ if __name__ == '__main__':
     _step_decay = partial(step_decay,
                           iterations_per_epoch=iterations_per_epoch
                           )
-    lrate = reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=10, mode='auto')
+    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=10, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
                                  verbose=0, save_best_only=False,
                                  save_weights_only=True, mode='min', period=1)
