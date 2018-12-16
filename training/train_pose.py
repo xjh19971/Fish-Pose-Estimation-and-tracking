@@ -6,7 +6,7 @@ from functools import partial
 
 import keras.backend as K
 import pandas
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint, CSVLogger, TensorBoard
+from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, CSVLogger, TensorBoard
 from keras.layers.convolutional import Conv2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -17,8 +17,8 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 20
-base_lr = 2e-5 # 2e-5
+batch_size = 32
+base_lr = 1.28e-4 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
@@ -107,14 +107,12 @@ def get_lr_multipliers(model):
                 kernel_name = layer.weights[0].name
                 bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 1
-                lr_mult[bias_name] = 2
 
             # stage > 1
             elif re.match("Mconv\d_stage.*", layer.name):
                 kernel_name = layer.weights[0].name
                 bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 4
-                lr_mult[bias_name] = 8
 
             # vgg
             else:
@@ -216,7 +214,7 @@ if __name__ == '__main__':
     _step_decay = partial(step_decay,
                           iterations_per_epoch=iterations_per_epoch
                           )
-    lrate = LearningRateScheduler(_step_decay)
+    lrate = reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=10, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
                                  verbose=0, save_best_only=False,
                                  save_weights_only=True, mode='min', period=1)
