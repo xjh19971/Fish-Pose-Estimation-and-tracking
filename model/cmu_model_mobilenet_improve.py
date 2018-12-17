@@ -90,7 +90,7 @@ def conv_block(inputs, filters, weight_decay, name, kernel=(3, 3), strides=(1, 1
 def relu(x): return Activation('relu')(x)
 
 
-def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
+def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,last=False):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
     if change is False:
@@ -109,11 +109,12 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
                          )(x)
     x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9)(x)
     x = Relu6(x)
-    x = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,
+    x = Conv2D(nf, 1, padding='same', strides=1, use_bias=False,name=name,
                 kernel_regularizer=l2(weight_decay))(x)
     x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x)
-    x= add([input,x])
+    if last is False:
+        x= add([input,x])
     return x
 
 
@@ -139,7 +140,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = conv(x, 64, 3, "Mconv2_stage1_L%d" % branch, weight_decay)
     x = conv(x, 64, 3, "Mconv3_stage1_L%d" % branch, weight_decay)
     x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, weight_decay,change=True)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True)
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,last=True)
 
     return x
 
@@ -152,7 +153,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 64, 7, "Mconv4_stage%d_L%d" % (stage, branch), weight_decay)
     x = conv(x, 64, 7, "Mconv5_stage%d_L%d" % (stage, branch), weight_decay)
     x = conv(x, 64, 1, "Mconv6_stage%d_L%d" % (stage, branch), weight_decay)
-    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True)
+    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True,last=True)
 
     return x
 
