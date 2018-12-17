@@ -105,13 +105,11 @@ def get_lr_multipliers(model):
             # stage = 1
             if re.match("Mconv\d_stage1.*", layer.name):
                 kernel_name = layer.weights[0].name
-                bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 1
 
             # stage > 1
             elif re.match("Mconv\d_stage.*", layer.name):
                 kernel_name = layer.weights[0].name
-                bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 4
 
             # vgg
