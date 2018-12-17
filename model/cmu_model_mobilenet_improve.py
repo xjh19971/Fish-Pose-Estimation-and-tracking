@@ -90,7 +90,7 @@ def conv_block(inputs, filters, weight_decay, name, kernel=(3, 3), strides=(1, 1
 def relu(x): return Activation('relu')(x)
 
 
-def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,lname=None):
+def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     in_channels = K.int_shape(x)[channel_axis]
     if change is False:
@@ -113,10 +113,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None,expand= 6,change=False,l
                 kernel_regularizer=l2(weight_decay))(x)
     x = BatchNormalization(axis=channel_axis, epsilon=1e-5, momentum=0.9,
                             )(x)
-    if lname is not None:
-        x = add([input, x],name=lname)
-    else:
-        x = add([input, x])
+    x= add([input,x])
     return x
 
 
@@ -138,12 +135,11 @@ def vgg_block(x, weight_decay):
 
 def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
-    stage=1
     x = conv(x, 64, 3, "Mconv1_stage1_L%d" % branch, weight_decay,change=True)
     x = conv(x, 64, 3, "Mconv2_stage1_L%d" % branch, weight_decay)
     x = conv(x, 64, 3, "Mconv3_stage1_L%d" % branch, weight_decay)
     x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, weight_decay,change=True)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True,lname="weight_stage%d_L%d" % (stage, branch))
+    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, weight_decay,change=True)
 
     return x
 
@@ -156,7 +152,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 64, 7, "Mconv4_stage%d_L%d" % (stage, branch), weight_decay)
     x = conv(x, 64, 7, "Mconv5_stage%d_L%d" % (stage, branch), weight_decay)
     x = conv(x, 64, 1, "Mconv6_stage%d_L%d" % (stage, branch), weight_decay)
-    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True,lname="weight_stage%d_L%d" % (stage, branch))
+    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), weight_decay,change=True)
 
     return x
 
@@ -200,12 +196,12 @@ def get_training_model(weight_decay):
 
     # stage 1 - branch 1 (PAF)
     stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, weight_decay)
-    #w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1,True)
-    w1=stage1_branch1_out
+    w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1,True)
+
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
-    #w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2,False)
-    w2=stage1_branch2_out
+    w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2,False)
+
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
     outputs.append(w1)
@@ -215,12 +211,12 @@ def get_training_model(weight_decay):
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
         stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
-        #w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1,is_weight=True)
-        w1=stageT_branch1_out
+        w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1,is_weight=True)
+
         # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
-        #w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2,is_weight=False)
-        w2=stageT_branch2_out
+        w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2,is_weight=False)
+
         outputs.append(w1)
         outputs.append(w2)
 
