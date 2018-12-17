@@ -304,15 +304,13 @@ if __name__ == '__main__':
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output,fourcc, output_fps, (input_image.shape[1], input_image.shape[0]))
-
-    tf_config = tf.ConfigProto()
-    tf_config.gpu_options.allow_growth = True
-    tf_config = tf.ConfigProto()
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.67)
+    tf_config = tf.ConfigProto(gpu_options=gpu_options)
     tf_config.gpu_options.allow_growth = True
     with sess1.as_default():
         with sess1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model.pb', "rb") as f:
+            with open('tf_model_real.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()

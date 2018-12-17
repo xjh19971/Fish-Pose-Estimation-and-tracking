@@ -66,7 +66,7 @@ if __name__ == '__main__':
     frozen_graph, output_names, input_names = freeze_session(K.get_session(),
                                                              output_names=[out.op.name for out in model.outputs],
                                                              input_names=[out.op.name for out in model.inputs])
-    tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
+    tf.train.write_graph(frozen_graph, ".", "tf_model_real.pb", as_text=False)
     trt_graph = trt.create_inference_graph(
         input_graph_def=frozen_graph,
         outputs=output_names,

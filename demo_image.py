@@ -6,7 +6,6 @@ import time
 import cv2
 import numpy as np
 import tensorflow as tf
-from scipy.ndimage.filters import gaussian_filter
 
 import util
 from config_reader import config_reader
@@ -278,8 +277,8 @@ if __name__ == '__main__':
 
     # authors of original model don't use
     # vgg normalization (subtracting mean) on input images
-
-    tf_config = tf.ConfigProto()
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.67)
+    tf_config = tf.ConfigProto(gpu_options=gpu_options)
     tf_config.gpu_options.allow_growth = True
     with sess1.as_default():
         with sess1.graph.as_default():
