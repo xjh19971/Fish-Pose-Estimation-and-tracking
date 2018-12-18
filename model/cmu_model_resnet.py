@@ -24,7 +24,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, weight_deca
         Output tensor for the block.  #返回块的输出变量#
     """
     filters1, filters2, filters3 = filters  # 滤波器的名称#
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     #conv(x, 64, 3, "conv1_1", (weight_decay, 0))
