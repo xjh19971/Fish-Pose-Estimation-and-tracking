@@ -140,9 +140,9 @@ def get_loss_funcs():
     losses["weight_stage1_L2"] = _eucl_loss
     losses["weight_stage2_L1"] = _eucl_loss
     losses["weight_stage2_L2"] = _eucl_loss
-    '''losses["weight_stage3_L1"] = _eucl_loss
-losses["weight_stage3_L2"] = _eucl_loss
-losses["weight_stage4_L1"] = _eucl_loss
+    losses["weight_stage3_L1"] = _eucl_loss
+    losses["weight_stage3_L2"] = _eucl_loss
+    '''losses["weight_stage4_L1"] = _eucl_loss
 losses["weight_stage4_L2"] = _eucl_loss
 
 losses["weight_stage5_L1"] = _eucl_loss
