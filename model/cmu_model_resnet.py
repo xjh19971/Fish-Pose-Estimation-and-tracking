@@ -173,7 +173,7 @@ def vgg_block(x, weight_decay):
     x = conv_block(x, 3, [128, 128, 512], stage=3, block='a',weight_decay=(weight_decay,0))
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='b',weight_decay=(weight_decay,0))
     x = conv_block(x, 3, [64, 64, 256], stage=3, block='cCPM',weight_decay=(weight_decay,0), strides=(1, 1))
-    x = conv_block(x, 3, [64, 64, 256], stage=3, block='dCPM',weight_decay=(weight_decay,0), strides=(1, 1))
+    x = identity_block(x, 3, [64, 64, 256], stage=3, block='dCPM',weight_decay=(weight_decay,0))
 
     return x
 
