@@ -24,7 +24,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, weight_deca
         Output tensor for the block.  #返回块的输出变量#
     """
     filters1, filters2, filters3 = filters  # 滤波器的名称#
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     #conv(x, 64, 3, "conv1_1", (weight_decay, 0))
@@ -62,7 +62,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     And the shortcut should have strides=(2,2) as well
     """
     filters1, filters2, filters3 = filters
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
 
@@ -97,10 +97,6 @@ def relu(x): return Activation('relu')(x)
 
 
 def conv(x, nf, ks, name,  weight_decay, strides = None):
-    if K.image_data_format() == 'channels_last':
-        bn_axis = 3
-    else:
-        bn_axis = 1
     kernel_reg = l2(weight_decay[0]) if weight_decay else None
     if strides == None:
         x = Conv2D(nf, (ks, ks), padding='same', name=name,
@@ -176,56 +172,30 @@ def vgg_block(x, weight_decay):
     # stage3#
     x = conv_block(x, 3, [128, 128, 512], stage=3, block='a',weight_decay=(weight_decay,0))
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='b',weight_decay=(weight_decay,0))
-    x = conv_block(x, 3, [128, 128, 256], stage=3, block='cCPM',weight_decay=(weight_decay,0), strides=(1, 1))
-    x = conv_block(x, 3, [128, 128, 128], stage=3, block='dCPM',weight_decay=(weight_decay,0), strides=(1, 1))
+    x = conv_block(x, 3, [128, 128, 512], stage=3, block='cCPM',weight_decay=(weight_decay,0), strides=(1, 1))
+    x = conv_block(x, 3, [128, 128, 512], stage=3, block='dCPM',weight_decay=(weight_decay,0), strides=(1, 1))
 
     return x
 
 
 def stage1_block(x, num_p, branch, weight_decay):
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 64, 3, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 3, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 3, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
+    x = conv_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
+    x = identity_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_b', weight_decay=(weight_decay, 0))
+    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_c', weight_decay=(weight_decay, 0), strides=(1, 1))
 
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
-    channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 64, 7, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 7, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 7, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 7, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 7, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, 64, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
-    x = relu(x)
-    x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis)(x)
+    x = conv_block(x, 7, [64, 64, 256], stage=stage, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
+    x = identity_block(x, 7, [64, 64, 256], stage=stage, block=str(branch)+'_b', weight_decay=(weight_decay, 0), )
+    x = identity_block(x, 7, [64, 64, 256], stage=stage, block=str(branch)+'_c', weight_decay=(weight_decay, 0), )
+    x = identity_block(x, 7, [64, 64, 256], stage=stage, block=str(branch)+'_d', weight_decay=(weight_decay, 0), )
+    x = conv_block(x, 7, [64, 64, num_p], stage=stage, block=str(branch)+'_e', weight_decay=(weight_decay, 0), strides=(1, 1))
+
+
 
     return x
 
@@ -242,7 +212,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 def get_training_model(weight_decay):
 
-    stages = 3
+    stages = 4
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
@@ -302,7 +272,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 3
+    stages = 4
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 

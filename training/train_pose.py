@@ -7,18 +7,23 @@ from functools import partial
 import keras.backend as K
 import pandas
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, CSVLogger, TensorBoard
-from keras.layers.convolutional import Conv2D
+import tensorflow as tf
 
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # 不全部占满显存, 按需分配
+sess = tf.Session(config=config)
+
+K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
+from keras.layers.convolutional import Conv2D
 #from model.cmu_model_resnet import get_training_model
-from model.cmu_model_mobilenet_improve import get_training_model
+from model.cmu_model_resnet import get_training_model
 from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
 batch_size = 32
-base_lr = 1.28e-4 # 2e-5
+base_lr = 1e-4 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
@@ -110,7 +115,7 @@ def get_lr_multipliers(model):
             # stage > 1
             elif re.match("Mconv\d_stage.*", layer.name):
                 kernel_name = layer.weights[0].name
-                lr_mult[kernel_name] = 4
+                lr_mult[kernel_name] = 2
 
             # vgg
             else:
@@ -135,14 +140,15 @@ def get_loss_funcs():
     losses["weight_stage1_L2"] = _eucl_loss
     losses["weight_stage2_L1"] = _eucl_loss
     losses["weight_stage2_L2"] = _eucl_loss
-    losses["weight_stage3_L1"] = _eucl_loss
-    losses["weight_stage3_L2"] = _eucl_loss
-    '''losses["weight_stage4_L1"] = _eucl_loss
-    losses["weight_stage4_L2"] = _eucl_loss
-    losses["weight_stage5_L1"] = _eucl_loss
-    losses["weight_stage5_L2"] = _eucl_loss
-    losses["weight_stage6_L1"] = _eucl_loss
-    losses["weight_stage6_L2"] = _eucl_loss'''
+    '''losses["weight_stage3_L1"] = _eucl_loss
+losses["weight_stage3_L2"] = _eucl_loss
+losses["weight_stage4_L1"] = _eucl_loss
+losses["weight_stage4_L2"] = _eucl_loss
+
+losses["weight_stage5_L1"] = _eucl_loss
+losses["weight_stage5_L2"] = _eucl_loss
+losses["weight_stage6_L1"] = _eucl_loss
+losses["weight_stage6_L2"] = _eucl_loss'''
 
     return losses
 
