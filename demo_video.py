@@ -31,7 +31,7 @@ filt=   [[0.0751,    0.1238 ,   0.0751,],
     [0.1238,    0.2042,    0.1238,],
     [0.0751,    0.1238 ,   0.0751,]]
 input_names=['input_1']
-output_names= ['batch_normalization_31/FusedBatchNorm_1', 'batch_normalization_38/FusedBatchNorm_1']
+output_names= ['batch_normalization_74/FusedBatchNorm_1','batch_normalization_90/FusedBatchNorm_1']
 
 g1 = tf.Graph()
 g2 = tf.Graph()
@@ -310,7 +310,7 @@ if __name__ == '__main__':
     with sess1.as_default():
         with sess1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model_real.pb', "rb") as f:
+            with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
