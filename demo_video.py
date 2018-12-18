@@ -31,7 +31,7 @@ filt=   [[0.0751,    0.1238 ,   0.0751,],
     [0.1238,    0.2042,    0.1238,],
     [0.0751,    0.1238 ,   0.0751,]]
 input_names=['input_1']
-output_names= ['batch_normalization_74/FusedBatchNorm_1','batch_normalization_90/FusedBatchNorm_1']
+output_names= ['batch_normalization_31/FusedBatchNorm_1','batch_normalization_38/FusedBatchNorm_1']
 
 g1 = tf.Graph()
 g2 = tf.Graph()
