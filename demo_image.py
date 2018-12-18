@@ -26,7 +26,7 @@ g2 = tf.Graph()
 sess1 = tf.Session(graph=g1)
 sess2 = tf.Session(graph=g2)
 input_names=['input_1']
-output_names= ['batch_normalization_31/FusedBatchNorm_1','batch_normalization_38/FusedBatchNorm_1']
+output_names= ['batch_normalization_17/FusedBatchNorm_1','batch_normalization_24/FusedBatchNorm_1']
 def process (input_image, params, model_params,tf_sess,sess2):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
