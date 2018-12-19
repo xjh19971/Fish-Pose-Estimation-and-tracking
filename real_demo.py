@@ -293,7 +293,7 @@ if __name__ == '__main__':
     # Video writer
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_output,fourcc, output_fps, (750, 480))
+    out = cv2.VideoWriter(video_output,fourcc, output_fps, (640, 512))
 
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.allow_growth = True
