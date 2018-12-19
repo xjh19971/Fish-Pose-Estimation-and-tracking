@@ -96,7 +96,7 @@ def process (input_image, params, model_params):
     t3 = time.time()
     connection_all = []
     special_k = []
-    mid_num = 10
+    mid_num = 5
 
     limit = [[60, 10], [80, 10]]
     for k in range(len(mapIdx)):
