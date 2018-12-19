@@ -346,8 +346,7 @@ if __name__ == '__main__':
     i = 0 # default is 0
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
-            scale=0.5
-            imageToTest = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+            imageToTest = cv2.resize(input_image, (512, 640), interpolation=cv2.INTER_CUBIC)
             tic = time.time()
 
             # generate image with body parts
