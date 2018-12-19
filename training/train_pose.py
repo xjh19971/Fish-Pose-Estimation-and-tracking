@@ -116,7 +116,7 @@ def get_lr_multipliers(model):
             # stage > 1
             elif re.match("Mconv\d_stage.*", layer.name):
                 kernel_name = layer.weights[0].name
-                lr_mult[kernel_name] = 2
+                lr_mult[kernel_name] = 4
 
             # vgg
             else:
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     _step_decay = partial(step_decay,
                           iterations_per_epoch=iterations_per_epoch
                           )
-    lrate = ReduceLROnPlateau(monitor='loss', factor=0.333,patience=20, mode='auto')
+    lrate = ReduceLROnPlateau(monitor='loss', factor=0.333,patience=10, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
                                  verbose=0, save_best_only=False,
                                  save_weights_only=True, mode='min', period=1)
@@ -235,7 +235,7 @@ if __name__ == '__main__':
      #                   nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-    adam=optimizers.Adam(lr=base_lr)
+    adam=optimizers.Nadam(lr=base_lr)
     loss_funcs = get_loss_funcs()
     model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
     model.fit_generator(train_gen,
