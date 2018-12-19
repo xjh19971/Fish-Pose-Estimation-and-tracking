@@ -293,7 +293,7 @@ if __name__ == '__main__':
     # Video writer
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_output,fourcc, output_fps, (input_image.shape[1], input_image.shape[0]))
+    out = cv2.VideoWriter(video_output,fourcc, output_fps, (750, 480))
 
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.allow_growth = True
@@ -346,7 +346,8 @@ if __name__ == '__main__':
     i = 0 # default is 0
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
-
+            input_image = cv2.resize(input_image, (750, 480),
+                                 interpolation=cv2.INTER_CUBIC)
             tic = time.time()
 
             # generate image with body parts
