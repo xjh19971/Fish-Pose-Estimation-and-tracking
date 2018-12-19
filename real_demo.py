@@ -300,7 +300,7 @@ if __name__ == '__main__':
     with sess1.as_default():
         with sess1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model.pb', "rb") as f:
+            with open('tf_model_real.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
@@ -347,7 +347,7 @@ if __name__ == '__main__':
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
             scale=0.5
-            imageToTest = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+            input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
 
             # generate image with body parts
