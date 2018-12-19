@@ -346,7 +346,7 @@ if __name__ == '__main__':
     i = 0 # default is 0
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
-            input_image = cv2.resize(input_image, (750, 480),
+            input_image = cv2.resize(input_image, (640, 512),
                                  interpolation=cv2.INTER_CUBIC)
             tic = time.time()
 
