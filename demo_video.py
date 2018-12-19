@@ -304,8 +304,7 @@ if __name__ == '__main__':
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output,fourcc, output_fps, (input_image.shape[1], input_image.shape[0]))
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.67)
-    tf_config = tf.ConfigProto(gpu_options=gpu_options)
+    tf_config = tf.ConfigProto()
     tf_config.gpu_options.allow_growth = True
     with sess1.as_default():
         with sess1.graph.as_default():

@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras import backend as K
 import tensorflow.contrib.tensorrt as trt
 from config_reader import config_reader
-from model.cmu_model_mobilenet import get_testing_model
+from model.cmu_model_resnet import get_testing_model
 
 
 def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True,input_names=None):
