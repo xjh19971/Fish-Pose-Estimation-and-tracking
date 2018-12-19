@@ -47,39 +47,38 @@ def process (input_image, params, model_params,tf_sess):
 
 
     t1=time.time()
-    for m in range(len(multiplier)):
-        scale = multiplier[m]
+    scale = multiplier[0]
 
-        imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
-        imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
+    imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
                                                           model_params['padValue'])
 
-        input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
-        tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
-        tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
-        tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
-        tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
+    input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
+    tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
+    tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
+    tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
+    tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
                                          feed_dict={
                                              tf_input: input_img
                                          })
-        output_blobs = [tf_paf, tf_heatmap]
+    output_blobs = [tf_paf, tf_heatmap]
 
         # extract outputs, resize, and remove padding
-        heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
-        heatmap = cv2.resize(heatmap, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+    heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
+    heatmap = cv2.resize(heatmap, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
                              interpolation=cv2.INTER_CUBIC)
-        heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
+    heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
-        heatmap = cv2.resize(heatmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
+    heatmap = cv2.resize(heatmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
 
-        paf = np.squeeze(output_blobs[0])  # output 0 is PAFs
-        paf = cv2.resize(paf, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+    paf = np.squeeze(output_blobs[0])  # output 0 is PAFs
+    paf = cv2.resize(paf, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
                          interpolation=cv2.INTER_CUBIC)
-        paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
-        paf = cv2.resize(paf, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
+    paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
+    paf = cv2.resize(paf, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
 
-        heatmap_avg = heatmap_avg + heatmap / len(multiplier)
-        paf_avg = paf_avg + paf / len(multiplier)
+    heatmap_avg = heatmap_avg + heatmap / len(multiplier)
+    paf_avg = paf_avg + paf / len(multiplier)
 
     t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
