@@ -235,7 +235,7 @@ if __name__ == '__main__':
      #                   nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-    adam=optimizers.Adam(lr=base_lr)
+    adam=optimizers.Adam(lr=base_lr, momentum=momentum, decay=0.0,nesterov=False)
     loss_funcs = get_loss_funcs()
     model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
     model.fit_generator(train_gen,
