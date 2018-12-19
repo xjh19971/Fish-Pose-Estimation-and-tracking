@@ -24,7 +24,7 @@ from training.dataset import get_dataflow, batch_dataflow
 
 
 batch_size = 64
-base_lr = 2e-5*batch_size/10 # 2e-5
+base_lr = 0.1 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
@@ -235,7 +235,7 @@ if __name__ == '__main__':
      #                   nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-    adam=optimizers.SGD(lr=base_lr,momentum =0.9)
+    adam=optimizers.Adam(lr=base_lr)
     loss_funcs = get_loss_funcs()
     model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
     model.fit_generator(train_gen,
