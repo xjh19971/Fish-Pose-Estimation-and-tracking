@@ -42,7 +42,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, weight_deca
     #x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = conv(x, filters3, 1, conv_name_base + '2c', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c', epsilon=1e-5, momentum=0.9)(x)'''
-    x = conv(x, filters3, kernel_size, conv_name_base + '2a', weight_decay)
+    x = conv(input_tensor, filters3, kernel_size, conv_name_base + '2a', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', epsilon=1e-5, momentum=0.9)(x)
     x = Activation('relu')(x)
     x = conv(x, filters3, kernel_size, conv_name_base + '2b', weight_decay)
@@ -86,8 +86,8 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     #x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = conv(x, filters3, 1, conv_name_base + '2c', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c', epsilon=1e-5, momentum=0.9)(x)'''
-    x = conv(input_tensor, filters3, kernel_size, conv_name_base + '2b', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', epsilon=1e-5, momentum=0.9)(x)
+    x = conv(input_tensor, filters3, kernel_size, conv_name_base + '2a', weight_decay)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', epsilon=1e-5, momentum=0.9)(x)
     x = Activation('relu')(x)
     x = conv(x, filters3, kernel_size, conv_name_base + '2b', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', epsilon=1e-5, momentum=0.9)(x)
