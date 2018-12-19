@@ -166,28 +166,27 @@ def vgg_block(x, weight_decay):
     x = relu(x)'''
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
 
-    x = conv(x, 64, 3, "conv1_1", (weight_decay, 0),strides=(2,2))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
-    x = conv(x, 64, 3, "conv1_2", (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
+    x = ZeroPadding2D((2, 2))(x)  # 对图片界面填充0，保证特征图的大小#
+    x = conv(x, 64, 7, strides=(2, 2), name='conv1', weight_decay=(weight_decay, 0))  # 定义卷积层#
+    x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
+    x = Activation('relu')(x)  # 激活函数#
+    x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
 
     # Block 2
-    x = conv(x, 128, 3, "conv2_1", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 64, 3, "conv2_1", (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 128, 3, "conv2_2", (weight_decay, 0))
+    x = conv(x, 64, 3, "conv2_2", (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     # Block 3
-    x = conv(x, 256, 3, "conv3_1", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 128, 3, "conv3_1", (weight_decay, 0),strides=(2,2))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     x = conv(x, 128, 3, "conv3_2", (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 64, 3, "conv3_3", (weight_decay, 0))
+    x = conv(x, 128, 3, "conv3_3", (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     return x
