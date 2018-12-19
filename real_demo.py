@@ -214,7 +214,7 @@ def process (input_image, params, model_params):
     # delete some rows of subset which has few parts occur
     deleteIdx = [];
     for i in range(len(subset)):
-        if subset[i][-1] < 4 or subset[i][-2] / subset[i][-1] < 0.4:
+        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.3:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
