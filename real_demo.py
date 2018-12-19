@@ -41,7 +41,7 @@ def process (input_image, params, model_params):
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
-
+    t1=time.time()
     for m in range(len(multiplier)):
         scale = multiplier[m]
 
@@ -76,7 +76,7 @@ def process (input_image, params, model_params):
 
         heatmap_avg = heatmap_avg + heatmap / len(multiplier)
         paf_avg = paf_avg + paf / len(multiplier)
-
+    t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
     output0 = sess2.graph.get_tensor_by_name('output0:0')
     output0 = sess2.run(output0, feed_dict={input: heatmap_avg[:, :, 0:3]})
@@ -93,7 +93,7 @@ def process (input_image, params, model_params):
     temp = output0[output0[:, 2] == 2].tolist()
     temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
     all_peaks.append(temp)
-
+    t3 = time.time()
     connection_all = []
     special_k = []
     mid_num = 10
@@ -167,7 +167,7 @@ def process (input_image, params, model_params):
     # the second last number in each row is the score of the overall configuration
     subset = -1 * np.ones((0, 5))
     candidate = np.array([item for sublist in all_peaks for item in sublist])
-
+    t4 = time.time()
     for k in range(len(mapIdx)):
         if k not in special_k:
             partAs = connection_all[k][:, 0]
@@ -219,7 +219,7 @@ def process (input_image, params, model_params):
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = input_image
-
+    t5 = time.time()
     for i in [0, 1, 2]:
         for n in range(len(subset)):
             idx = int(subset[n][i])
@@ -246,7 +246,7 @@ def process (input_image, params, model_params):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return canvas
+    return canvas,t1,t2,t3,t4,t5
 
 
 if __name__ == '__main__':
@@ -350,12 +350,14 @@ if __name__ == '__main__':
             tic = time.time()
 
             # generate image with body parts
-            canvas = process(input_image, params, model_params)
+            canvas,t1,t2,t3,t4,t5 = process(input_image, params, model_params)
 
             print('Processing frame: ', i)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
-
+            print(
+                'processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
+                    toc - t5))
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
