@@ -103,7 +103,7 @@ def process (input_image, params, model_params,tf_sess):
     connection_all = []
     special_k = []
     mid_num = 5
-    limit=[[60,10],[80,10]]
+    limit=[[60,20],[80,20]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
@@ -147,7 +147,7 @@ def process (input_image, params, model_params,tf_sess):
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
                     score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
                         0.5 * oriImg.shape[0] / norm - 1, 0)
-                    criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.8 * len(
+                    criterion1 = len(np.nonzero(score_midpts > 0.05)[0]) > 0.8 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
                     if criterion1 and criterion2:
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     with sess1.as_default():
         with sess1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model_real.pb', "rb") as f:
+            with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
@@ -337,7 +337,7 @@ if __name__ == '__main__':
             tempb=mapx[1:, :] < 0
             tempc=mapy[:, :-1] > 0
             tempd=mapy[:, 1:] < 0
-            tempe=map_ori>0.05
+            tempe=map_ori>0.1
             A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
             B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
             C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
