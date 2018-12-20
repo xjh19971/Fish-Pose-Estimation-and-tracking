@@ -174,7 +174,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = conv(x, 512, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
     x = relu(x)
     x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
-
+    x = relu(x)
     return x
 
 
