@@ -167,17 +167,17 @@ def vgg_block(x, weight_decay):
     x = relu(x)'''
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
 
-    x = conv(x, 64, 3, "conv1_1", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 64, 3, "conv1_1", (weight_decay, 0),strides=(2,2))                 #64
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 128, 1, "conv1_2", (weight_decay, 0))
+    x = conv(x, 128, 1, "conv1_2", (weight_decay, 0))                               #64
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     # Block 2
-    x = conv(x, 128, 3, "conv2_1", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 128, 3, "conv2_1", (weight_decay, 0),strides=(2,2))                 #128
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 256, 1, "conv2_2", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 256, 1, "conv2_2", (weight_decay, 0),strides=(2,2))                 #256
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     return x
@@ -189,9 +189,9 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = conv(x, 128, 3, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    '''x = conv(x, 128, 1, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)'''
+    x = relu(x)
     x = conv(x, 512, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
@@ -206,12 +206,12 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 128, 3, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 512, 1, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    '''x = conv(x, 64, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 512, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)'''
+    x = relu(x)
     x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x
