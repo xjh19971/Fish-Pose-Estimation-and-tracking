@@ -366,8 +366,7 @@ if __name__ == '__main__':
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
             print('processing time is '+str(t1-tic)+str(t2-t1)+str(t3-t2)+str(t4-t3)+str(t5-t4)+str(toc-t5))
-            cv2.imwrite('result.png', canvas)
-            #out.write(canvas)
+            out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
     sess1.close()
