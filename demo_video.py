@@ -31,7 +31,7 @@ filt=   [[0.0751,    0.1238 ,   0.0751,],
     [0.1238,    0.2042,    0.1238,],
     [0.0751,    0.1238 ,   0.0751,]]
 input_names=['input_1']
-output_names= ['batch_normalization_22/FusedBatchNorm_1','batch_normalization_29/FusedBatchNorm_1']
+output_names= ['batch_normalization_16/FusedBatchNorm_1','batch_normalization_20/FusedBatchNorm_1']
 
 g1 = tf.Graph()
 g2 = tf.Graph()
@@ -40,7 +40,7 @@ sess2 = tf.Session(graph=g2)
 def process (input_image, params, model_params,tf_sess):
 
     oriImg = input_image  # B,G,R order
-    scale_search = [4]
+    scale_search = [2]
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
