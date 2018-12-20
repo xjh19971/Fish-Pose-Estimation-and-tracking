@@ -6,7 +6,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization,add
+from keras.layers import  BatchNormalization,add,ReLU
 import keras.backend as K
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
@@ -103,7 +103,8 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
 
 
 
-def relu(x): return Activation('relu')(x)
+def relu(x):
+    return ReLU(6.)(x)
 
 
 def conv(x, nf, ks, name,  weight_decay, strides = None):
@@ -177,7 +178,7 @@ def vgg_block(x, weight_decay):
     x = conv(x, 128, 3, "conv2_1", (weight_decay, 0),strides=(2,2))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 128, 3, "conv2_2", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 256, 3, "conv2_2", (weight_decay, 0),strides=(2,2))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     return x
@@ -197,7 +198,6 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = relu(x)
     x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
     return x
 
 
@@ -215,7 +215,6 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = relu(x)
     x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
     return x
 
 
