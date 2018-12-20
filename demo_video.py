@@ -147,7 +147,7 @@ def process (input_image, params, model_params,tf_sess):
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
                     score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
                         0.5 * oriImg.shape[0] / norm - 1, 0)
-                    criterion1 = len(np.nonzero(score_midpts > 0.05)[0]) > 0.8 * len(
+                    criterion1 = len(np.nonzero(score_midpts > 0.01)[0]) > 0.8 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
                     if criterion1 and criterion2:
@@ -229,13 +229,14 @@ def process (input_image, params, model_params,tf_sess):
         for j in range(len(all_peaks[i])):
             cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)'''
     t5=time.time()
+
+    stickwidth = 1
     for i in [0,1,2]:
         for n in range(len(subset)):
             idx=int(subset[n][i])
             if int(subset[n][i])!=-1:
-                cv2.circle(canvas,tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2])), 4, colors[i], thickness=-1)
+                cv2.circle(canvas,tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2])), stickwidth, colors[i], thickness=-1)
 
-    stickwidth = 4
 
     for i in range(2):
         for n in range(len(subset)):
@@ -337,7 +338,7 @@ if __name__ == '__main__':
             tempb=mapx[1:, :] < 0
             tempc=mapy[:, :-1] > 0
             tempd=mapy[:, 1:] < 0
-            tempe=map_ori>0.1
+            tempe=map_ori>0.05
             A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
             B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
             C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
