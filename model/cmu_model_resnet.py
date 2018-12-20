@@ -177,9 +177,9 @@ def vgg_block(x, weight_decay):
     x = conv(x, 256, 3, "conv2_1", (weight_decay, 0),strides=(2,2))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    '''x = conv(x, 256, 3, "conv2_2", (weight_decay, 0),strides=(2,2))
+    x = conv(x, 256, 1, "conv2_2", (weight_decay, 0),strides=(2,2))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)'''
+    x = relu(x)
     return x
 
 
