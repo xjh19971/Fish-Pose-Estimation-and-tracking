@@ -134,7 +134,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
 
     x3 = conv(input_tensor, filters3[0], 1, conv_name_base + 'c1', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
-    x3 = relu(x2)
+    x3 = relu(x3)
     x3 = conv(x3, filters3[1], 3, conv_name_base + 'c2', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x3)
     x3 = relu(x3)
