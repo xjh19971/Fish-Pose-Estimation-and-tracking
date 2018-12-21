@@ -179,8 +179,8 @@ def conv(x, nf, ks, name,  weight_decay, strides = None):
     return x
 
 
-def pooling(x, ks, st, name):
-    x = MaxPooling2D((ks, ks), strides=(st, st), name=name)(x)
+def pooling(x, ks, st):
+    x = MaxPooling2D((ks, ks), strides=(st, st))(x)
     return x
 
 
