@@ -31,7 +31,7 @@ filt=   [[0.0751,    0.1238 ,   0.0751,],
     [0.1238,    0.2042,    0.1238,],
     [0.0751,    0.1238 ,   0.0751,]]
 input_names=['input_1']
-output_names= ['batch_normalization_16/FusedBatchNorm_1','batch_normalization_20/FusedBatchNorm_1']
+output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1']
 
 g1 = tf.Graph()
 g2 = tf.Graph()
@@ -230,12 +230,12 @@ def process (input_image, params, model_params,tf_sess):
             cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)'''
     t5=time.time()
 
-    stickwidth = 1
+    stickwidth = 2
     for i in [0,1,2]:
         for n in range(len(subset)):
             idx=int(subset[n][i])
             if int(subset[n][i])!=-1:
-                cv2.circle(canvas,tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2])), stickwidth, colors[i], thickness=-1)
+                cv2.circle(canvas,tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2])), 2, colors[i], thickness=-1)
 
 
     for i in range(2):
