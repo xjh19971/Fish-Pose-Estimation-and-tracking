@@ -71,9 +71,10 @@ if __name__ == '__main__':
         input_graph_def=frozen_graph,
         outputs=output_names,
         max_batch_size=1,
-        max_workspace_size_bytes=1 << 25,
-        precision_mode='FP16',
+        max_workspace_size_bytes=4000000000,
+        precision_mode='INT8',
         minimum_segment_size=50
     )
+    trt_graph=trt.calib_graph_to_infer_graph(trt_graph)
     tf.train.write_graph(trt_graph, ".", "tf_model.pb", as_text=False)
 

@@ -40,7 +40,7 @@ sess2 = tf.Session(graph=g2)
 def process (input_image, params, model_params,tf_sess):
 
     oriImg = input_image  # B,G,R order
-    scale_search = [2]
+    scale_search = [1]
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
@@ -306,6 +306,7 @@ if __name__ == '__main__':
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output,fourcc, output_fps, (int(input_image.shape[1]/2), int(input_image.shape[0]/2)))
     tf_config = tf.ConfigProto()
+    tf_config.gpu_options.per_process_gpu_memory_fraction= 0.75
     tf_config.gpu_options.allow_growth = True
     with sess1.as_default():
         with sess1.graph.as_default():
