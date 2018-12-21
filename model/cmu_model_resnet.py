@@ -121,13 +121,16 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x1 = conv(input_tensor, filters1[0], 1, conv_name_base + 'a1', weight_decay)
     x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
     x1 = relu(x1)
+    x1 = pooling(x1, 2, 2)
 
     x2 = conv(input_tensor, filters2[0], 1, conv_name_base + 'b1', weight_decay)
     x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
     x2 = relu(x2)
+    x3 = pooling(x2, 2, 2)
     x2 = conv(x2, filters2[1], 3, conv_name_base + 'b2', weight_decay)
     x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
     x2 = relu(x2)
+
 
     x3 = conv(input_tensor, filters3[0], 1, conv_name_base + 'c1', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
@@ -135,6 +138,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x3 = conv(x3, filters3[1], 3, conv_name_base + 'c2', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x3)
     x3 = relu(x3)
+    x3 = pooling(x3, 2, 2)
     x3 = conv(x3, filters3[2], 3, conv_name_base + 'c3', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x3)
     x3 = relu(x3)
@@ -145,6 +149,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
+    x4 = pooling(x4, 2, 2)
     x4 = conv(x4, filters4[2], 3, conv_name_base + 'd3', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd3', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
@@ -233,9 +238,8 @@ def vgg_block(x, weight_decay):
     x = relu(x)
     '''
     x=inception_block(x, [[32],[16,32],[32,64,128],[32,32,64,64]], 1, (weight_decay, 0))
-    x = pooling(x, 2, 2, "pool1_1")
     x=inception_block(x, [[64],[32,64],[64,128,256],[64,64,128,128]], 2, (weight_decay, 0))
-    x = pooling(x, 2, 2, "pool1_1")
+    x = pooling(x, 2, 2)
     return x
 
 
