@@ -11,7 +11,6 @@ import keras.backend as K
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
 
-
 def identity_block(input_tensor, kernel_size, filters, stage, block, weight_decay):
     """The identity block is the block that has no conv layer at shortcut.
     # Arguments
@@ -68,7 +67,7 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     """
     filters1, filters2, filters3 = filters
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    conv_name_base = 'res' + str(stage) + block + '_branch'
+    conv_name_base = 'incpetion' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
 
     ''''#x = Conv2D(filters1, (1, 1), strides=strides,
@@ -101,7 +100,59 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     x = Activation('relu')(x)
     return x
 
+def inception_block(input_tensor, filters, stage, weight_decay):
+    """conv_block is the block that has a conv layer at shortcut
+    # Arguments
+        input_tensor: input tensor
+        kernel_size: defualt 3, the kernel size of middle conv layer at main path
+        filters: list of integers, the filterss of 3 conv layer at main path
+        stage: integer, current stage label, used for generating layer names
+        block: 'a','b'..., current block label, used for generating layer names
+    # Returns
+        Output tensor for the block.
+    Note that from stage 3, the first conv layer at main path is with strides=(2,2)
+    And the shortcut should have strides=(2,2) as well
+    """
+    filters1, filters2, filters3, filters4 = filters
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    conv_name_base = 'inception' + str(stage) + '_branch'
+    bn_name_base = 'bn' + str(stage) + '_branch'
 
+    x1 = conv(input_tensor, filters1, (1,1), conv_name_base + 'a1', weight_decay)
+    x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
+    x1 = relu(x1)
+
+    x2 = conv(input_tensor, filters1, (1,1), conv_name_base + 'b1', weight_decay)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = relu(x2)
+    x2 = conv(x2, filters2, (3,3), conv_name_base + 'b2', weight_decay)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = relu(x2)
+
+    x3 = conv(input_tensor, filters1, (1,1), conv_name_base + 'c1', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x2)
+    x3 = conv(x3, filters2, (3,3), conv_name_base + 'c2', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x3)
+    x3 = conv(x3, filters3, (3,3), conv_name_base + 'c3', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x3)
+
+    x4 = conv(input_tensor, filters1, (1,1), conv_name_base + 'd1', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = conv(x4, filters2, (3,3), conv_name_base + 'd2', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = conv(x4, filters3, (3,3), conv_name_base + 'd3', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd3', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = conv(x4, filters4, (3,3), conv_name_base + 'd4', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd4', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x = Concatenate()([x1,x2,x3,x4])
+    return x
 
 def relu(x):
     return ReLU(6.)(x)
@@ -165,8 +216,8 @@ def vgg_block(x, weight_decay):
     x = relu(x)
     x = conv(x, 128, 3, "conv4_4_CPM", (weight_decay, 0))
     x = relu(x)'''
-    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
 
+    '''
     x = conv(x, 64, 3, "conv1_1", (weight_decay, 0),strides=(2,2))                 #64
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
@@ -180,6 +231,9 @@ def vgg_block(x, weight_decay):
     x = conv(x, 128, 3, "conv2_2", (weight_decay, 0),strides=(2,2))                 #256
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
+    '''
+    inception_block(x, [64,64,64,64], 1, weight_decay)
+    inception_block(x, [128,128,128,128], 1, weight_decay)
     return x
 
 
