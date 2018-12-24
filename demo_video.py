@@ -240,7 +240,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     canvas = input_image  # B,G,R order
     for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
+            cv2.circle(canvas, tuple(all_peaks[i][j][0:2]), 4, colors[i], thickness=-1)
     t5=time.time()
 
     stickwidth = 2
@@ -331,14 +331,14 @@ if __name__ == '__main__':
     # Video writer
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_output,fourcc, output_fps, (int(input_image.shape[1]), int(input_image.shape[0])))
+    out = cv2.VideoWriter(video_output,fourcc, output_fps, (int(input_image.shape[1]/2), int(input_image.shape[0]/2)))
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction= 0.75
     tf_config.gpu_options.allow_growth = True
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model.pb', "rb") as f:
+            with open('tf_model_real.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
