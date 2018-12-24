@@ -106,7 +106,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
         for y in temp:
             if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
                 temp[temp.index(y)][0]=(x[0]+y[0])/2
-                temp[temp.index(y)][10] = (x[1] + y[1]) / 2
+                temp[temp.index(y)][1] = (x[1] + y[1]) / 2
                 find=True
                 break
         if not find:
@@ -120,7 +120,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
         for y in temp:
             if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
                 temp[temp.index(y)][0]=(x[0]+y[0])/2
-                temp[temp.index(y)][10] = (x[1] + y[1]) / 2
+                temp[temp.index(y)][1] = (x[1] + y[1]) / 2
                 find=True
                 break
         if not find:
@@ -134,7 +134,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
         for y in temp:
             if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
                 temp[temp.index(y)][0]=(x[0]+y[0])/2
-                temp[temp.index(y)][10] = (x[1] + y[1]) / 2
+                temp[temp.index(y)][1] = (x[1] + y[1]) / 2
                 find=True
                 break
         if not find:
