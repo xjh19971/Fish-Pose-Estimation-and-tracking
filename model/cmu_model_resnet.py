@@ -118,19 +118,18 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     conv_name_base = 'inception' + str(stage) + '_branch'
     bn_name_base = 'bn' + str(stage) + '_branch'
 
-    x1 = conv(input_tensor, filters1[0], 1, conv_name_base + 'a1', weight_decay)
+    '''x1 = conv(input_tensor, filters1[0], 1, conv_name_base + 'a1', weight_decay)
     x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
     x1 = relu(x1)
-    x1 = pooling(x1, 2, 2)
+    x1 = pooling(x1, 2, 2)'''
 
     x2 = conv(input_tensor, filters2[0], 1, conv_name_base + 'b1', weight_decay)
     x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
     x2 = relu(x2)
-    x2 = pooling(x2, 2, 2)
     x2 = conv(x2, filters2[1], 3, conv_name_base + 'b2', weight_decay)
     x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
     x2 = relu(x2)
-
+    x2 = pooling(x2, 2, 2)
 
     x3 = conv(input_tensor, filters3[0], 1, conv_name_base + 'c1', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
@@ -156,7 +155,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x4 = conv(x4, filters4[3], 3, conv_name_base + 'd4', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd4', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    x = Concatenate()([x1,x2,x3,x4])
+    x = Concatenate()([x2,x3,x4])
     return x
 
 def relu(x):
@@ -237,8 +236,8 @@ def vgg_block(x, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     '''
-    x=inception_block(x, [[32],[16,32],[32,64,128],[32,32,64,64]], 1, (weight_decay, 0))
-    x=inception_block(x, [[64],[32,64],[64,128,256],[64,64,128,128]], 2, (weight_decay, 0))
+    x=inception_block(x, [[32,64],[32,64,128],[32,32,64,64]], 1, (weight_decay, 0))
+    x=inception_block(x, [[64,128],[64,128,256],[64,64,128,128]], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 

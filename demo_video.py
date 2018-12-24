@@ -99,55 +99,16 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     output0 = sess2.run(output0, feed_dict={input: heatmap_avg[:, :, 0:3]})
     all_peaks=[]
     check=0
-    temp1=output0[output0[:, 2] == 0].tolist()
-    temp=[]
-    n=0
-    for x in temp1:
-        find=False
-        for y in temp:
-            if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
-                temp[temp.index(y)][0]=(x[0]+y[0])/2
-                temp[temp.index(y)][1] = (x[1] + y[1]) / 2
-                find=True
-                break
-        if not find:
-            temp.append([x[0],x[1],x[3],temp1.index(x)-n+check])
-        else:
-            n=n+1
-    check= check+len(temp)
+    temp = output0[output0[:, 2] == 0].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    check = check+len(temp)
     all_peaks.append(temp)
-    temp1=output0[output0[:, 2] == 1].tolist()
-    temp=[]
-    n=0
-    for x in temp1:
-        find=False
-        for y in temp:
-            if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
-                temp[temp.index(y)][0]=(x[0]+y[0])/2
-                temp[temp.index(y)][1] = (x[1] + y[1]) / 2
-                find=True
-                break
-        if not find:
-            temp.append([x[0],x[1],x[3],temp1.index(x)-n+check])
-        else:
-            n=n+1
-    check= check+len(temp)
+    temp = output0[output0[:, 2] == 1].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    check = check+len(temp)
     all_peaks.append(temp)
-    temp1=output0[output0[:, 2] == 2].tolist()
-    temp=[]
-    for x in temp1:
-        find=False
-        for y in temp:
-            if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
-                temp[temp.index(y)][0]=(x[0]+y[0])/2
-                temp[temp.index(y)][1] = (x[1] + y[1]) / 2
-                find=True
-                break
-        if not find:
-            temp.append([x[0],x[1],x[3],temp1.index(x)-n+check])
-        else:
-            n = n + 1
-    check= check+len(temp)
+    temp = output0[output0[:, 2] == 2].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
     all_peaks.append(temp)
 
     t3 = time.time()
@@ -284,26 +245,12 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     stickwidth = 2
     flist=[]
     for n in range(len(subset)):
-        maxx=-1
-        maxy=-1
-        minx=10000
-        miny=10000
         for i in [0,1,2]:
             idx=int(subset[n][i])
             if int(subset[n][i])!=-1:
                 location=tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2]))
                 cv2.circle(canvas,location, 2, colors[i], thickness=-1)
-                if(maxx<location[0]):maxx=location[0]
-                if (maxy < location[1]): maxy = location[1]
-                if (minx > location[0]): minx = location[0]
-                if (miny > location[1]): miny = location[1]
-        centerx=int((maxx+minx)/2)
-        centery = int((maxy + miny) / 2)
-        maxx=centerx+50
-        maxy=centery+50
-        minx = centerx - 50
-        miny = centery - 50
-        flist.append((maxx,maxy,minx,miny))
+
 
     for i in range(2):
         for n in range(len(subset)):
