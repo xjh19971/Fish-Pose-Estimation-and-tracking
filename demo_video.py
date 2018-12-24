@@ -27,28 +27,20 @@ mapIdx = [[2,3],[4,5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
-filt=   [[0.0751,    0.1238 ,   0.0751,],
-    [0.1238,    0.2042,    0.1238,],
-    [0.0751,    0.1238 ,   0.0751,]]
+
 input_names=['input_1']
 output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1']
 
-g1 = tf.Graph()
+g1_1 = tf.Graph()
+g1_2 = tf.Graph()
 g2 = tf.Graph()
-sess1 = tf.Session(graph=g1)
+sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
-def process (input_image, params, model_params,tf_sess):
-
-    oriImg = input_image  # B,G,R order
-    scale_search = [1]
+def predict(oriImg,scale_search,model_params,tf_sess):
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
-
+    scale = multiplier[0]
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
-
-
-    t1=time.time()
-    scale = multiplier[0]
 
     imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
     imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
@@ -80,7 +72,28 @@ def process (input_image, params, model_params,tf_sess):
 
     heatmap_avg = heatmap_avg + heatmap / len(multiplier)
     paf_avg = paf_avg + paf / len(multiplier)
+    return heatmap_avg,paf_avg
+def process (input_image,n, params, model_params,tf_sess,sess2,flist):
+    PAD=50
+    scale_search = [2]
+    t1=time.time()
 
+    oriImg = input_image  # B,G,R order
+    heatmap_avg = np.zeros((input_image.shape[0], input_image.shape[1], 4))
+    paf_avg = np.zeros((input_image.shape[0], input_image.shape[1], 4))
+    heatmap_avg,paf_avg=predict(oriImg,scale_search,model_params,tf_sess)
+    '''
+    else:
+        heatmap_avg = np.zeros((input_image.shape[0]+100, input_image.shape[1]+100, 4))
+        paf_avg = np.zeros((input_image.shape[0]+100, input_image.shape[1]+100, 4))
+        oriImg_Re= cv2.copyMakeBorder(oriImg,50,50,50,50,cv2.BORDER_REPLICATE)
+        for fish in flist:
+            ROI=oriImg_Re[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:]
+            _heatmap_avg,_paf_avg=predict(ROI,scale_search,model_params,tf_sess)
+            heatmap_avg[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:]=_heatmap_avg
+            paf_avg[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:] = _paf_avg
+        heatmap_avg = heatmap_avg[50:heatmap_avg.shape[0]-50,50:heatmap_avg.shape[0]-50]
+        paf_avg=paf_avg[50:paf_avg.shape[0]-50,50:paf_avg.shape[0]-50]'''
     t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
     output0 = sess2.graph.get_tensor_by_name('output0:0')
@@ -103,7 +116,7 @@ def process (input_image, params, model_params,tf_sess):
     connection_all = []
     special_k = []
     mid_num = 5
-    limit=[[60,20],[80,20]]
+    limit=[[50,20],[50,20]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
@@ -225,18 +238,34 @@ def process (input_image, params, model_params,tf_sess):
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = input_image  # B,G,R order
-    '''for i in [0,1,2]:
+    for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)'''
+            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
     t5=time.time()
 
     stickwidth = 2
-    for i in [0,1,2]:
-        for n in range(len(subset)):
+    flist=[]
+    '''for n in range(len(subset)):
+        maxx=-1
+        maxy=-1
+        minx=10000
+        miny=10000
+        for i in [0,1,2]:
             idx=int(subset[n][i])
             if int(subset[n][i])!=-1:
-                cv2.circle(canvas,tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2])), 2, colors[i], thickness=-1)
-
+                location=tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2]))
+                cv2.circle(canvas,location, 2, colors[i], thickness=-1)
+                if(maxx<location[0]):maxx=location[0]
+                if (maxy < location[1]): maxy = location[1]
+                if (minx > location[0]): minx = location[0]
+                if (miny > location[1]): miny = location[1]
+        centerx=int((maxx+minx)/2)
+        centery = int((maxy + miny) / 2)
+        maxx=centerx+50
+        maxy=centery+50
+        minx = centerx - 50
+        miny = centery - 50
+        flist.append((maxx,maxy,minx,miny))'''
 
     for i in range(2):
         for n in range(len(subset)):
@@ -255,20 +284,18 @@ def process (input_image, params, model_params,tf_sess):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return canvas,t1,t2,t3,t4,t5
+    return canvas,t1,t2,t3,t4,t5,flist
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--video', type=str, required=True, help='input video file name')
-    parser.add_argument('--model', type=str, default='model/keras/model.h5', help='path to the weights file')
     parser.add_argument('--frame_ratio', type=int, default=1, help='analyze every [n] frames')
     parser.add_argument('--process_speed', type=int, default=4, help='Int 1 (fastest, lowest quality) to 4 (slowest, highest quality)')
     parser.add_argument('--end', type=int, default=None, help='Last video frame to analyze')
 
     args = parser.parse_args()
 
-    keras_weights_file = args.model
     frame_rate_ratio = args.frame_ratio
     process_speed = args.process_speed
     ending_frame = args.end
@@ -304,19 +331,19 @@ if __name__ == '__main__':
     # Video writer
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_output,fourcc, output_fps, (int(input_image.shape[1]/2), int(input_image.shape[0]/2)))
+    out = cv2.VideoWriter(video_output,fourcc, output_fps, (int(input_image.shape[1]), int(input_image.shape[0])))
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction= 0.75
     tf_config.gpu_options.allow_growth = True
-    with sess1.as_default():
-        with sess1.graph.as_default():
+    with sess1_1.as_default():
+        with sess1_1.graph.as_default():
             output_graph_def = tf.GraphDef()
             with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
-            sess1.run(init)
-            sess1 = tf.Session(config=tf_config)
+            sess1_1.run(init)
+            sess1_1 = tf.Session(config=tf_config)
     with sess2.as_default():
         with sess2.graph.as_default():
             map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, 3], name='input'),perm=[1,0,2])
@@ -350,20 +377,20 @@ if __name__ == '__main__':
             floatxy=tf.cast(xy,tf.float32)
             score=tf.expand_dims(tf.cast(tf.gather_nd(map_ori,xy),dtype=tf.float32),1)
             output=tf.concat([floatxy,score],1,name='output0')
-            #output0=tf.concat([xy])
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
     i = 0 # default is 0
+    flist=[]
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
             scale=0.5
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
-
                     # generate image with body parts
-            canvas,t1,t2,t3,t4,t5 = process(input_image, params, model_params,sess1)
-
+            canvas,t1,t2,t3,t4,t5,flist = process(input_image,i, params, model_params,sess1_1,sess2,flist)
+            cv2.imshow('canvas',canvas)
+            cv2.waitKey(1)
             print('Processing frame: ', i)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
@@ -371,5 +398,5 @@ if __name__ == '__main__':
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
-    sess1.close()
+    sess1_1.close()
     sess2.close()
