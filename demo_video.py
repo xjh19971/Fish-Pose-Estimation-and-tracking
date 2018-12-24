@@ -31,27 +31,28 @@ input_names=['input_1']
 output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1']
 
 g1_1 = tf.Graph()
-g1_2 = tf.Graph()
+#g1_2 = tf.Graph()
 g2 = tf.Graph()
 sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
-def predict(oriImg,scale_search,model_params,tf_sess):
+def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1):
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
     scale = multiplier[0]
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
-
-    imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
-    imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
+    realinput_img = np.zeros((lenimg, 100, 100, 3))
+    for i in range(0,lenimg):
+        imageToTest = cv2.resize(oriImg[i,:,:,:], (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+        imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
                                                           model_params['padValue'])
+        realinput_img[i,:,:,:] = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
 
-    input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
     tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
     tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
     tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
     tf_paf, tf_heatmap = tf_sess.run([tf_paf, tf_heatmap],
                                          feed_dict={
-                                             tf_input: input_img
+                                             tf_input: realinput_img
                                          })
     output_blobs = [tf_paf, tf_heatmap]
 
@@ -78,21 +79,24 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     t1=time.time()
 
     oriImg = input_image  # B,G,R order
-    heatmap_avg = np.zeros((input_image.shape[0], input_image.shape[1], 4))
-    paf_avg = np.zeros((input_image.shape[0], input_image.shape[1], 4))
-    heatmap_avg,paf_avg=predict(oriImg,scale_search,model_params,tf_sess)
-    '''
+    if n%2==0:
+        heatmap_avg = np.zeros((input_image.shape[0], input_image.shape[1], 4))
+        paf_avg = np.zeros((input_image.shape[0], input_image.shape[1], 4))
+        ROI=np.zeros((1, oriImg.shape[0], oriImg.shape[1],3))
+        ROI[0,:,:,:]=oriImg[:,:,:]
+        heatmap_avg,paf_avg=predict(ROI,scale_search,model_params,tf_sess)
     else:
         heatmap_avg = np.zeros((input_image.shape[0]+100, input_image.shape[1]+100, 4))
         paf_avg = np.zeros((input_image.shape[0]+100, input_image.shape[1]+100, 4))
         oriImg_Re= cv2.copyMakeBorder(oriImg,50,50,50,50,cv2.BORDER_REPLICATE)
+        ROI=np.zeros((len(flist),100,100,3))
         for fish in flist:
-            ROI=oriImg_Re[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:]
-            _heatmap_avg,_paf_avg=predict(ROI,scale_search,model_params,tf_sess)
-            heatmap_avg[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:]=_heatmap_avg
-            paf_avg[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:] = _paf_avg
+            ROI[flist.index(fish),:,:,:]=oriImg_Re[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:]
+        _heatmap_avg,_paf_avg=predict(ROI,scale_search,model_params,tf_sess,lenimg=len(flist))
+        heatmap_avg[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:]=_heatmap_avg
+        paf_avg[fish[3]+50:fish[1]+50,fish[2]+50:fish[0]+50,:] = _paf_avg
         heatmap_avg = heatmap_avg[50:heatmap_avg.shape[0]-50,50:heatmap_avg.shape[0]-50]
-        paf_avg=paf_avg[50:paf_avg.shape[0]-50,50:paf_avg.shape[0]-50]'''
+        paf_avg=paf_avg[50:paf_avg.shape[0]-50,50:paf_avg.shape[0]-50]
     t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
     output0 = sess2.graph.get_tensor_by_name('output0:0')
@@ -245,12 +249,30 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     stickwidth = 2
     flist=[]
     for n in range(len(subset)):
+        maxx=-1
+        maxy=-1
+        minx=10000
+        miny=10000
+        centerx=0
+        centery=0
+        find=False
         for i in [0,1,2]:
             idx=int(subset[n][i])
             if int(subset[n][i])!=-1:
                 location=tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2]))
                 cv2.circle(canvas,location, 2, colors[i], thickness=-1)
-
+                if(maxx<location[0]):maxx=location[0]
+                if (maxy < location[1]): maxy = location[1]
+                if (minx > location[0]): minx = location[0]
+                if (miny > location[1]): miny = location[1]
+                if i==1:
+                    centerx = location[0]
+                    centery = location[1]
+        maxx=centerx+50
+        maxy=centery+50
+        minx = centerx - 50
+        miny = centery - 50
+        flist.append((maxx,maxy,minx,miny))
 
     for i in range(2):
         for n in range(len(subset)):
