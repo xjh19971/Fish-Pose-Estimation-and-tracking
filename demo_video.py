@@ -101,6 +101,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     check=0
     temp1=output0[output0[:, 2] == 0].tolist()
     temp=[]
+    n=0
     for x in temp1:
         find=False
         for y in temp:
@@ -110,11 +111,14 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
                 find=True
                 break
         if not find:
-            temp.append([x[0],x[1],x[3],temp1.index(x)+check])
+            temp.append([x[0],x[1],x[3],temp1.index(x)-n+check])
+        else:
+            n=n+1
     check= check+len(temp)
     all_peaks.append(temp)
     temp1=output0[output0[:, 2] == 1].tolist()
     temp=[]
+    n=0
     for x in temp1:
         find=False
         for y in temp:
@@ -124,7 +128,9 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
                 find=True
                 break
         if not find:
-            temp.append([x[0],x[1],x[3],temp1.index(x)+check])
+            temp.append([x[0],x[1],x[3],temp1.index(x)-n+check])
+        else:
+            n=n+1
     check= check+len(temp)
     all_peaks.append(temp)
     temp1=output0[output0[:, 2] == 2].tolist()
@@ -138,7 +144,9 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
                 find=True
                 break
         if not find:
-            temp.append([x[0],x[1],x[3],temp1.index(x)+check])
+            temp.append([x[0],x[1],x[3],temp1.index(x)-n+check])
+        else:
+            n = n + 1
     check= check+len(temp)
     all_peaks.append(temp)
 
