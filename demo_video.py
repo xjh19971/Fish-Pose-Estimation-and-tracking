@@ -389,8 +389,8 @@ if __name__ == '__main__':
             tic = time.time()
                     # generate image with body parts
             canvas,t1,t2,t3,t4,t5,flist = process(input_image,i, params, model_params,sess1_1,sess2,flist)
-            cv2.imshow('canvas',canvas)
-            cv2.waitKey(1)
+            '''cv2.imshow('canvas',canvas)
+            cv2.waitKey(1)'''
             print('Processing frame: ', i)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
