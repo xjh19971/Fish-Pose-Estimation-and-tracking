@@ -240,7 +240,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     canvas = input_image  # B,G,R order
     for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, tuple(all_peaks[i][j][0:2]), 4, colors[i], thickness=-1)
+            cv2.circle(canvas, tuple(int(all_peaks[i][j][0]),int(all_peaks[i][j][1])), 4, colors[i], thickness=-1)
     t5=time.time()
 
     stickwidth = 2
