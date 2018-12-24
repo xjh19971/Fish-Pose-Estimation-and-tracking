@@ -366,7 +366,7 @@ if __name__ == '__main__':
             tempb=mapx[1:, :] < 0
             tempc=mapy[:, :-1] > 0
             tempd=mapy[:, 1:] < 0
-            tempe=map_ori>0.1
+            tempe=map_ori>0.2
             A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
             B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
             C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
