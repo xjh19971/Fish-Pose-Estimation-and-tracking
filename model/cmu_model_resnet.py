@@ -113,7 +113,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     Note that from stage 3, the first conv layer at main path is with strides=(2,2)
     And the shortcut should have strides=(2,2) as well
     """
-    filters1, filters2, filters3, filters4 = filters
+    filters2, filters3, filters4 = filters
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     conv_name_base = 'inception' + str(stage) + '_branch'
     bn_name_base = 'bn' + str(stage) + '_branch'
