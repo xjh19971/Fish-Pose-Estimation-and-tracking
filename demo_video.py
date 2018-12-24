@@ -12,7 +12,6 @@ from scipy.ndimage.filters import gaussian_filter
 import tensorflow as tf
 import util
 from config_reader import config_reader
-
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 
@@ -100,16 +99,47 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     output0 = sess2.run(output0, feed_dict={input: heatmap_avg[:, :, 0:3]})
     all_peaks=[]
     check=0
-    temp=output0[output0[:, 2] == 0].tolist()
-    temp=[[x[0],x[1],x[3],temp.index(x)+check] for x in temp]
+    temp1=output0[output0[:, 2] == 0].tolist()
+    temp=[]
+    for x in temp1:
+        find=False
+        for y in temp:
+            if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
+                temp[temp.index(y)][0]=(x[0]+y[0])/2
+                temp[temp.index(y)][10] = (x[1] + y[1]) / 2
+                find=True
+                break
+        if not find:
+            temp.append([x[0],x[1],x[3],temp1.index(x)+check])
     check= check+len(temp)
     all_peaks.append(temp)
-    temp = output0[output0[:, 2] == 1].tolist()
-    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
-    check = check+len(temp)
+    temp1=output0[output0[:, 2] == 1].tolist()
+    temp=[]
+    for x in temp1:
+        find=False
+        for y in temp:
+            if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
+                temp[temp.index(y)][0]=(x[0]+y[0])/2
+                temp[temp.index(y)][10] = (x[1] + y[1]) / 2
+                find=True
+                break
+        if not find:
+            temp.append([x[0],x[1],x[3],temp1.index(x)+check])
+    check= check+len(temp)
     all_peaks.append(temp)
-    temp = output0[output0[:, 2] == 2].tolist()
-    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    temp1=output0[output0[:, 2] == 2].tolist()
+    temp=[]
+    for x in temp1:
+        find=False
+        for y in temp:
+            if math.sqrt((x[0]-y[0])*(x[0]-y[0])+(x[1]-y[1])*(x[1]-y[1]))<=10:
+                temp[temp.index(y)][0]=(x[0]+y[0])/2
+                temp[temp.index(y)][10] = (x[1] + y[1]) / 2
+                find=True
+                break
+        if not find:
+            temp.append([x[0],x[1],x[3],temp1.index(x)+check])
+    check= check+len(temp)
     all_peaks.append(temp)
 
     t3 = time.time()
@@ -238,14 +268,14 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = input_image  # B,G,R order
-    for i in [0,1,2]:
+    '''for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, tuple([int(all_peaks[i][j][0]),int(all_peaks[i][j][1])]), 4, colors[i], thickness=-1)
+            cv2.circle(canvas, tuple([int(all_peaks[i][j][0]),int(all_peaks[i][j][1])]), 4, colors[i], thickness=-1)'''
     t5=time.time()
 
     stickwidth = 2
     flist=[]
-    '''for n in range(len(subset)):
+    for n in range(len(subset)):
         maxx=-1
         maxy=-1
         minx=10000
@@ -265,7 +295,7 @@ def process (input_image,n, params, model_params,tf_sess,sess2,flist):
         maxy=centery+50
         minx = centerx - 50
         miny = centery - 50
-        flist.append((maxx,maxy,minx,miny))'''
+        flist.append((maxx,maxy,minx,miny))
 
     for i in range(2):
         for n in range(len(subset)):
@@ -366,7 +396,7 @@ if __name__ == '__main__':
             tempb=mapx[1:, :] < 0
             tempc=mapy[:, :-1] > 0
             tempd=mapy[:, 1:] < 0
-            tempe=map_ori>0.2
+            tempe=map_ori>0.1
             A = tf.expand_dims(tf.concat([tempa,padxb],0),-1)
             B = tf.expand_dims(tf.concat([tempb,padxb],0),-1)
             C = tf.expand_dims(tf.concat([tempc,padyb],1),-1)
