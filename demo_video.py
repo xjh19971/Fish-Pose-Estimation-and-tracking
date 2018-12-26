@@ -239,13 +239,13 @@ def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
     return candidate_all,subset_all,all_peaks,t1,t2,t3
 def process (input_image,f, params, model_params,tf_sess,sess2,flist):
 
-    scale_search = [1]
+    scale_search = [2]
 
     oriImg = input_image  # B,G,R order
     if f%video_process==0:
         candidate_all, subset_all, all_peaks_all, t1, t2, t3=predict(oriImg,scale_search,model_params,tf_sess)
     else:
-        candidate_all, subset_all, all_peaks_all, t1, t2, t3=predict(oriImg,scale_search,model_params,tf_sess,lenimg=len(flist),flist=flist)
+        candidate_all, subset_all, all_peaks_all, t1, t2, t3=predict(oriImg,scale_search,model_params,tf_sess,lenimg=len(flist) if len(flist)!=0 else 1,flist=flist)
 
     canvas = input_image  # B,G,R order
     '''for i in [0,1,2]:
@@ -413,7 +413,7 @@ if __name__ == '__main__':
     flist=[]
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
-            scale=1
+            scale=0.5
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
                     # generate image with body parts
