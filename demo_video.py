@@ -242,6 +242,8 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
     scale_search = [2]
 
     oriImg = input_image  # B,G,R order
+    if f==13:
+        hh=0
     if f%video_process==0:
         candidate_all, subset_all, all_peaks_all, t1, t2, t3=predict(oriImg,scale_search,model_params,tf_sess)
     else:
