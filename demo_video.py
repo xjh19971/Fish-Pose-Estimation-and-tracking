@@ -38,7 +38,7 @@ sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
 def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
     t1 = time.time()
-    multiplier = scale_search[0]
+    multiplier = scale_search
     scale = multiplier[0]
     if lenimg==1:
         ROI=np.zeros((1, oriImg.shape[0], oriImg.shape[1],3))
