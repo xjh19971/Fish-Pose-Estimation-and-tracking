@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 45
-video_process=2
+video_process=30
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1,2],[2,3]]
 
@@ -395,7 +395,7 @@ if __name__ == '__main__':
             tempb=mapx[:,1:, :] < 0
             tempc=mapy[:,:, :-1] > 0
             tempd=mapy[:,:, 1:] < 0
-            tempe=map_ori>0.05
+            tempe=map_ori>0.1
             A = tf.expand_dims(tf.concat([tempa,padxb],1),-1)
             B = tf.expand_dims(tf.concat([tempb,padxb],1),-1)
             C = tf.expand_dims(tf.concat([tempc,padyb],2),-1)
@@ -413,7 +413,7 @@ if __name__ == '__main__':
     flist=[]
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
         if i%frame_rate_ratio == 0:
-            scale=0.5
+            scale=1
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
                     # generate image with body parts
