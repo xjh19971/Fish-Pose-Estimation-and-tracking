@@ -6,13 +6,10 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization,add
+from keras.layers import  BatchNormalization,add,ReLU
 import keras.backend as K
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
-
-def relu(x):
-    return ReLU(6.)(x)
 
 def identity_block(input_tensor, kernel_size, filters, stage, block, weight_decay):
     """The identity block is the block that has no conv layer at shortcut.
@@ -31,20 +28,25 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, weight_deca
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     #conv(x, 64, 3, "conv1_1", (weight_decay, 0))
     #x = Conv2D(filters1, (1, 1), name=conv_name_base + '2a')(input_tensor)
-    x = conv(input_tensor, filters1, 1, conv_name_base + '2a', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
+    '''x = conv(input_tensor, filters1, 1, conv_name_base + '2a', weight_decay)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', epsilon=1e-5, momentum=0.9)(x)
     x = Activation('relu')(x)  # 卷积层，BN层，激活函数#
 
     #x = Conv2D(filters2, kernel_size,
     #           padding='same', name=conv_name_base + '2b')(x)
     x = conv(x, filters2, kernel_size, conv_name_base + '2b', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', epsilon=1e-5, momentum=0.9)(x)
     x = Activation('relu')(x)
 
     #x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = conv(x, filters3, 1, conv_name_base + '2c', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
-
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c', epsilon=1e-5, momentum=0.9)(x)'''
+    x = conv(input_tensor, filters3, kernel_size, conv_name_base + '2a', weight_decay)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', epsilon=1e-5, momentum=0.9)(x)
+    x = Activation('relu')(x)
+    x = conv(x, filters3, kernel_size, conv_name_base + '2b', weight_decay)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', epsilon=1e-5, momentum=0.9)(x)
+    x = Activation('relu')(x)
     x = add([x, input_tensor])
     x = Activation('relu')(x)
     return x
@@ -65,37 +67,99 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     """
     filters1, filters2, filters3 = filters
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    conv_name_base = 'res' + str(stage) + block + '_branch'
+    conv_name_base = 'incpetion' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
 
-    #x = Conv2D(filters1, (1, 1), strides=strides,
+    ''''#x = Conv2D(filters1, (1, 1), strides=strides,
     #           name=conv_name_base + '2a')(input_tensor)
     x = conv(input_tensor, filters1, 1, conv_name_base + '2a', weight_decay, strides=strides)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', epsilon=1e-5, momentum=0.9)(x)
     x = Activation('relu')(x)
 
     #x = Conv2D(filters2, kernel_size, padding='same',
     #           name=conv_name_base + '2b')(x)
     x = conv(x, filters2, kernel_size, conv_name_base + '2b', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', epsilon=1e-5, momentum=0.9)(x)
     x = Activation('relu')(x)
 
     #x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = conv(x, filters3, 1, conv_name_base + '2c', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
-
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c', epsilon=1e-5, momentum=0.9)(x)'''
+    x = conv(input_tensor, filters3, kernel_size, conv_name_base + '2a', weight_decay,strides=strides)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', epsilon=1e-5, momentum=0.9)(x)
+    x = Activation('relu')(x)
+    x = conv(x, filters3, kernel_size, conv_name_base + '2b', weight_decay)
+    x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', epsilon=1e-5, momentum=0.9)(x)
+    x = Activation('relu')(x)
     #shortcut = Conv2D(filters3, (1, 1), strides=strides,
     #                  name=conv_name_base + '1')(input_tensor)
     shortcut = conv(input_tensor, filters3, 1, conv_name_base + '1', weight_decay, strides=strides)
-    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
+    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1', epsilon=1e-5, momentum=0.9)(shortcut)
 
     x = add([x, shortcut])
     x = Activation('relu')(x)
     return x
 
+def inception_block(input_tensor, filters, stage, weight_decay):
+    """conv_block is the block that has a conv layer at shortcut
+    # Arguments
+        input_tensor: input tensor
+        kernel_size: defualt 3, the kernel size of middle conv layer at main path
+        filters: list of integers, the filterss of 3 conv layer at main path
+        stage: integer, current stage label, used for generating layer names
+        block: 'a','b'..., current block label, used for generating layer names
+    # Returns
+        Output tensor for the block.
+    Note that from stage 3, the first conv layer at main path is with strides=(2,2)
+    And the shortcut should have strides=(2,2) as well
+    """
+    filters2, filters3, filters4 = filters
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    conv_name_base = 'inception' + str(stage) + '_branch'
+    bn_name_base = 'bn' + str(stage) + '_branch'
 
+    '''x1 = conv(input_tensor, filters1[0], 1, conv_name_base + 'a1', weight_decay)
+    x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
+    x1 = relu(x1)
+    x1 = pooling(x1, 2, 2)'''
 
-def relu(x): return Activation('relu')(x)
+    x2 = conv(input_tensor, filters2[0], 1, conv_name_base + 'b1', weight_decay)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = relu(x2)
+    x2 = conv(x2, filters2[1], 3, conv_name_base + 'b2', weight_decay)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = relu(x2)
+    x2 = pooling(x2, 2, 2)
+
+    x3 = conv(input_tensor, filters3[0], 1, conv_name_base + 'c1', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x3)
+    x3 = conv(x3, filters3[1], 3, conv_name_base + 'c2', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x3)
+    x3 = pooling(x3, 2, 2)
+    x3 = conv(x3, filters3[2], 3, conv_name_base + 'c3', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x3)
+
+    x4 = conv(input_tensor, filters4[0], 1, conv_name_base + 'd1', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = pooling(x4, 2, 2)
+    x4 = conv(x4, filters4[2], 3, conv_name_base + 'd3', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd3', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = conv(x4, filters4[3], 3, conv_name_base + 'd4', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd4', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x = Concatenate()([x2,x3,x4])
+    return x
+
+def relu(x):
+    return ReLU(6.)(x)
 
 
 def conv(x, nf, ks, name,  weight_decay, strides = None):
@@ -104,7 +168,7 @@ def conv(x, nf, ks, name,  weight_decay, strides = None):
         x = Conv2D(nf, (ks, ks), padding='same', name=name,
                kernel_regularizer=kernel_reg,
                kernel_initializer=random_normal(stddev=0.01),
-	       use_bias=False
+	           use_bias=False
                )(x)
     else:
         x = Conv2D(nf, (ks, ks), padding='same', name=name,strides=strides,
@@ -114,8 +178,8 @@ def conv(x, nf, ks, name,  weight_decay, strides = None):
     return x
 
 
-def pooling(x, ks, st, name):
-    x = MaxPooling2D((ks, ks), strides=(st, st), name=name)(x)
+def pooling(x, ks, st):
+    x = MaxPooling2D((ks, ks), strides=(st, st))(x)
     return x
 
 
@@ -156,46 +220,65 @@ def vgg_block(x, weight_decay):
     x = relu(x)
     x = conv(x, 128, 3, "conv4_4_CPM", (weight_decay, 0))
     x = relu(x)'''
-    if K.image_data_format() == 'channels_last':
-        bn_axis = 3
-    else:
-        bn_axis = 1
 
-    x = ZeroPadding2D((2, 2))(x)  # 对图片界面填充0，保证特征图的大小#
-    x = conv(x,64, 7, strides=(2, 2), name='conv1',weight_decay=(weight_decay,0))  # 定义卷积层#
-    x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
-    x = Activation('relu')(x)  # 激活函数#
-    x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
-
-    # stage2#
-    x = conv_block(x, 3, [64, 64, 256], stage=2, block='a',weight_decay=(weight_decay,0), strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='b',weight_decay=(weight_decay,0))
-    # stage3#
-    x = conv_block(x, 3, [128, 128, 512], stage=3, block='a',weight_decay=(weight_decay,0))
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b',weight_decay=(weight_decay,0))
-
+    '''
+    x = conv(x, 64, 3, "conv1_1", (weight_decay, 0),strides=(2,2))                 #64
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 64, 3, "conv1_2", (weight_decay, 0))                               #64
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    # Block 2
+    x = conv(x, 128, 3, "conv2_1", (weight_decay, 0),strides=(2,2))                 #128
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 128, 3, "conv2_2", (weight_decay, 0),strides=(2,2))                 #256
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    '''
+    x=inception_block(x, [[32,64],[32,64,128],[32,32,64,64]], 1, (weight_decay, 0))
+    x=inception_block(x, [[64,128],[64,128,256],[64,64,128,128]], 2, (weight_decay, 0))
+    x = pooling(x, 2, 2)
     return x
 
 
 def stage1_block(x, num_p, branch, weight_decay):
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_b', weight_decay=(weight_decay, 0))
-    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_c', weight_decay=(weight_decay, 0), strides=(1, 1))
-
+    x = conv(x, 64, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 64, 3, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 64, 3, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    '''x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)'''
+    x = conv(x, num_p, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_b', weight_decay=(weight_decay, 0), )
-    x = identity_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_c', weight_decay=(weight_decay, 0), )
-    x = identity_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_d', weight_decay=(weight_decay, 0), )
-    x = conv_block(x, 3, [64, 64, num_p], stage=stage, block=str(branch)+'_e', weight_decay=(weight_decay, 0), strides=(1, 1))
-
-
-
+    xx = conv(x, 64, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 64, 3, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 64, 3, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    '''x = conv(x, 256, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)'''
+    x = conv(x, num_p, 1, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x
 
 
@@ -211,7 +294,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 def get_training_model(weight_decay):
 
-    stages = 4
+    stages = 2
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
@@ -271,7 +354,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 4
+    stages = 2
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
