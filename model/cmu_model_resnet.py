@@ -46,11 +46,11 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, weight_deca
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
     x = add([x, input_tensor])
-    x = Activation('relu')(x)
+    x = relu(x)
     return x
 
 
-def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, strides=(2, 2)):
+def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, strides=(2, 2),final=False):
     """conv_block is the block that has a conv layer at shortcut
     # Arguments
         input_tensor: input tensor
@@ -90,7 +90,8 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
 
     x = add([x, shortcut])
-    x = Activation('relu')(x)
+    if final==False:
+        x = relu(x)
     return x
 
 
