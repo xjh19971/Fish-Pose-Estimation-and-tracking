@@ -40,10 +40,10 @@ def STEM_block(input_tensor, filters, stage, weight_decay):
     x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'c1', weight_decay,strides=(2, 2))
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    x4 = conv(x4, filters4[2], 3, conv_name_base + 'c2', weight_decay)
+    x4 = conv(x4, filters4[1], 3, conv_name_base + 'c2', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    shortcut = conv(input_tensor, filters4[2], 1, conv_name_base + '1', weight_decay, strides=(2, 2))
+    shortcut = conv(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay, strides=(2, 2))
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
     x = add([x4, shortcut])
     x = relu(x)
@@ -86,7 +86,7 @@ def tiny_inception_block(input_tensor, filters, stage,branch, weight_decay):
     x3 = conv(x3, filters3[2], 3, conv_name_base + 'c3', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x3)
     x3 = relu(x3)
-    x = Concatenate()([x1,x2,x3,input_tensor])
+    x = Concatenate()([x1,x2,x3])
     x=conv(x, 64, 1, conv_name_base + 'd', weight_decay)
     x = add([x, input_tensor])
     x = relu(x)
@@ -241,7 +241,6 @@ def get_training_model(weight_decay):
     stages = 2
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
-
     img_size=368
     img_input_shape = (img_size, img_size, 3)
     vec_input_shape = (46, 46, KEY_POINT_LINK)
