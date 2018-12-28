@@ -164,15 +164,12 @@ def vgg_block(x, weight_decay):
     x = ZeroPadding2D((2, 2))(x)  # 对图片界面填充0，保证特征图的大小#
     x = conv(x,64, 7, strides=(2, 2), name='conv1',weight_decay=(weight_decay,0))  # 定义卷积层#
     x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
-    x = Activation('relu')(x)  # 激活函数#
+    x = relu(x)  # 激活函数#
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
 
     # stage2#
     x = conv_block(x, 3, [64, 64, 256], stage=2, block='a',weight_decay=(weight_decay,0), strides=(1, 1))
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='b',weight_decay=(weight_decay,0))
-    # stage3#
-    x = conv_block(x, 3, [128, 128, 512], stage=3, block='a',weight_decay=(weight_decay,0))
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b',weight_decay=(weight_decay,0))
 
     return x
 
@@ -180,7 +177,6 @@ def vgg_block(x, weight_decay):
 def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
     x = conv_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_b', weight_decay=(weight_decay, 0))
     x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_c', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
 
     return x
@@ -189,7 +185,6 @@ def stage1_block(x, num_p, branch, weight_decay):
 def stageT_block(x, num_p, stage, branch, weight_decay):
     # Block 1
     x = conv_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_b', weight_decay=(weight_decay, 0), )
     x = conv_block(x, 3, [64, 64, num_p], stage=stage, block=str(branch)+'_e', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
 
 
@@ -209,7 +204,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 def get_training_model(weight_decay):
 
-    stages = 3
+    stages = 4
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
@@ -269,7 +264,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 3
+    stages = 4
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
