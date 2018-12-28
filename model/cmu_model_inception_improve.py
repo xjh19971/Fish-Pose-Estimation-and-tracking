@@ -210,7 +210,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 64, 3, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], stage+2,branch (weight_decay, 0))
+    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], stage+2,branch, (weight_decay, 0))
     '''x = conv(x, 256, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)'''
