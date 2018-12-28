@@ -124,7 +124,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x1 = pooling(x1, 2, 2)'''
 
 
-    x4 = conv(input_tensor, filters4[0], 1, conv_name_base + 'd1', weight_decay)
+    x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
     x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
@@ -218,8 +218,8 @@ def vgg_block(x, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     '''
-    x=inception_block(x, [32,64,128,128], 1, (weight_decay, 0))
-    x=inception_block(x, [64,128,256,256], 2, (weight_decay, 0))
+    x=inception_block(x, [64,64,64,64], 1, (weight_decay, 0))
+    x=inception_block(x, [128,128,128,128], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 
