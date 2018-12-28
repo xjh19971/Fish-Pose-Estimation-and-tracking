@@ -6,7 +6,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization,add
+from keras.layers import  BatchNormalization,add,ReLU
 import keras.backend as K
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2*2
@@ -95,7 +95,6 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
 
 
 
-def relu(x): return Activation('relu')(x)
 
 
 def conv(x, nf, ks, name,  weight_decay, strides = None):
