@@ -218,8 +218,8 @@ def vgg_block(x, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     '''
-    x=inception_block(x, [[32,64,128,256]], 1, (weight_decay, 0))
-    x=inception_block(x, [[64,128,256,512]], 2, (weight_decay, 0))
+    x=inception_block(x, [32,64,128,256], 1, (weight_decay, 0))
+    x=inception_block(x, [64,128,256,512], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 
