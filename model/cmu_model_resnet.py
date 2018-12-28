@@ -33,13 +33,13 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, weight_deca
     #x = Conv2D(filters1, (1, 1), name=conv_name_base + '2a')(input_tensor)
     x = conv(input_tensor, filters1, 1, conv_name_base + '2a', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
-    x = Activation('relu')(x)  # 卷积层，BN层，激活函数#
+    x = relu(x)  # 卷积层，BN层，激活函数#
 
     #x = Conv2D(filters2, kernel_size,
     #           padding='same', name=conv_name_base + '2b')(x)
     x = conv(x, filters2, kernel_size, conv_name_base + '2b', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
-    x = Activation('relu')(x)
+    x = relu(x)
 
     #x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = conv(x, filters3, 1, conv_name_base + '2c', weight_decay)
@@ -72,13 +72,13 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, weight_decay, s
     #           name=conv_name_base + '2a')(input_tensor)
     x = conv(input_tensor, filters1, 1, conv_name_base + '2a', weight_decay, strides=strides)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
-    x = Activation('relu')(x)
+    x = relu(x)
 
     #x = Conv2D(filters2, kernel_size, padding='same',
     #           name=conv_name_base + '2b')(x)
     x = conv(x, filters2, kernel_size, conv_name_base + '2b', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
-    x = Activation('relu')(x)
+    x = relu(x)
 
     #x = Conv2D(filters3, (1, 1), name=conv_name_base + '2c')(x)
     x = conv(x, filters3, 1, conv_name_base + '2c', weight_decay)
