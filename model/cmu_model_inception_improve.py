@@ -66,7 +66,7 @@ def tiny_inception_block(input_tensor, filters, stage,branch, weight_decay):
     conv_name_base = 'tinyinception' + str(stage) + '_branch'+str(branch)
     bn_name_base = 'bn' + str(stage) + '_branch'+str(branch)
 
-    x=conv(input_tensor, filters1[0], 1, conv_name_base + 'a1', weight_decay)
+    x=conv(input_tensor, filters1[0], 1, conv_name_base + 'f', weight_decay)
     x1 = conv(x, filters1[0], 3, conv_name_base + 'a1', weight_decay)
     x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
     x1 = relu(x1)
