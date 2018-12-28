@@ -67,8 +67,8 @@ def tiny_inception_block(input_tensor, filters, stage,branch, weight_decay):
     """
     filters1,filters2,filters3 = filters
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    conv_name_base = 'tinyinception' + str(stage) + '_branch'+branch
-    bn_name_base = 'bn' + str(stage) + '_branch'+branch
+    conv_name_base = 'tinyinception' + str(stage) + '_branch'+str(branch)
+    bn_name_base = 'bn' + str(stage) + '_branch'+str(branch)
 
     x1 = conv(input_tensor, filters1[0], 3, conv_name_base + 'a1', weight_decay)
     x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
