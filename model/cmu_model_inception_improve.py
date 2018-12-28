@@ -40,11 +40,8 @@ def STEM_block(input_tensor, filters, stage, weight_decay):
     x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'c1', weight_decay,strides=(2, 2))
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    x4 = conv(x4, filters4[1], 3, conv_name_base + 'c2', weight_decay)
+    x4 = conv(x4, filters4[2], 3, conv_name_base + 'c2', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x4)
-    x4 = relu(x4)
-    x4 = conv(x4, filters4[2], 3, conv_name_base + 'c3', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
     shortcut = conv(input_tensor, filters4[2], 1, conv_name_base + '1', weight_decay, strides=(2, 2))
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
@@ -173,8 +170,8 @@ def vgg_block(x, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     '''
-    x=STEM_block(x, [64,64,64], 1, (weight_decay, 0))
-    x=STEM_block(x, [128,128,128], 2, (weight_decay, 0))
+    x=STEM_block(x, [64,64], 1, (weight_decay, 0))
+    x=STEM_block(x, [128,128], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 
