@@ -18,12 +18,12 @@ K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
 #from model.cmu_model_resnet import get_training_model
-from model.cmu_model_inception import get_training_model
+from model.cmu_model_inception_improve import get_training_model
 #from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 32
+batch_size = 16
 base_lr = 0.01 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
