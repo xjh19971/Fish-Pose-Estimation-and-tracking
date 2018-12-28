@@ -37,18 +37,18 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x1 = pooling(x1, 2, 2)'''
 
 
-    x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'c1', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = conv(x4, filters4[1], 3, conv_name_base + 'c2', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
     x4 = pooling(x4, 2, 2)
-    x4 = conv(x4, filters4[2], 3, conv_name_base + 'd3', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd3', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = conv(x4, filters4[2], 3, conv_name_base + 'c3', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    x4 = conv(x4, filters4[3], 3, conv_name_base + 'd4', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd4', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = conv(x4, filters4[3], 3, conv_name_base + 'c4', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c4', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
     x = x4
     return x
