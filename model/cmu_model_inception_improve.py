@@ -92,6 +92,7 @@ def tiny_inception_block(input_tensor, filters, stage,branch, weight_decay):
     x = Concatenate()([x1,x2,x3,input_tensor])
     x=conv(x, 64, 1, conv_name_base + 'd', weight_decay)
     x = add([x, input_tensor])
+    x = relu(x)
     return x
 
 def relu(x):
