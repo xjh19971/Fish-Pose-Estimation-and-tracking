@@ -52,7 +52,7 @@ def inception_block(input_tensor, filters, stage, weight_decay):
     x4 = relu(x4)
     x = x4
     return x
-def tiny_inception_block(input_tensor, filters, stage, weight_decay):
+def tiny_inception_block(input_tensor, filters, stage,branch, weight_decay):
     """conv_block is the block that has a conv layer at shortcut
     # Arguments
         input_tensor: input tensor
@@ -67,8 +67,8 @@ def tiny_inception_block(input_tensor, filters, stage, weight_decay):
     """
     filters1,filters2,filters3 = filters
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    conv_name_base = 'tinyinception' + str(stage) + '_branch'
-    bn_name_base = 'bn' + str(stage) + '_branch'
+    conv_name_base = 'tinyinception' + str(stage) + '_branch'+branch
+    bn_name_base = 'bn' + str(stage) + '_branch'+branch
 
     x1 = conv(input_tensor, filters1[0], 3, conv_name_base + 'a1', weight_decay)
     x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
@@ -189,7 +189,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = conv(x, 64, 3, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x= tiny_inception_block(x, [[64],[64,64],[64, 64, 64]], 3, (weight_decay, 0))
+    x= tiny_inception_block(x, [[64],[64,64],[64, 64, 64]], 3,branch, (weight_decay, 0))
     '''x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)'''
@@ -210,7 +210,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 64, 3, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], 4, (weight_decay, 0))
+    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], stage+2,branch (weight_decay, 0))
     '''x = conv(x, 256, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)'''
