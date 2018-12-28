@@ -67,7 +67,7 @@ def tiny_inception_block(input_tensor, filters, stage, weight_decay):
     """
     filters1,filters2,filters3 = filters
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    conv_name_base = 'inception' + str(stage) + '_branch'
+    conv_name_base = 'tinyinception' + str(stage) + '_branch'
     bn_name_base = 'bn' + str(stage) + '_branch'
 
     x1 = conv(input_tensor, filters1[0], 3, conv_name_base + 'a1', weight_decay)
