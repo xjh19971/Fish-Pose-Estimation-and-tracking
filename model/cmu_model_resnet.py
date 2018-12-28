@@ -181,7 +181,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
     x = conv_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
     x = identity_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_b', weight_decay=(weight_decay, 0))
-    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_c', weight_decay=(weight_decay, 0), strides=(1, 1))
+    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_c', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
 
     return x
 
@@ -190,7 +190,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     # Block 1
     x = conv_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
     x = identity_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_b', weight_decay=(weight_decay, 0), )
-    x = conv_block(x, 3, [64, 64, num_p], stage=stage, block=str(branch)+'_e', weight_decay=(weight_decay, 0), strides=(1, 1))
+    x = conv_block(x, 3, [64, 64, num_p], stage=stage, block=str(branch)+'_e', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
 
 
 
