@@ -192,7 +192,7 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = add([x1, x])
     x = relu(x)
-    x= tiny_inception_block(x, [[64],[64,64],[64, 64, 64]], 3,branch, (weight_decay, 0))
+    x= tiny_inception_block(x, [[64],[64,64],[64, 64, 128]], 3,branch, (weight_decay, 0))
     '''x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)'''
@@ -217,7 +217,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = add([x1, x])
     x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], stage+2,branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 128]], stage+2,branch, (weight_decay, 0))
     '''x = conv(x, 256, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)'''
