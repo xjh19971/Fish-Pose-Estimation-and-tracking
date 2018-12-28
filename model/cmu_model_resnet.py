@@ -174,15 +174,19 @@ def vgg_block(x, weight_decay):
 def stage1_block(x, num_p, branch, weight_decay):
     # Block 1
     x = conv_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
-    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_c', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='_b',weight_decay=(weight_decay,0))
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='_c',weight_decay=(weight_decay,0))
+    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_d', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
 
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     # Block 1
-    x = conv_block(x, 3, [64, 64, 256], stage=stage, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
-    x = conv_block(x, 3, [64, 64, num_p], stage=stage, block=str(branch)+'_e', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
+    x = conv_block(x, 3, [64, 64, 256], stage=1, block=str(branch)+'_a', weight_decay=(weight_decay, 0), strides=(1, 1))
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='_b',weight_decay=(weight_decay,0))
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='_c',weight_decay=(weight_decay,0))
+    x = conv_block(x, 3, [64, 64, num_p], stage=1, block=str(branch)+'_d', weight_decay=(weight_decay, 0), strides=(1, 1),final=True)
 
 
 
@@ -201,7 +205,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 def get_training_model(weight_decay):
 
-    stages = 4
+    stages = 2
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
@@ -261,7 +265,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 4
+    stages = 2
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
