@@ -90,7 +90,7 @@ def tiny_inception_block(input_tensor, filters, stage, weight_decay):
     x3 = conv(x3, filters3[2], 3, conv_name_base + 'c3', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x3)
     x3 = relu(x3)
-    x = Concatenate()([x1,x3,x3])
+    x = Concatenate()([x1,x2,x3])
     return x
 
 def relu(x):
