@@ -109,7 +109,7 @@ def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
         check = check+len(temp)
     t3 = time.time()
     mid_num = 10
-    limit=[[60,20],[60,20]]
+    limit=[[80,10],[80,10]]
     subset_all=[]
     candidate_all = []
     checkpoint=0
@@ -156,8 +156,9 @@ def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
                             for I in range(len(startend))])
 
                         score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
-                        score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
-                            0.5 * oriImg.shape[0] / norm - 1, 0)
+                        #score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
+                        #    0.5 * oriImg.shape[0] / norm - 1, 0)
+                        score_with_dist_prior = sum(score_midpts) / len(score_midpts)
                         criterion1 = len(np.nonzero(score_midpts > 0.01)[0]) > 0.8 * len(
                             score_midpts)
                         criterion2 = score_with_dist_prior > 0
