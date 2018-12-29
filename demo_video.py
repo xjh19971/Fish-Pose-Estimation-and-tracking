@@ -473,6 +473,7 @@ if __name__ == '__main__':
             tic = time.time()
             # generate image with body parts
             canvas, t1, t2, t3, t4,t5,t6 ,flist = process(input_image, i, params, model_params, sess1_1, flist)
+            print('processing frame is %d' % i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +str(t5 - t4)+str(t6 - t5) + str(toc - t6))
