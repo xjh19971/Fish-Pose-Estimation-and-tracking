@@ -307,12 +307,12 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                                 No = lenflistnew
                             else:
                                 No = flist[index][4]
-                            if fish_detected[No]==1:
+                            if fish_detected[No-1]==1:
                                 np.delete(subset,n,0)
                                 n=n-1
                                 continue
                             else:
-                                fish_detected[No]=1
+                                fish_detected[No-1]=1
                         else:
                             lenflistnew = lenflistnew + 1
                             No = lenflistnew
