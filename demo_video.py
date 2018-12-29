@@ -16,7 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-PAD = 45
+PAD = 50
 video_process = 50
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
@@ -37,8 +37,9 @@ sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
 def merge(middlepeaklist):
     mergelist=np.zeros(len(middlepeaklist))
+    num=0
     for i in range(len(middlepeaklist)):
-        middlepeaklist[i][3]=middlepeaklist[i][3]-len(mergelist)
+        middlepeaklist[i][3]=middlepeaklist[i][3]-num
         for j in range(i+1,len(middlepeaklist)):
             if math.sqrt(pow(middlepeaklist[i][0]-middlepeaklist[j][0],2)
                          +pow(middlepeaklist[i][1]-middlepeaklist[j][1],2))<10 and mergelist[j]==0:
@@ -47,6 +48,7 @@ def merge(middlepeaklist):
                                    (middlepeaklist[i][2]+middlepeaklist[j][2])/2,
                                    middlepeaklist[i][3]]
                 mergelist[j]=1
+                num=num+1
     for j in range(len(mergelist)-1,-1,-1):
         if mergelist[j]:
             middlepeaklist.remove(middlepeaklist[j])
@@ -67,6 +69,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
             ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3]:fish[1], fish[2]:fish[0], :]
+            cv2.imwrite('rr.png',ROI[flist.index(fish), :, :, :])
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
