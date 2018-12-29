@@ -48,7 +48,8 @@ def merge(middlepeaklist):
                                    middlepeaklist[i][3]]
                 mergelist[j]=1
     for j in mergelist:
-        middlepeaklist.remove(middlepeaklist[j])
+        if j:
+            middlepeaklist.remove(middlepeaklist[j])
     return middlepeaklist
 
 def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
