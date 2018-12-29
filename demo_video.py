@@ -68,7 +68,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_REPLICATE)
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
-            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3]:fish[1], fish[2]:fish[0], :]
+            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3]+PAD:fish[1]+PAD, fish[2]+PAD:fish[0]+PAD, :]
             cv2.imwrite('rr.png',ROI[flist.index(fish), :, :, :])
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
