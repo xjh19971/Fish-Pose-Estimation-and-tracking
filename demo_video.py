@@ -260,7 +260,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
     stickwidth = 2
     flistnew = []
     lenflistnew = len(flist)
-    fish_detected=np.zeros(len(flist))
+    fish_detected=np.zeros(len(flist)+5)
     checkpoint = 0
     if f != 0:
         points = [[x[0] - PAD, x[1] - PAD] for x in flist]
@@ -305,14 +305,15 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                             if dis > 10:
                                 lenflistnew = lenflistnew + 1
                                 No = lenflistnew
+                                fish_detected[No - 1] = 1
                             else:
                                 No = flist[index][4]
-                            if fish_detected[No-1]==1:
-                                np.delete(subset,n,0)
-                                n=n-1
-                                continue
-                            else:
-                                fish_detected[No-1]=1
+                                if fish_detected[No-1]==1:
+                                    np.delete(subset,n,0)
+                                    n=n-1
+                                    continue
+                                else:
+                                    fish_detected[No-1]=1
                         else:
                             lenflistnew = lenflistnew + 1
                             No = lenflistnew
