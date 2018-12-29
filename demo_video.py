@@ -30,7 +30,6 @@ colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 input_names = ['input_1']
 output_names = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
-
 g1_1 = tf.Graph()
 g2 = tf.Graph()
 sess1_1 = tf.Session(graph=g1_1)
@@ -281,7 +280,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
     lenflistnew = len(flist)
     fish_detected=np.zeros(len(flist)+5)
     checkpoint = 0
-    if f != 0:
+    if f != 0 and f%video_process==0:
         points = [[x[0] - PAD, x[1] - PAD] for x in flist]
         tree = KDTree(points)
 
@@ -311,7 +310,6 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                     location[0] = location[0] + locx
                     location[1] = location[1] + locy
                     location = tuple(location)
-                    cv2.circle(canvas, location, 2, colors[i], thickness=-1)
                     if (maxx < location[0]): maxx = location[0]
                     if (maxy < location[1]): maxy = location[1]
                     if (minx > location[0]): minx = location[0]
@@ -320,7 +318,11 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         centerx = location[0]
                         centery = location[1]
                         if f != 0:
-                            dis, index = tree.query([centerx, centery])
+                            if f%video_process==0:
+                                dis, index = tree.query([centerx, centery])
+                            else:
+                                dis=math.sqrt(pow(centerx-(locx+PAD),2)+pow(centery-(locy+PAD),2))
+                                index=k
                             if dis > 10:
                                 lenflistnew = lenflistnew + 1
                                 No = lenflistnew
@@ -336,6 +338,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         else:
                             lenflistnew = lenflistnew + 1
                             No = lenflistnew
+                    cv2.circle(canvas, location, 2, colors[i], thickness=-1)
             if centerx==-1:
                 continue
             maxx = centerx + PAD
