@@ -353,7 +353,9 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                 index = subset[n][np.array(limbSeq[i]) - 1]
                 if -1 in index:
                     continue
-                cur_canvas = canvas.copy()
+                Y = candidate[index.astype(int) - checkpoint, 0] + locx
+                X = candidate[index.astype(int) - checkpoint, 1] + locy
+                '''cur_canvas = canvas.copy()
                 Y = candidate[index.astype(int) - checkpoint, 0] + locx
                 X = candidate[index.astype(int) - checkpoint, 1] + locy
                 mX = np.mean(X)
@@ -363,9 +365,11 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                 polygon = cv2.ellipse2Poly((int(mY), int(mX)), (int(length / 2), stickwidth), int(angle), 0,
                                            360, 1)
                 cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
-                canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
+                canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)'''
+                canvas=cv2.line(canvas, (int(Y[1]),int(X[1])),(int(Y[0]),int(X[0])),   colors[i],2)
     flist = flistnew
-    return canvas, t1, t2, t3, t4,t5, flist
+    t6 = time.time()
+    return canvas, t1, t2, t3, t4,t5,t6, flist
 
 
 if __name__ == '__main__':
@@ -473,12 +477,10 @@ if __name__ == '__main__':
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
             # generate image with body parts
-            canvas, t1, t2, t3, t4,t5 ,flist = process(input_image, i, params, model_params, sess1_1, flist)
-            cv2.imwrite('canvas.png',canvas)
-            print('Processing frame: ', i)
+            canvas, t1, t2, t3, t4,t5,t6 ,flist = process(input_image, i, params, model_params, sess1_1, flist)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
-            print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +str(t5 - t4) + str(toc - t5))
+            print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +str(t5 - t4)+str(t6 - t5) + str(toc - t6))
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
