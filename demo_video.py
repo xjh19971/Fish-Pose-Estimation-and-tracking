@@ -35,7 +35,20 @@ g1_1 = tf.Graph()
 g2 = tf.Graph()
 sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
-
+def merge(middlepeaklist):
+    mergelist=[]
+    for i in range(len(middlepeaklist)):
+        for j in range(i+1,len(middlepeaklist)):
+            if math.sqrt(pow(middlepeaklist[i][0]-middlepeaklist[j][0],2)
+                         +pow(middlepeaklist[i][1]-middlepeaklist[j][1],2))<10:
+                middlepeaklist[i]=[(middlepeaklist[i][0]+middlepeaklist[j][0])/2,
+                                   (middlepeaklist[i][1]+middlepeaklist[j][1])/2,
+                                   (middlepeaklist[i][2]+middlepeaklist[j][2])/2,
+                                   middlepeaklist[i][3]]
+                mergelist.append(j)
+    for j in mergelist:
+        middlepeaklist.remove(middlepeaklist[j])
+    return middlepeaklist
 
 def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
@@ -104,6 +117,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 1].tolist()
         temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
+        temp = merge(temp)
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 2].tolist()
@@ -305,7 +319,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                             if dis > 10:
                                 lenflistnew = lenflistnew + 1
                                 No = lenflistnew
-                                fish_detected[No - 1] = 1
+
                             else:
                                 No = flist[index][4]
                                 if fish_detected[No-1]==1:
@@ -451,8 +465,7 @@ if __name__ == '__main__':
             tic = time.time()
             # generate image with body parts
             canvas, t1, t2, t3, t4, flist = process(input_image, i, params, model_params, sess1_1, flist)
-            # cv2.imshow('canvas',canvas)
-            # cv2.waitKey(1000)
+            cv2.imwrite('canvas.png',canvas)
             print('Processing frame: ', i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
