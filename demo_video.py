@@ -280,7 +280,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
     lenflistnew = len(flist)
     fish_detected=np.zeros(len(flist)+5)
     checkpoint = 0
-    if f != 0 and f%video_process==0:
+    if f != 0 :
         points = [[x[0] - PAD, x[1] - PAD] for x in flist]
         tree = KDTree(points)
 
@@ -318,15 +318,10 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         centerx = location[0]
                         centery = location[1]
                         if f != 0:
-                            if f%video_process==0:
-                                dis, index = tree.query([centerx, centery])
-                            else:
-                                dis=math.sqrt(pow(centerx-(locx+PAD),2)+pow(centery-(locy+PAD),2))
-                                index=k
+                            dis, index = tree.query([centerx, centery])
                             if dis > 10:
                                 lenflistnew = lenflistnew + 1
                                 No = lenflistnew
-
                             else:
                                 No = flist[index][4]
                                 if fish_detected[No-1]==1:
