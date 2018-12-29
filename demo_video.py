@@ -42,12 +42,12 @@ def merge(middlepeaklist):
         for j in range(i+1,len(middlepeaklist)):
             if math.sqrt(pow(middlepeaklist[i][0]-middlepeaklist[j][0],2)
                          +pow(middlepeaklist[i][1]-middlepeaklist[j][1],2))<10 and mergelist[j]==0:
-                middlepeaklist[i]=[(middlepeaklist[i][0]+middlepeaklist[j][0])/2,
-                                   (middlepeaklist[i][1]+middlepeaklist[j][1])/2,
+                middlepeaklist[i]=[int((middlepeaklist[i][0]+middlepeaklist[j][0])/2),
+                                   int((middlepeaklist[i][1]+middlepeaklist[j][1])/2),
                                    (middlepeaklist[i][2]+middlepeaklist[j][2])/2,
                                    middlepeaklist[i][3]]
                 mergelist[j]=1
-    for j in range(len(mergelist)):
+    for j in range(len(mergelist)-1,-1,-1):
         if mergelist[j]:
             middlepeaklist.remove(middlepeaklist[j])
     return middlepeaklist
@@ -461,7 +461,7 @@ if __name__ == '__main__':
     i = 0  # default is 0
     flist = []
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i % frame_rate_ratio == 0 and (i>=201 or i==0):
+        if i % frame_rate_ratio == 0 :
             scale = 0.5
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
