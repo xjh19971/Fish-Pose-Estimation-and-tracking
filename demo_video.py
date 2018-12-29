@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 45
-video_process=1
+video_process=5
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1,2],[2,3]]
 
@@ -240,7 +240,7 @@ def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
     return candidate_all,subset_all,all_peaks,t1,t2,t3
 def process (input_image,f, params, model_params,tf_sess,sess2,flist):
 
-    scale_search = [2]
+    scale_search = [2.5]
 
     oriImg = input_image  # B,G,R order
     if f%video_process==0:
@@ -265,11 +265,12 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
             locy=0
         else:
             locx=flist[k][2]
-            locy =flist[k][3]
+            locy = flist[k][3]
         for i in [0, 1, 2]:
             for j in range(len(all_peaks[i])):
-                cv2.circle(canvas, tuple([int(all_peaks[i][j][0]), int(all_peaks[i][j][1])]), 4, colors[i],
+                cv2.circle(canvas, tuple([int(all_peaks[i][j][0]+locx), int(all_peaks[i][j][1])+locy]), 2, colors[i],
                  thickness=-1)
+
         for n in range(len(subset)):
             maxx=-1
             maxy=-1
