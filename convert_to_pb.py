@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras import backend as K
 import tensorflow.contrib.tensorrt as trt
 from config_reader import config_reader
-from model.cmu_model_resnet import get_testing_model
+from model.cmu_model_inception_improve import get_testing_model
 
 
 def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True,input_names=None):
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     tf.train.write_graph(frozen_graph, ".", "tf_model_real.pb", as_text=False)
     trt_graph = trt.create_inference_graph(
         input_graph_def=frozen_graph,
-        outputs=output_names,
+        outputs=['batch_normalization_17/FusedBatchNorm_1','batch_normalization_22/FusedBatchNorm_1'],
         max_batch_size=1,
         max_workspace_size_bytes=4000000000,
         precision_mode='INT8',

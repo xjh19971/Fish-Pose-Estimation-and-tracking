@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 45
-video_process=30
+video_process=1
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1,2],[2,3]]
 
@@ -29,7 +29,7 @@ mapIdx = [[2,3],[4,5]]
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
 input_names=['input_1']
-output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1']
+output_names= ['batch_normalization_17/FusedBatchNorm_1','batch_normalization_22/FusedBatchNorm_1']
 
 g1_1 = tf.Graph()
 #g1_2 = tf.Graph()
@@ -395,7 +395,7 @@ if __name__ == '__main__':
             tempb=mapx[:,1:, :] < 0
             tempc=mapy[:,:, :-1] > 0
             tempd=mapy[:,:, 1:] < 0
-            tempe=map_ori>0.15
+            tempe=map_ori>0.1
             A = tf.expand_dims(tf.concat([tempa,padxb],1),-1)
             B = tf.expand_dims(tf.concat([tempb,padxb],1),-1)
             C = tf.expand_dims(tf.concat([tempc,padyb],2),-1)
