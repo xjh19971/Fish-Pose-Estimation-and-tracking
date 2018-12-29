@@ -263,7 +263,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
 
 
 def process(input_image, f, params, model_params, tf_sess, flist):
-    scale_search = [3.5]
+    scale_search = [3]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
@@ -461,10 +461,11 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = 0  # default is 0
+    i =0  # default is 0
     flist = []
+
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i % frame_rate_ratio == 0 :
+        if i % frame_rate_ratio == 0 and i>=0 :
             scale = 0.5
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
