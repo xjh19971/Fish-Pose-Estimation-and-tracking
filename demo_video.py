@@ -464,7 +464,7 @@ if __name__ == '__main__':
     i = 0  # default is 0
     flist = []
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i % frame_rate_ratio == 0 and (i==0 or i>=31):
+        if i % frame_rate_ratio == 0 :
             scale = 0.5
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
