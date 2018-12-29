@@ -47,8 +47,8 @@ def merge(middlepeaklist):
                                    (middlepeaklist[i][2]+middlepeaklist[j][2])/2,
                                    middlepeaklist[i][3]]
                 mergelist[j]=1
-    for j in mergelist:
-        if j:
+    for j in range(len(mergelist)):
+        if mergelist[j]:
             middlepeaklist.remove(middlepeaklist[j])
     return middlepeaklist
 
