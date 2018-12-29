@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 50
-video_process = 50
+video_process = 20
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
 
