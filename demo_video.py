@@ -66,7 +66,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_REPLICATE)
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
-            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3] + PAD:fish[1] + PAD, fish[2] + PAD:fish[0] + PAD, :]
+            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3]:fish[1], fish[2]:fish[0], :]
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -461,7 +461,7 @@ if __name__ == '__main__':
     i = 0  # default is 0
     flist = []
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i % frame_rate_ratio == 0 :
+        if i % frame_rate_ratio == 0 and (i==0 or i>=31):
             scale = 0.5
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
