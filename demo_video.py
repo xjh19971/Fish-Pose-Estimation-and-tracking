@@ -249,9 +249,9 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
         candidate_all, subset_all, all_peaks_all, t1, t2, t3=predict(oriImg,scale_search,model_params,tf_sess,lenimg=len(flist) if len(flist)!=0 else 1,flist=flist)
 
     canvas = input_image  # B,G,R order
-    '''for i in [0,1,2]:
+    for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, tuple([int(all_peaks[i][j][0]),int(all_peaks[i][j][1])]), 4, colors[i], thickness=-1)'''
+            cv2.circle(canvas, tuple([int(all_peaks[i][j][0]),int(all_peaks[i][j][1])]), 4, colors[i], thickness=-1)
     t4=time.time()
 
     stickwidth = 2
@@ -283,7 +283,7 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
                     location[0]=location[0]+locx
                     location[1]=location[1]+locy
                     location=tuple(location)
-                    cv2.circle(canvas,location, 2, colors[i], thickness=-1)
+                    #cv2.circle(canvas,location, 2, colors[i], thickness=-1)
                     if(maxx<location[0]):maxx=location[0]
                     if (maxy < location[1]): maxy = location[1]
                     if (minx > location[0]): minx = location[0]
