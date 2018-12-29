@@ -38,6 +38,7 @@ sess2 = tf.Session(graph=g2)
 def merge(middlepeaklist):
     mergelist=[]
     for i in range(len(middlepeaklist)):
+        middlepeaklist[i][3]=middlepeaklist[i][3]-len(mergelist)
         for j in range(i+1,len(middlepeaklist)):
             if math.sqrt(pow(middlepeaklist[i][0]-middlepeaklist[j][0],2)
                          +pow(middlepeaklist[i][1]-middlepeaklist[j][1],2))<10:
