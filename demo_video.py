@@ -240,7 +240,7 @@ def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
     return candidate_all,subset_all,all_peaks,t1,t2,t3
 def process (input_image,f, params, model_params,tf_sess,sess2,flist):
 
-    scale_search = [2.5]
+    scale_search = [2]
 
     oriImg = input_image  # B,G,R order
     if f%video_process==0:
