@@ -3,9 +3,7 @@ import math
 import os
 import sys
 import time
-
-
-
+from scipy.spatial import KDTree
 import cv2
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
@@ -30,9 +28,9 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
 input_names=['input_1']
 output_names= ['batch_normalization_17/FusedBatchNorm_1','batch_normalization_22/FusedBatchNorm_1']
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 g1_1 = tf.Graph()
-#g1_2 = tf.Graph()
 g2 = tf.Graph()
 sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
@@ -238,9 +236,9 @@ def predict(oriImg,scale_search,model_params,tf_sess,lenimg=1,flist=None):
         candidate_all.append(candidate)
         checkpoint=checkpoint+len(candidate)
     return candidate_all,subset_all,all_peaks,t1,t2,t3
-def process (input_image,f, params, model_params,tf_sess,sess2,flist):
+def process (input_image,f, params, model_params,tf_sess,flist):
 
-    scale_search = [2]
+    scale_search = [3]
 
     oriImg = input_image  # B,G,R order
     if f%video_process==0:
@@ -253,7 +251,12 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
     t4 = time.time()
     stickwidth = 2
     flistnew=[]
+    lenflistnew=len(flist)
     checkpoint=0
+    if f != 0:
+        points = [[x[0] - PAD, x[1] - PAD] for x in flist]
+        tree = KDTree(points)
+
     for k in range(len(subset_all)):
         subset = subset_all[k]
         candidate = candidate_all[k]
@@ -264,13 +267,8 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
             locx=0
             locy=0
         else:
-            locx=flist[k][2]
+            locx= flist[k][2]
             locy = flist[k][3]
-        for i in [0, 1, 2]:
-            for j in range(len(all_peaks[i])):
-                cv2.circle(canvas, tuple([int(all_peaks[i][j][0]+locx), int(all_peaks[i][j][1])+locy]), 2, colors[i],
-                 thickness=-1)
-
         for n in range(len(subset)):
             maxx=-1
             maxy=-1
@@ -285,7 +283,7 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
                     location[0]=location[0]+locx
                     location[1]=location[1]+locy
                     location=tuple(location)
-                    #cv2.circle(canvas,location, 2, colors[i], thickness=-1)
+                    cv2.circle(canvas,location, 2, colors[i], thickness=-1)
                     if(maxx<location[0]):maxx=location[0]
                     if (maxy < location[1]): maxy = location[1]
                     if (minx > location[0]): minx = location[0]
@@ -297,7 +295,18 @@ def process (input_image,f, params, model_params,tf_sess,sess2,flist):
             maxy=centery+PAD
             minx = centerx - PAD
             miny = centery - PAD
-            flistnew.append((maxx,maxy,minx,miny))
+            if f!=0:
+                dis, index = tree.query([centerx,centery])
+                if dis>10:
+                    lenflistnew=lenflistnew+1
+                    No=lenflistnew
+                else:
+                    No=flist[index][4]
+            else:
+                lenflistnew = lenflistnew + 1
+                No = lenflistnew
+            cv2.putText(canvas, str(No), (centerx, centery), font, 0.8, (255, 255, 255), 2)
+            flistnew.append((maxx,maxy,minx,miny,No))
 
         for i in range(2):
             for n in range(len(subset)):
@@ -420,9 +429,9 @@ if __name__ == '__main__':
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
                     # generate image with body parts
-            canvas,t1,t2,t3,t4,flist = process(input_image,i, params, model_params,sess1_1,sess2,flist)
-            '''cv2.imshow('canvas',canvas)
-            cv2.waitKey(1)'''
+            canvas,t1,t2,t3,t4,flist = process(input_image,i, params, model_params,sess1_1,flist)
+            cv2.imshow('canvas',canvas)
+            cv2.waitKey(1000)
             print('Processing frame: ', i)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
