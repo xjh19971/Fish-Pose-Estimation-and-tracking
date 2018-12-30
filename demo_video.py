@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 50
-video_process = 20
+video_process = 1
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
 
@@ -416,7 +416,7 @@ if __name__ == '__main__':
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output, fourcc, output_fps,
-                          (int(input_image.shape[1] / 2), int(input_image.shape[0] / 2)))
+                          (int(input_image.shape[1] ), int(input_image.shape[0] )))
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction = 0.75
     tf_config.gpu_options.allow_growth = True
@@ -474,12 +474,12 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i =-300  # default is 0
+    i =0  # default is 0
     flist = []
 
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
         if i % frame_rate_ratio == 0 and i>=0 :
-            scale = 0.5
+            scale = 1
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
             # generate image with body parts
@@ -488,7 +488,6 @@ if __name__ == '__main__':
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +str(t5 - t4)+str(t6 - t5) + str(toc - t6))
-            cv2.imwrite('canvas.png',canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
