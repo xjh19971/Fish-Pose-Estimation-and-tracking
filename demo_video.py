@@ -322,7 +322,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         centery = location[1]
                         if f != 0:
                             dis, index = tree.query([centerx, centery])
-                            if dis > 10:
+                            if dis > 20:
                                 lenflistnew = lenflistnew + 1
                                 No = lenflistnew
                             else:
@@ -474,7 +474,7 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i =0  # default is 0
+    i =-300  # default is 0
     flist = []
 
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
@@ -488,6 +488,7 @@ if __name__ == '__main__':
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +str(t5 - t4)+str(t6 - t5) + str(toc - t6))
+            cv2.imwrite('canvas.png',canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
