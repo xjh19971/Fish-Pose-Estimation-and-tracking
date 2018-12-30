@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from scipy.spatial import KDTree
-
+from scipy.ndimage.filters import gaussian_filter
 import util
 from config_reader import config_reader
 
@@ -26,7 +26,11 @@ mapIdx = [[2, 3], [4, 5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
-
+g_filter=[[[[0.0318]],    [[0.0375]],    [[0.0397]],    [[0.0375]],   [[0.0318]],],
+    [[[0.0375]],    [[0.0443]],    [[0.0469]],    [[0.0443]],    [[0.0375]],],
+    [[[0.0397]],    [[0.0469]],    [[0.0495]],    [[0.0469]],    [[0.0397]],],
+    [[[0.0375]],    [[0.0443]],    [[0.0469]],    [[0.0443]],    [[0.0375]],],
+    [[[0.0318]],    [[0.0375]],    [[0.0397]],    [[0.0375]],    [[0.0318]],]]
 input_names = ['input_1']
 output_names = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -68,7 +72,6 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
             ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3]+PAD:fish[1]+PAD, fish[2]+PAD:fish[0]+PAD, :]
-            cv2.imwrite('rr.png',ROI[flist.index(fish), :, :, :])
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -121,7 +124,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 1].tolist()
         temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
-        temp = merge(temp)
+        #temp = merge(temp)
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 2].tolist()
@@ -431,6 +434,14 @@ if __name__ == '__main__':
             map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input'),
                                    perm=[0, 2, 1, 3])
             mapshape = tf.shape(map_ori)
+            filter = tf.constant(g_filter, dtype=tf.float32)
+            temp1=tf.expand_dims(map_ori[:,:,:,0],-1)
+            temp2 = tf.expand_dims(map_ori[:, :, :, 1], -1)
+            temp3 = tf.expand_dims(map_ori[:, :, :, 2], -1)
+            temp1=tf.nn.conv2d(temp1,filter,strides = [1,1,1,1],padding ='SAME')
+            temp2 = tf.nn.conv2d(temp2, filter, strides=[1, 1, 1, 1], padding='SAME')
+            temp3 = tf.nn.conv2d(temp3, filter, strides=[1, 1, 1, 1], padding='SAME')
+            map_ori=tf.concat([temp1,temp2,temp3],-1)
             '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
             map_ori2 = tf.expand_dims(map_ori3, -1)
             map_ori1 = tf.expand_dims(map_ori2, 1)
