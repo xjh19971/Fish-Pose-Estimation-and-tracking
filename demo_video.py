@@ -124,7 +124,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 1].tolist()
         temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
-        #temp = merge(temp)
+        temp = merge(temp)
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 2].tolist()
