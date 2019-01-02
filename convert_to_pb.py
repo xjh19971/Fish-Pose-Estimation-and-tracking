@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # vgg normalization (subtracting mean) on input images
     model = get_testing_model()
     model.load_weights(keras_weights_file)
-    frozen_graph, output_names, input_names = freeze_session(K.get_session(),
+    frozen_graph = freeze_session(K.get_session(),
                                                              output_names=['batch_normalization_17/FusedBatchNorm_1','batch_normalization_22/FusedBatchNorm_1'])
     tf.train.write_graph(frozen_graph, ".", "tf_model_real.pb", as_text=False)
     trt_graph = trt.create_inference_graph(
