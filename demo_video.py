@@ -334,7 +334,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         centerx = location[0]
                         centery = location[1]
                 else:
-                    lost = 1
+                    lost = i
             newloc = []
             for x in loc:
                 newloc.append(x[0])
@@ -458,23 +458,22 @@ if __name__ == '__main__':
     tf_config.gpu_options.allow_growth = True
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
-            with open('tf_model_real.pb', "rb") as f:
-                graph_def = tf.GraphDef()
-                graph_def.ParseFromString(f.read())
-            trt_graph = trt.create_inference_graph(
-                input_graph_def=graph_def,
-                outputs=output_names,
-                max_batch_size = 10,
+            output_graph_def = tf.GraphDef()
+            with open('tf_model.pb', "rb") as f:
+                output_graph_def.ParseFromString(f.read())
+                trt_graph = trt.create_inference_graph(
+                input_graph_def=output_graph_def,
+                outputs = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1'],
+                max_batch_size = 1,
                 max_workspace_size_bytes = 4000000000,
-                precision_mode='FP16',
-                minimum_segment_size=50)
+                precision_mode = 'FP16',
+                minimum_segment_size = 50
+                )
+            # Import the TensorRT graph into a new graph and run:
+                _ = tf.import_graph_def(trt_graph, name="")
             init = tf.global_variables_initializer()
             sess1_1.run(init)
             sess1_1 = tf.Session(config=tf_config)
-            output_node = tf.import_graph_def(
-                trt_graph,
-                return_elements=output_names)
-            summary_write = tf.summary.FileWriter("./logdir", g1_1)
     with sess2.as_default():
         with sess2.graph.as_default():
             map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input'),
