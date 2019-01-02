@@ -466,9 +466,9 @@ if __name__ == '__main__':
                 outputs = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1'],
                 max_batch_size = 10,
                 max_workspace_size_bytes = 4000000000,
-                precision_mode = 'FP16',
-                minimum_segment_size = 50
+                precision_mode = 'INT8',
                 )
+                trt_graph = trt.calib_graph_to_infer_graph(trt_graph)
             # Import the TensorRT graph into a new graph and run:
                 _ = tf.import_graph_def(trt_graph, name="")
             summary_write = tf.summary.FileWriter("./logdir", g1_1)
