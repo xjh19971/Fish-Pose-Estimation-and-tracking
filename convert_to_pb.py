@@ -7,13 +7,13 @@ from config_reader import config_reader
 from model.cmu_model_inception_improve import get_testing_model
 
 
-def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True,input_names=None):
+def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True):
     """
-    Freezes the state of a session into a pruned computation graph.
+    Freezes the state of a session into a prunned computation graph.
 
     Creates a new computation graph where variable nodes are replaced by
     constants taking their current value in the session. The new graph will be
-    pruned so subgraphs that are not necessary to compute the requested
+    prunned so subgraphs that are not neccesary to compute the requested
     outputs are removed.
     @param session The TensorFlow session to be frozen.
     @param keep_var_names A list of variable names that should not be frozen,
@@ -27,15 +27,14 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
     with graph.as_default():
         freeze_var_names = list(set(v.op.name for v in tf.global_variables()).difference(keep_var_names or []))
         output_names = output_names or []
-        output_names += [v.op.name for v in tf.global_variables()]
-        # Graph -> GraphDef ProtoBuf
         input_graph_def = graph.as_graph_def()
         if clear_devices:
             for node in input_graph_def.node:
                 node.device = ""
         frozen_graph = convert_variables_to_constants(session, input_graph_def,
                                                       output_names, freeze_var_names)
-        return frozen_graph,output_names,input_names
+        return frozen_graph
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -64,8 +63,7 @@ if __name__ == '__main__':
     model = get_testing_model()
     model.load_weights(keras_weights_file)
     frozen_graph, output_names, input_names = freeze_session(K.get_session(),
-                                                             output_names=[out.op.name for out in model.outputs],
-                                                             input_names=[out.op.name for out in model.inputs])
+                                                             output_names=['batch_normalization_17/FusedBatchNorm_1','batch_normalization_22/FusedBatchNorm_1'])
     tf.train.write_graph(frozen_graph, ".", "tf_model_real.pb", as_text=False)
     trt_graph = trt.create_inference_graph(
         input_graph_def=frozen_graph,
