@@ -464,11 +464,12 @@ if __name__ == '__main__':
                 trt_graph = trt.create_inference_graph(
                 input_graph_def=output_graph_def,
                 outputs = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1'],
-                max_batch_size = 1,
+                max_batch_size = 10,
                 max_workspace_size_bytes = 4000000000,
-                precision_mode = 'FP16',
+                precision_mode = 'INT8',
                 minimum_segment_size = 50
                 )
+                trt_graph = trt.calib_graph_to_infer_graph(trt_graph)
             # Import the TensorRT graph into a new graph and run:
                 _ = tf.import_graph_def(trt_graph, name="")
             init = tf.global_variables_initializer()
