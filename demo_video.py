@@ -11,13 +11,15 @@ from scipy.spatial import KDTree
 from scipy.ndimage.filters import gaussian_filter
 import util
 from config_reader import config_reader
+import tensorflow.contrib.tensorrt as trt
+# from kalmenfilter import  Kalman2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-PAD = 50
-video_process = 1
+PAD = 60
+video_process = 2
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
 
@@ -26,36 +28,40 @@ mapIdx = [[2, 3], [4, 5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
-g_filter=[[[[0.0318]],    [[0.0375]],    [[0.0397]],    [[0.0375]],   [[0.0318]],],
-    [[[0.0375]],    [[0.0443]],    [[0.0469]],    [[0.0443]],    [[0.0375]],],
-    [[[0.0397]],    [[0.0469]],    [[0.0495]],    [[0.0469]],    [[0.0397]],],
-    [[[0.0375]],    [[0.0443]],    [[0.0469]],    [[0.0443]],    [[0.0375]],],
-    [[[0.0318]],    [[0.0375]],    [[0.0397]],    [[0.0375]],    [[0.0318]],]]
+g_filter = [[[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ],
+            [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
+            [[[0.0397]], [[0.0469]], [[0.0495]], [[0.0469]], [[0.0397]], ],
+            [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
+            [[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ]]
 input_names = ['input_1']
 output_names = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
+filterlist = []
 g1_1 = tf.Graph()
 g2 = tf.Graph()
 sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
+
+
 def merge(middlepeaklist):
-    mergelist=np.zeros(len(middlepeaklist))
-    num=0
+    mergelist = np.zeros(len(middlepeaklist))
+    num = 0
     for i in range(len(middlepeaklist)):
-        middlepeaklist[i][3]=middlepeaklist[i][3]-num
-        for j in range(i+1,len(middlepeaklist)):
-            if math.sqrt(pow(middlepeaklist[i][0]-middlepeaklist[j][0],2)
-                         +pow(middlepeaklist[i][1]-middlepeaklist[j][1],2))<10 and mergelist[j]==0:
-                middlepeaklist[i]=[int((middlepeaklist[i][0]+middlepeaklist[j][0])/2),
-                                   int((middlepeaklist[i][1]+middlepeaklist[j][1])/2),
-                                   (middlepeaklist[i][2]+middlepeaklist[j][2])/2,
-                                   middlepeaklist[i][3]]
-                mergelist[j]=1
-                num=num+1
-    for j in range(len(mergelist)-1,-1,-1):
+        middlepeaklist[i][3] = middlepeaklist[i][3] - num
+        for j in range(i + 1, len(middlepeaklist)):
+            if math.sqrt(pow(middlepeaklist[i][0] - middlepeaklist[j][0], 2)
+                         + pow(middlepeaklist[i][1] - middlepeaklist[j][1], 2)) < 10 and mergelist[j] == 0:
+                middlepeaklist[i] = [int((middlepeaklist[i][0] + middlepeaklist[j][0]) / 2),
+                                     int((middlepeaklist[i][1] + middlepeaklist[j][1]) / 2),
+                                     (middlepeaklist[i][2] + middlepeaklist[j][2]) / 2,
+                                     middlepeaklist[i][3]]
+                mergelist[j] = 1
+                num = num + 1
+    for j in range(len(mergelist) - 1, -1, -1):
         if mergelist[j]:
             middlepeaklist.remove(middlepeaklist[j])
     return middlepeaklist
+
 
 def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
@@ -71,7 +77,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_REPLICATE)
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
-            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3]+PAD:fish[1]+PAD, fish[2]+PAD:fish[0]+PAD, :]
+            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3] + PAD:fish[1] + PAD, fish[2] + PAD:fish[0] + PAD, :]
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -133,7 +139,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         check = check + len(temp)
     t3 = time.time()
     mid_num = 10
-    limit = [[80, 10], [80, 10]]
+    limit = [[100, 10], [100, 10]]
     subset_all = []
     candidate_all = []
     checkpoint = 0
@@ -278,14 +284,18 @@ def process(input_image, f, params, model_params, tf_sess, flist):
     canvas = input_image  # B,G,R order
 
     t4 = time.time()
-    stickwidth = 2
     flistnew = []
     lenflistnew = len(flist)
-    fish_detected=np.zeros(len(flist)+5)
+    fish_detected = np.zeros(len(flist) + 5)
     checkpoint = 0
-    if f != 0 :
-        points = [[x[0] - PAD, x[1] - PAD] for x in flist]
-        tree = KDTree(points)
+    tree = []
+    if f != 0:
+        points = [x[5][2:6] for x in flist]
+        tree.append(KDTree(points))
+        points = [x[5] for x in flist]
+        tree.append(KDTree(points))
+        points = [x[5][0:4] for x in flist]
+        tree.append(KDTree(points))
 
     for k in range(len(subset_all)):
         subset = subset_all[k]
@@ -306,6 +316,8 @@ def process(input_image, f, params, model_params, tf_sess, flist):
             miny = 10000
             centerx = -1
             centery = -1
+            loc = []
+            lost = 1
             for i in [1, 0, 2]:
                 idx = int(subset[n][i])
                 if int(subset[n][i]) != -1:
@@ -317,34 +329,58 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                     if (maxy < location[1]): maxy = location[1]
                     if (minx > location[0]): minx = location[0]
                     if (miny > location[1]): miny = location[1]
+                    loc.append(location)
                     if i == 1:
                         centerx = location[0]
                         centery = location[1]
-                        if f != 0:
-                            dis, index = tree.query([centerx, centery])
-                            if dis > 20:
-                                lenflistnew = lenflistnew + 1
-                                No = lenflistnew
-                            else:
-                                No = flist[index][4]
-                                if fish_detected[No-1]==1:
-                                    np.delete(subset,n,0)
-                                    n=n-1
-                                    continue
-                                else:
-                                    fish_detected[No-1]=1
+                else:
+                    lost = 1
+            newloc = []
+            for x in loc:
+                newloc.append(x[0])
+                newloc.append(x[1])
+            if f != 0:
+                dis, index = tree[lost].query(newloc)
+                if dis > 30:
+                    lenflistnew = lenflistnew + 1
+                    No = lenflistnew
+                    if lost !=1:
+                        if lost == 0:
+                            loc = [(2*loc[0][0]-loc[1][0],2*loc[0][0]-loc[1][0]), loc[0], loc[1]]
+                            newloc = [2*newloc[0]-newloc[2], 2*newloc[1]-newloc[3], newloc[0], newloc[1], newloc[2],
+                                      newloc[3]]
                         else:
-                            lenflistnew = lenflistnew + 1
-                            No = lenflistnew
-                    cv2.circle(canvas, location, 2, colors[i], thickness=-1)
-            if centerx==-1:
-                continue
+                            loc = [loc[0], loc[1],(2*loc[1][0]-loc[0][0],2*loc[1][0]-loc[0][0])]
+                            newloc = [newloc[0], newloc[1], newloc[2],
+                                      newloc[3],2*newloc[2]-newloc[0], 2*newloc[3]-newloc[1]]
+                else:
+                    No = flist[index][4]
+                    if fish_detected[No - 1] == 1:
+                        np.delete(subset, n, 0)
+                        n = n - 1
+                        continue
+                    else:
+                        fish_detected[No - 1] = 1
+                        if lost != 1:
+                            if lost == 0:
+                                loc = [(flist[index][5][0], flist[index][5][1]), loc[0], loc[1]]
+                                newloc = [flist[index][5][0], flist[index][5][1], newloc[0], newloc[1], newloc[2],
+                                          newloc[3]]
+                            else:
+                                loc = [loc[0], loc[1], (flist[index][5][4], flist[index][5][5])]
+                                newloc = [newloc[0], newloc[1], newloc[2],
+                                          newloc[3], flist[index][5][0], flist[index][5][1]]
+            else:
+                lenflistnew = lenflistnew + 1
+                No = lenflistnew
+            for temploc in loc:
+                cv2.circle(canvas, temploc, 2, colors[i], thickness=-1)
             maxx = centerx + PAD
             maxy = centery + PAD
             minx = centerx - PAD
             miny = centery - PAD
             cv2.putText(canvas, str(No), (centerx, centery), font, 0.8, (255, 255, 255), 2)
-            flistnew.append((maxx, maxy, minx, miny, No))
+            flistnew.append((maxx, maxy, minx, miny, No, newloc))
         t5 = time.time()
         for i in range(2):
             for n in range(len(subset)):
@@ -364,10 +400,10 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                                            360, 1)
                 cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
                 canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)'''
-                canvas=cv2.line(canvas, (int(Y[1]),int(X[1])),(int(Y[0]),int(X[0])),   colors[i],2)
+                canvas = cv2.line(canvas, (int(Y[1]), int(X[1])), (int(Y[0]), int(X[0])), colors[i], 2)
     flist = flistnew
     t6 = time.time()
-    return canvas, t1, t2, t3, t4,t5,t6, flist
+    return canvas, t1, t2, t3, t4, t5, t6, flist
 
 
 if __name__ == '__main__':
@@ -416,32 +452,42 @@ if __name__ == '__main__':
     output_fps = input_fps / frame_rate_ratio
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output, fourcc, output_fps,
-                          (int(input_image.shape[1] ), int(input_image.shape[0] )))
+                          (int(input_image.shape[1]), int(input_image.shape[0])))
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.per_process_gpu_memory_fraction = 0.75
     tf_config.gpu_options.allow_growth = True
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
-            output_graph_def = tf.GraphDef()
-            with open('tf_model.pb', "rb") as f:
-                output_graph_def.ParseFromString(f.read())
-                _ = tf.import_graph_def(output_graph_def, name="")
+            with open('tf_model_real.pb', "rb") as f:
+                graph_def = tf.GraphDef()
+                graph_def.ParseFromString(f.read())
+            trt_graph = trt.create_inference_graph(
+                input_graph_def=graph_def,
+                outputs=output_names,
+                max_batch_size = 10,
+                max_workspace_size_bytes = 4000000000,
+                precision_mode='FP16',
+                minimum_segment_size=50)
             init = tf.global_variables_initializer()
             sess1_1.run(init)
             sess1_1 = tf.Session(config=tf_config)
+            output_node = tf.import_graph_def(
+                trt_graph,
+                return_elements=output_names)
+            summary_write = tf.summary.FileWriter("./logdir", g1_1)
     with sess2.as_default():
         with sess2.graph.as_default():
             map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input'),
                                    perm=[0, 2, 1, 3])
             mapshape = tf.shape(map_ori)
             filter = tf.constant(g_filter, dtype=tf.float32)
-            temp1=tf.expand_dims(map_ori[:,:,:,0],-1)
+            temp1 = tf.expand_dims(map_ori[:, :, :, 0], -1)
             temp2 = tf.expand_dims(map_ori[:, :, :, 1], -1)
             temp3 = tf.expand_dims(map_ori[:, :, :, 2], -1)
-            temp1=tf.nn.conv2d(temp1,filter,strides = [1,1,1,1],padding ='SAME')
+            temp1 = tf.nn.conv2d(temp1, filter, strides=[1, 1, 1, 1], padding='SAME')
             temp2 = tf.nn.conv2d(temp2, filter, strides=[1, 1, 1, 1], padding='SAME')
             temp3 = tf.nn.conv2d(temp3, filter, strides=[1, 1, 1, 1], padding='SAME')
-            map_ori=tf.concat([temp1,temp2,temp3],-1)
+            map_ori = tf.concat([temp1, temp2, temp3], -1)
             '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
             map_ori2 = tf.expand_dims(map_ori3, -1)
             map_ori1 = tf.expand_dims(map_ori2, 1)
@@ -474,20 +520,22 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i =0  # default is 0
+    i = 0  # default is 0
     flist = []
 
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i % frame_rate_ratio == 0 and i>=0 :
+        if i % frame_rate_ratio == 0 and i >= 0:
             scale = 1
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
             # generate image with body parts
-            canvas, t1, t2, t3, t4,t5,t6 ,flist = process(input_image, i, params, model_params, sess1_1, flist)
+            canvas, t1, t2, t3, t4, t5, t6, flist = process(input_image, i, params, model_params, sess1_1, flist)
             print('processing frame is %d' % i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
-            print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +str(t5 - t4)+str(t6 - t5) + str(toc - t6))
+            print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
+                  str(t5 - t4) + str(t6 - t5) + str(toc - t6))
+            cv2.imwrite('can.png',canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
