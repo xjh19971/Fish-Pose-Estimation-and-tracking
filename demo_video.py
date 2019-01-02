@@ -459,7 +459,7 @@ if __name__ == '__main__':
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model.pb', "rb") as f:
+            with open('tf_model_real.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 trt_graph = trt.create_inference_graph(
                 input_graph_def=output_graph_def,
