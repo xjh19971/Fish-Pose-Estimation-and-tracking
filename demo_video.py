@@ -462,6 +462,7 @@ if __name__ == '__main__':
             with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
+            summary_write = tf.summary.FileWriter("./logdir", graph)
             init = tf.global_variables_initializer()
             sess1_1.run(init)
             sess1_1 = tf.Session(config=tf_config)
