@@ -11,7 +11,7 @@ from scipy.spatial import KDTree
 from scipy.ndimage.filters import gaussian_filter
 import util
 from config_reader import config_reader
-import tensorflow.contrib.tensorrt as trt
+
 # from kalmenfilter import  Kalman2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -459,18 +459,9 @@ if __name__ == '__main__':
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model_real.pb', "rb") as f:
+            with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
-                trt_graph = trt.create_inference_graph(
-                input_graph_def=output_graph_def,
-                outputs = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1'],
-                max_batch_size = 10,
-                max_workspace_size_bytes = 4000000000,
-                precision_mode = 'INT8',
-                )
-            # Import the TensorRT graph into a new graph and run:
-                _ = tf.import_graph_def(trt_graph, name="")
-            summary_write = tf.summary.FileWriter("./logdir", g1_1)
+                _ = tf.import_graph_def(output_graph_def, name="")
             init = tf.global_variables_initializer()
             sess1_1.run(init)
             sess1_1 = tf.Session(config=tf_config)
