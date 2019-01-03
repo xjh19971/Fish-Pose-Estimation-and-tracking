@@ -1,7 +1,7 @@
 from keras.models import Model
 from keras.layers.merge import Concatenate
 from keras.layers import Activation, Input, Lambda, ZeroPadding2D
-from keras.layers.convolutional import Conv2D
+from keras.layers.convolutional import Conv2D,UpSampling2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
@@ -223,6 +223,8 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
     else:
         w = Multiply(name=w_name)([x, mask2])  # vec_heat
+
+    w=UpSampling2D(size=(8, 8), data_format=None,name= w_name)(w)
     return w
 
 
