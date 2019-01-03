@@ -1,12 +1,12 @@
 from keras.models import Model
 from keras.layers.merge import Concatenate
 from keras.layers import Activation, Input, Lambda, ZeroPadding2D
-from keras.layers.convolutional import Conv2D
+from keras.layers.convolutional import Conv2D, UpSampling2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal, constant
-from keras.layers import BatchNormalization, add, ReLU
+from keras.layers import BatchNormalization, Add, ReLU
 import keras.backend as K
 
 KEY_POINT_NUM = 3 + 1
@@ -39,58 +39,9 @@ def STEM_block(input_tensor, filters, stage, weight_decay):
     x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'c1', weight_decay, strides=(2, 2))
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    x4 = conv(x4, filters4[1], 3, conv_name_base + 'c2', weight_decay)
+    x4 = conv(x4, filters4[1], 3, conv_name_base + 'c2', weight_decay, strides=(2, 2))
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x4)
-    x4 = relu(x4)
-    shortcut = conv(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay, strides=(2, 2))
-    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
-    x = add([x4, shortcut])
-    x = relu(x)
-    return x
-
-
-def tiny_inception_block(input_tensor, filters, stage, branch, weight_decay):
-    """conv_block is the block that has a conv layer at shortcut
-    # Arguments
-        input_tensor: input tensor
-        kernel_size: defualt 3, the kernel size of middle conv layer at main path
-        filters: list of integers, the filterss of 3 conv layer at main path
-        stage: integer, current stage label, used for generating layer names
-        block: 'a','b'..., current block label, used for generating layer names
-    # Returns
-        Output tensor for the block.
-    Note that from stage 3, the first conv layer at main path is with strides=(2,2)
-    And the shortcut should have strides=(2,2) as well
-    """
-    filters1, filters2, filters3 = filters
-    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
-    conv_name_base = 'tinyinception' + str(stage) + '_branch' + str(branch)
-    bn_name_base = 'bn' + str(stage) + '_branch' + str(branch)
-
-    x1 = conv(input_tensor, filters1[0], 3, conv_name_base + 'a1', weight_decay)
-    x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
-    x1 = relu(x1)
-
-    x2 = conv(input_tensor, filters2[0], 3, conv_name_base + 'b1', weight_decay)
-    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
-    x2 = relu(x2)
-    x2 = conv(x2, filters2[1], 3, conv_name_base + 'b2', weight_decay)
-    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
-    x2 = relu(x2)
-
-    x3 = conv(input_tensor, filters3[0], 3, conv_name_base + 'c1', weight_decay)
-    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
-    x3 = relu(x3)
-    x3 = conv(x3, filters3[1], 3, conv_name_base + 'c2', weight_decay)
-    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c2', epsilon=1e-5, momentum=0.9)(x3)
-    x3 = relu(x3)
-    x3 = conv(x3, filters3[2], 3, conv_name_base + 'c3', weight_decay)
-    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c3', epsilon=1e-5, momentum=0.9)(x3)
-    x3 = relu(x3)
-    x = Concatenate()([x1, x2, x3])
-    x = conv(x, 64, 1, conv_name_base + 'd', weight_decay)
-    x = add([x, input_tensor])
-    x = relu(x)
+    x = relu(x4)
     return x
 
 
@@ -173,60 +124,68 @@ def vgg_block(x, weight_decay):
     x = relu(x)
     '''
     x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
-    x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
-    x = pooling(x, 2, 2)
     return x
 
 
 def stage1_block(x, num_p, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 64, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
+    x1 = x
+    x = conv(x, 64, 3, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x1 = relu(x)
+    x = relu(x)
     x = conv(x, 64, 3, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = Add()([x, x1])
     x = relu(x)
-    x = conv(x, 64, 3, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = add([x1, x])
-    x2 = relu(x)
-    x = conv(x2, 64, 3, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 1, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 64, 3, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
+    x2 = x
+    x = conv(x, 128, 3, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = add([x2, x])
     x = relu(x)
-    x = conv(x, num_p, 1, "Mconv6_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = Add()([x, x2])
+    x= relu(x)
+    '''x = conv(x, 256, 1, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)'''
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 64, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x1 = relu(x)
+    x = conv(x, 128, 3, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0), strides=(2, 2))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], stage + 2, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], stage + 2, branch + 1, (weight_decay, 0))
-    x = conv(x, num_p, 1, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x1 = conv(x1, 128, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0), strides=(2, 2))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = Add()([x, x1])
+    x = relu(x)
+    x2 = x
+    x = conv(x, 128, 3, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 128, 3, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = Add()([x, x2])
+    x= relu(x)
+    '''x = conv(x, 256, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)'''
     return x
 
 
-def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
-    w_name = "weight_stage%d_L%d" % (stage, branch)
-    if is_weight:
-        w = Multiply(name=w_name)([x, mask1])  # vec_weight
-
-    else:
-        w = Multiply(name=w_name)([x, mask2])  # vec_heat
-    return w
-
-
 def get_training_model(weight_decay):
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     stages = 3
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
@@ -237,6 +196,7 @@ def get_training_model(weight_decay):
 
     inputs = []
     outputs = []
+    outputstemp = []
 
     img_input = Input(shape=img_input_shape)
     vec_weight_input = Input(shape=vec_input_shape)
@@ -253,39 +213,52 @@ def get_training_model(weight_decay):
 
     # stage 1 - branch 1 (PAF)
     stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, weight_decay)
-    w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1, True)
 
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
-    w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2, False)
 
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
-    outputs.append(w1)
-    outputs.append(w2)
-
+    outputstemp.append(stage1_branch1_out)
+    outputstemp.append(stage1_branch2_out)
     # stage sn >= 2
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
         stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
-        w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1, is_weight=True)
-
         # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
-        w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2, is_weight=False)
-
+        outputstemp.append(stageT_branch1_out)
+        outputstemp.append(stageT_branch2_out)
+        if (sn < stages):
+            x = Concatenate()([stageT_branch1_out, stageT_branch2_out])
+    w1up = None
+    w2up = None
+    for sn in range(stages, 0, -1):
+        w1 = outputstemp[2 * sn - 2]
+        w2 = outputstemp[2 * sn - 1]
+        w1_name = "weight_stage%d_L%d" % (sn, 1)
+        w2_name = "weight_stage%d_L%d" % (sn, 2)
+        if sn != stages:
+            w1 = Concatenate()([w1, w1up])
+            w2 = Concatenate()([w2, w2up])
+            outputstemp[2 * sn - 2] = w1
+            outputstemp[2 * sn - 1] = w2
+        w1 = conv(w1, np_branch1, 1, "up_stage%d_L%d" % (sn, 1), (weight_decay, 0))
+        w1 = BatchNormalization(name=w1_name, axis=bn_axis, epsilon=1e-5, momentum=0.9)(w1)
+        w2 = conv(w2, np_branch2, 1, "up_stage%d_L%d" % (sn, 2), (weight_decay, 0))
+        w2 = BatchNormalization(name=w2_name, axis=bn_axis, epsilon=1e-5, momentum=0.9)(w2)
+        if sn != 1:
+            w1up = UpSampling2D(size=(2, 2), data_format=None)(outputstemp[2 * sn - 2])
+            w2up = UpSampling2D(size=(2, 2), data_format=None)(outputstemp[2 * sn - 1])
         outputs.append(w1)
         outputs.append(w2)
-
-        if (sn < stages):
-            x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
-
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
     return model
 
 
 def get_testing_model():
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     stages = 3
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
@@ -306,17 +279,42 @@ def get_testing_model():
     stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, None)
 
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
-
+    outputstemp = []
+    outputs = []
     # stage t >= 2
-    stageT_branch1_out = None
-    stageT_branch2_out = None
+    outputstemp.append(stage1_branch1_out)
+    outputstemp.append(stage1_branch2_out)
+    # stage sn >= 2
     for sn in range(2, stages + 1):
+        # stage SN - branch 1 (PAF)
         stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, None)
+        # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, None)
-
+        outputstemp.append(stageT_branch1_out)
+        outputstemp.append(stageT_branch2_out)
         if (sn < stages):
-            x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
-
-    model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
-
+            x = Concatenate()([stageT_branch1_out, stageT_branch2_out])
+    w1up = None
+    w2up = None
+    for sn in range(stages, 0, -1):
+        w1 = outputstemp[2 * sn - 2]
+        w2 = outputstemp[2 * sn - 1]
+        w1_name = "weight_stage%d_L%d" % (sn, 1)
+        w2_name = "weight_stage%d_L%d" % (sn, 2)
+        if sn != stages:
+            w1 = Concatenate()([w1, w1up])
+            w2 = Concatenate()([w2, w2up])
+            outputstemp[2 * sn - 2] = w1
+            outputstemp[2 * sn - 1] = w2
+        w1 = conv(w1, np_branch1, 1, "up_stage%d_L%d" % (sn, 1), (None, 0))
+        w1 = BatchNormalization(name=w1_name, axis=bn_axis, epsilon=1e-5, momentum=0.9)(w1)
+        w2 = conv(w2, np_branch2, 1, "up_stage%d_L%d" % (sn, 2), (None, 0))
+        w2 = BatchNormalization(name=w2_name, axis=bn_axis, epsilon=1e-5, momentum=0.9)(w2)
+        if sn != 1:
+            w1up = UpSampling2D(size=(2, 2), data_format=None)(outputstemp[2 * sn - 2])
+            w2up = UpSampling2D(size=(2, 2), data_format=None)(outputstemp[2 * sn - 1])
+    outputs.append(w1)
+    outputs.append(w2)
+    model = Model(inputs=[img_input], outputs=outputs)
+    model.summary()
     return model
