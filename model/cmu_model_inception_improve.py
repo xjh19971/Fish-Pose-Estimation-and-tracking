@@ -175,7 +175,6 @@ def vgg_block(x, weight_decay):
     '''
     x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
     x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
-    x = pooling(x, 2, 2)
     return x
 
 

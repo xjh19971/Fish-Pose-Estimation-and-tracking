@@ -169,11 +169,11 @@ def build_sample(components):
         mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=8)
 
     #for fpn
-    heatmap0 = create_heatmap(JointsLoader.num_joints_and_bkg, 46, 46,
-                             meta.aug_joints, 7.0, stride=8)
+    heatmap0 = create_heatmap(JointsLoader.num_joints_and_bkg, 92, 92,
+                             meta.aug_joints, 7.0, stride=4)
 
-    pafmap0 = create_paf(JointsLoader.num_connections, 46, 46,
-                        meta.aug_joints, 1, stride=8)
+    pafmap0 = create_paf(JointsLoader.num_connections, 92, 92,
+                        meta.aug_joints, 1, stride=4)
 
     # release reference to the image/mask/augmented data. Otherwise it would easily consume all memory at some point
     meta.mask = None
