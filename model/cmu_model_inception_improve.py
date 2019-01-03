@@ -232,8 +232,8 @@ def get_training_model(weight_decay):
     np_branch2 = KEY_POINT_NUM
     img_size = 368
     img_input_shape = (img_size, img_size, 3)
-    vec_input_shape = (46, 46, KEY_POINT_LINK)
-    heat_input_shape = (46, 46, KEY_POINT_NUM)
+    vec_input_shape = (None, None, KEY_POINT_LINK)
+    heat_input_shape = (None, None, KEY_POINT_NUM)
 
     inputs = []
     outputs = []
