@@ -18,7 +18,7 @@ K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
 #from model.cmu_model_resnet import get_training_model
-from model.cmu_model_yolo import get_training_model
+from model.cmu_model_inception_improve import get_training_model
 #from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
