@@ -218,12 +218,6 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
 
 def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
     w_name = "weight_stage%d_L%d" % (stage, branch)
-    if is_weight:
-        w = Multiply(name=w_name)([x, mask1])  # vec_weight
-
-    else:
-        w = Multiply(name=w_name)([x, mask2])  # vec_heat
-
     w=UpSampling2D(size=(8, 8), data_format=None,name= w_name)(w)
     return w
 
