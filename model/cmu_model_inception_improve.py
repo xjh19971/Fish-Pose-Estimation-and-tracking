@@ -6,7 +6,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal, constant
-from keras.layers import BatchNormalization, add, ReLU
+from keras.layers import BatchNormalization, add, ReLU,DepthwiseConv2D
 import keras.backend as K
 
 KEY_POINT_NUM = 3 + 1
