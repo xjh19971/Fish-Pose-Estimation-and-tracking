@@ -225,7 +225,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 
 def get_training_model(weight_decay):
-    stages = 3
+    stages = 4
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
     img_size = 320
