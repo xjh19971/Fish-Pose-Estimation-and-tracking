@@ -46,7 +46,6 @@ def STEM_block(input_tensor, filters, stage, weight_decay):
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
     x = add([x4, shortcut])
     x = relu(x)
-    x = pooling(x, 2, 2)
     return x
 
 
@@ -167,9 +166,16 @@ def vgg_block(x, weight_decay):
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     '''
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
+    x = ZeroPadding2D((2, 2))(x)  # 对图片界面填充0，保证特征图的大小#
+    x = conv(x, 64, 7, strides=(2, 2), name='conv1', weight_decay=(weight_decay, 0))  # 定义卷积层#
+    x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)  # 批标准化#
+    x = Activation('relu')(x)  # 激活函数#
+    x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
+
     x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
+    x = pooling(x, 2, 2)
     x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
-    x = STEM_block(x, [256, 256], 3, (weight_decay, 0))
     return x
 
 
