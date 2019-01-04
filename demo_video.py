@@ -291,7 +291,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
     tree = []
     if f != 0:
         points = [[x[0]-PAD,x[1]-PAD] for x in flist]
-        tree.append(KDTree(points))
+        tree=KDTree(points)
 
     for k in range(len(subset_all)):
         subset = subset_all[k]
