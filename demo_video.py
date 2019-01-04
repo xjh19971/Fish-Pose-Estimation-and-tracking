@@ -70,16 +70,16 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     if lenimg == 1:
         ROI = np.zeros((1, oriImg.shape[0], oriImg.shape[1], 3))
         ROI[0, :, :, :] = oriImg[:, :, :]
-        heatmap_avg = np.zeros((lenimg, oriImg.shape[0], oriImg.shape[1], 8))
-        paf_avg = np.zeros((lenimg, oriImg.shape[0], oriImg.shape[1], 8))
+        heatmap_avg = np.zeros((lenimg, oriImg.shape[0], oriImg.shape[1], 4))
+        paf_avg = np.zeros((lenimg, oriImg.shape[0], oriImg.shape[1], 4))
         orishape = [oriImg.shape[1], oriImg.shape[0]]
     else:
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_REPLICATE)
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
             ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3] + PAD:fish[1] + PAD, fish[2] + PAD:fish[0] + PAD, :]
-        heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 8))
-        paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 8))
+        heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
+        paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
     for i in range(0, lenimg):
         imageToTest = cv2.resize(ROI[i, :, :, :], (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
@@ -271,7 +271,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
 
 
 def process(input_image, f, params, model_params, tf_sess, flist):
-    scale_search = [2]
+    scale_search = [1]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
