@@ -106,7 +106,7 @@ def conv(x, nf, ks, name, weight_decay, strides=None):
                             padding='same',
                             depth_multiplier=1,
                             use_bias=False,
-                            kernel_regularizer=l2(weight_decay),
+                            kernel_regularizer=l2(weight_decay[0]),
                             )(x)
     else:
         x = DepthwiseConv2D((ks, ks),
@@ -114,7 +114,7 @@ def conv(x, nf, ks, name, weight_decay, strides=None):
                             depth_multiplier=1,
                             strides=strides,
                             use_bias=False,
-                            kernel_regularizer=l2(weight_decay),
+                            kernel_regularizer=l2(weight_decay[0]),
                             )(x)
 
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
