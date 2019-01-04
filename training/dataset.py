@@ -26,14 +26,14 @@ AUGMENTORS_LIST = [
 
         ScaleAug(scale_min=0.9,
                  scale_max=1.1,
-                 target_dist=1,
+                 target_dist=0.4,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=180,
                   interp=cv2.INTER_CUBIC,
                   border=cv2.BORDER_CONSTANT,
                   border_value=(128, 128, 128), mask_border_val=1),
 
-        CropAug(368, 368, center_perterb_max=40, border_value=(128, 128, 128),
+        CropAug(368, 368, center_perterb_max=40, border_value=(128, 128, 128), #40
                  mask_border_val=1),
 
         FlipAug(num_parts=KEY_POINT_NUM-1, prob=0.5),
