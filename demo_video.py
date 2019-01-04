@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 60
-video_process = 2
+video_process = 1
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
 
@@ -34,7 +34,7 @@ g_filter = [[[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ],
             [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
             [[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ]]
 input_names = ['input_1']
-output_names = ['batch_normalization_17/FusedBatchNorm_1', 'batch_normalization_22/FusedBatchNorm_1']
+output_names = ['weight_stage1_L1/FusedBatchNorm_1', 'weight_stage1_L2/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -104,12 +104,12 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     heatmaptemp = output_blobs[1]  # output 1 is heatmaps
     paftemp = output_blobs[0]  # output 0 is PAFs
     for i in range(0, lenimg):
-        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=4, fy=4,
                              interpolation=cv2.INTER_CUBIC)
         heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
         heatmap = cv2.resize(heatmap, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
-        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=4, fy=4,
                          interpolation=cv2.INTER_CUBIC)
         paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
         paf = cv2.resize(paf, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
@@ -341,7 +341,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                 newloc.append(x[1])
             if f != 0:
                 dis, index = tree[lost].query(newloc)
-                if dis > 30:
+                if dis > 40:
                     lenflistnew = lenflistnew + 1
                     No = lenflistnew
                     if lost !=1:
@@ -355,12 +355,11 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                                       newloc[3],2*newloc[2]-newloc[0], 2*newloc[3]-newloc[1]]
                 else:
                     No = flist[index][4]
-                    if fish_detected[No - 1] == 1:
-                        np.delete(subset, n, 0)
-                        n = n - 1
+                    if fish_detected[No] == 1:
+                        subset[n]=[-1,-1,-1,-1,-1]
                         continue
                     else:
-                        fish_detected[No - 1] = 1
+                        fish_detected[No] = 1
                         if lost != 1:
                             if lost == 0:
                                 loc = [(flist[index][5][0], flist[index][5][1]), loc[0], loc[1]]
@@ -373,8 +372,8 @@ def process(input_image, f, params, model_params, tf_sess, flist):
             else:
                 lenflistnew = lenflistnew + 1
                 No = lenflistnew
-            for temploc in loc:
-                cv2.circle(canvas, temploc, 2, colors[i], thickness=-1)
+            for i in range(len(loc)):
+                cv2.circle(canvas, loc[i], 4, colors[i], thickness=-1)
             maxx = centerx + PAD
             maxy = centery + PAD
             minx = centerx - PAD
@@ -459,7 +458,7 @@ if __name__ == '__main__':
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
             output_graph_def = tf.GraphDef()
-            with open('tf_model.pb', "rb") as f:
+            with open('tf_model_real.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
             summary_write = tf.summary.FileWriter("./logdir", output_graph_def)
