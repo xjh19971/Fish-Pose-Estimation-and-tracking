@@ -271,7 +271,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
 
 
 def process(input_image, f, params, model_params, tf_sess, flist):
-    scale_search = [3]
+    scale_search = [2]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
@@ -290,11 +290,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
     checkpoint = 0
     tree = []
     if f != 0:
-        points = [x[5][2:6] for x in flist]
-        tree.append(KDTree(points))
-        points = [x[5] for x in flist]
-        tree.append(KDTree(points))
-        points = [x[5][0:4] for x in flist]
+        points = [[x[0]-PAD,x[1]-PAD] for x in flist]
         tree.append(KDTree(points))
 
     for k in range(len(subset_all)):
@@ -334,17 +330,17 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         centerx = location[0]
                         centery = location[1]
                 else:
-                    lost = i
+                    lost = 1
             newloc = []
             for x in loc:
                 newloc.append(x[0])
                 newloc.append(x[1])
             if f != 0:
-                dis, index = tree[lost].query(newloc)
+                dis, index = tree.query([centerx,centery])
                 if dis > 40:
                     lenflistnew = lenflistnew + 1
                     No = lenflistnew
-                    if lost !=1:
+                    '''if lost !=1:
                         if lost == 0:
                             loc = [(2*loc[0][0]-loc[1][0],2*loc[0][0]-loc[1][0]), loc[0], loc[1]]
                             newloc = [2*newloc[0]-newloc[2], 2*newloc[1]-newloc[3], newloc[0], newloc[1], newloc[2],
@@ -352,7 +348,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         else:
                             loc = [loc[0], loc[1],(2*loc[1][0]-loc[0][0],2*loc[1][0]-loc[0][0])]
                             newloc = [newloc[0], newloc[1], newloc[2],
-                                      newloc[3],2*newloc[2]-newloc[0], 2*newloc[3]-newloc[1]]
+                                      newloc[3],2*newloc[2]-newloc[0], 2*newloc[3]-newloc[1]]'''
                 else:
                     No = flist[index][4]
                     if fish_detected[No] == 1:
@@ -360,7 +356,8 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         continue
                     else:
                         fish_detected[No] = 1
-                        if lost != 1:
+
+                        '''if lost != 1:
                             if lost == 0:
                                 loc = [(flist[index][5][0], flist[index][5][1]), loc[0], loc[1]]
                                 newloc = [flist[index][5][0], flist[index][5][1], newloc[0], newloc[1], newloc[2],
@@ -368,7 +365,7 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                             else:
                                 loc = [loc[0], loc[1], (flist[index][5][4], flist[index][5][5])]
                                 newloc = [newloc[0], newloc[1], newloc[2],
-                                          newloc[3], flist[index][5][0], flist[index][5][1]]
+                                          newloc[3], flist[index][5][0], flist[index][5][1]]'''
             else:
                 lenflistnew = lenflistnew + 1
                 No = lenflistnew
@@ -525,7 +522,7 @@ if __name__ == '__main__':
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
-            cv2.imwrite('can.png',canvas)
+            #cv2.imwrite('can.png',canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
