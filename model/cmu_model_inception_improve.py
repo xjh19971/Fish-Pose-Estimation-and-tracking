@@ -169,7 +169,6 @@ def vgg_block(x, weight_decay):
     '''
     x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
     x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
-    x = STEM_block(x, [256, 256], 3, (weight_decay, 0))
     return x
 
 
@@ -291,7 +290,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 3
+    stages = 4
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
