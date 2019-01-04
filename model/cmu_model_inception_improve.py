@@ -324,8 +324,6 @@ def get_testing_model():
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
     # stage t >= 2
-    stageT_branch1_out = None
-    stageT_branch2_out = None
     for sn in range(2, stages + 1):
         stageT_branch1_out,x3 = stageT_block(x, np_branch1, sn, 1, None)
         outputstemp.append(x3)
@@ -339,5 +337,5 @@ def get_testing_model():
 
     
     model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
-
+    model.summary()
     return model
