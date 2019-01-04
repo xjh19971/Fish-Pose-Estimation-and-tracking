@@ -120,8 +120,11 @@ def conv(x, nf, ks, name, weight_decay, strides=None):
 
         x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
         x = relu(x)
-    x = Conv2D(nf, (1,1), padding='same', strides=1, use_bias=False, name=name,
+        x = Conv2D(nf, (1,1), padding='same', strides=1, use_bias=False, name=name,
                kernel_regularizer=l2(weight_decay[0]))(x)
+    else:
+        x = Conv2D(nf, (1, 1), padding='same', strides=strides, use_bias=False, name=name,
+                   kernel_regularizer=l2(weight_decay[0]))(x)
 
     return x
 
