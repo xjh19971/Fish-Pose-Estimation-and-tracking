@@ -314,25 +314,30 @@ def get_testing_model():
 
     # VGG
     stage0_out = vgg_block(img_normalized, None)
-
+    outputstemp=[]
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, None)
-
+    stage1_branch1_out,x3 = stage1_block(stage0_out, np_branch1, 1, None)
+    outputstemp.append(x3)
     # stage 1 - branch 2 (confidence maps)
-    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, None)
-
+    stage1_branch2_out,x3 = stage1_block(stage0_out, np_branch2, 2, None)
+    outputstemp.append(x3)
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
     # stage t >= 2
     stageT_branch1_out = None
     stageT_branch2_out = None
     for sn in range(2, stages + 1):
-        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, None)
-        stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, None)
+        stageT_branch1_out,x3 = stageT_block(x, np_branch1, sn, 1, None)
+        outputstemp.append(x3)
+        stageT_branch2_out,x3 = stageT_block(x, np_branch2, sn, 2, None)
+        outputstemp.append(x3)
 
         if (sn < stages):
-            x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
+            x = stage0_out
+            for snc in range(1,sn+1):
+                x = Concatenate()([outputstemp[2*snc-2], outputstemp[2*snc-1], x])
 
+    
     model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
 
     return model
