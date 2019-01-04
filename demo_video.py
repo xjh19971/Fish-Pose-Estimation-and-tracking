@@ -34,7 +34,7 @@ g_filter = [[[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ],
             [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
             [[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ]]
 input_names = ['input_1']
-output_names = ['batch_normalization_18/FusedBatchNorm_1','batch_normalization_20/FusedBatchNorm_1']
+output_names = ['batch_normalization_22/FusedBatchNorm_1','batch_normalization_24/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -271,7 +271,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
 
 
 def process(input_image, f, params, model_params, tf_sess, flist):
-    scale_search = [1]
+    scale_search = [2]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
