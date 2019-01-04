@@ -99,25 +99,16 @@ def relu(x):
     return ReLU(6.)(x)
 
 
-def conv(x, nf, ks, name, weight_decay, strides=None):
+def conv(x, nf, ks, name, weight_decay, strides=(1,1)):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     if ks!=1:
-        if strides == None:
-            x = DepthwiseConv2D((ks, ks),
-                                padding='same',
-                                depth_multiplier=1,
-                                use_bias=False,
-                                kernel_regularizer=l2(weight_decay[0]),
-                                )(x)
-        else:
-            x = DepthwiseConv2D((ks, ks),
+        x = DepthwiseConv2D((ks, ks),
                             padding='same',
                             depth_multiplier=1,
-                            strides=strides,
                             use_bias=False,
+                            strides=strides,
                             kernel_regularizer=l2(weight_decay[0]),
                             )(x)
-
         x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
         x = relu(x)
         x = Conv2D(nf, (1,1), padding='same', strides=1, use_bias=False, name=name,
