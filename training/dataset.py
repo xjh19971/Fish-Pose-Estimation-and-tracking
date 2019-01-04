@@ -26,7 +26,7 @@ AUGMENTORS_LIST = [
 
         ScaleAug(scale_min=0.9,
                  scale_max=1.1,
-                 target_dist=0.2,
+                 target_dist=0.5,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=180,
                   interp=cv2.INTER_CUBIC,
