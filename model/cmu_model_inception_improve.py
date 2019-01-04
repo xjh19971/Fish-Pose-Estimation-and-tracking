@@ -36,16 +36,17 @@ def STEM_block(input_tensor, filters, stage, weight_decay):
     x1 = relu(x1)
     x1 = pooling(x1, 2, 2)'''
 
-    x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay, strides=(2, 2))
+    x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
     x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
     x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
     x4 = relu(x4)
-    shortcut = conv(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay, strides=(2, 2))
+    shortcut = conv(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay)
     shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
     x = add([x4, shortcut])
     x = relu(x)
+    x = pooling(x, 2, 2)
     return x
 
 
@@ -67,18 +68,27 @@ def tiny_inception_block(input_tensor, filters, stage, branch, weight_decay):
     conv_name_base = 'tinyinception' + str(stage) + '_branch' + str(branch)
     bn_name_base = 'bn' + str(stage) + '_branch' + str(branch)
 
-    x1 = conv(input_tensor, filters1[0], 3, conv_name_base + 'a1', weight_decay)
+    x1 = conv(input_tensor, filters1[0], 1, conv_name_base + 'a0', weight_decay)
+    x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a0', epsilon=1e-5, momentum=0.9)(x1)
+    x1 = relu(x1)
+    x1 = conv(x1, filters1[0], 3, conv_name_base + 'a1', weight_decay)
     x1 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'a1', epsilon=1e-5, momentum=0.9)(x1)
     x1 = relu(x1)
 
-    x2 = conv(input_tensor, filters2[0], 3, conv_name_base + 'b1', weight_decay)
+    x2 = conv(input_tensor, filters2[0], 1, conv_name_base + 'b0', weight_decay)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b0', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = relu(x2)
+    x2 = conv(x2, filters2[0], 3, conv_name_base + 'b1', weight_decay)
     x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
     x2 = relu(x2)
     x2 = conv(x2, filters2[1], 3, conv_name_base + 'b2', weight_decay)
     x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
     x2 = relu(x2)
 
-    x3 = conv(input_tensor, filters3[0], 3, conv_name_base + 'c1', weight_decay)
+    x3 = conv(input_tensor, filters3[0], 1, conv_name_base + 'c0', weight_decay)
+    x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c0', epsilon=1e-5, momentum=0.9)(x3)
+    x3 = relu(x3)
+    x3 = conv(x3, filters3[0], 3, conv_name_base + 'c1', weight_decay)
     x3 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'c1', epsilon=1e-5, momentum=0.9)(x3)
     x3 = relu(x3)
     x3 = conv(x3, filters3[1], 3, conv_name_base + 'c2', weight_decay)
@@ -205,8 +215,8 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], 2*stage - 1, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], 2*stage, branch , (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2*stage - 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2*stage, branch , (weight_decay, 0))
     x3=x
     x = conv(x, num_p, 1, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
@@ -227,7 +237,7 @@ def get_training_model(weight_decay):
     stages = 3
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
-    img_size = 368
+    img_size = 320
     img_input_shape = (img_size, img_size, 3)
     vec_input_shape = (None, None, KEY_POINT_LINK)
     heat_input_shape = (None, None, KEY_POINT_NUM)

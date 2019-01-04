@@ -130,10 +130,10 @@ def build_debug_sample(components):
         mask_paf = create_all_mask(meta.mask, 6, stride=8)
         mask_heatmap = create_all_mask(meta.mask, 4, stride=8)
 
-    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, 46, 46,
+    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, 40, 40,
                                  meta.aug_joints, 7.0, stride=8)
 
-    pafmap = create_paf(JointsLoader.num_connections, 46, 46,
+    pafmap = create_paf(JointsLoader.num_connections, 40, 40,
                            meta.aug_joints, 1, stride=8)
 
     return [meta, mask_paf, mask_heatmap, pafmap, heatmap]
