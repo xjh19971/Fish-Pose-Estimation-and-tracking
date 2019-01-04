@@ -203,14 +203,11 @@ def stage1_block(x, num_p, branch, weight_decay):
 def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 64, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], 2*stage - 1, branch, (weight_decay, 0))
-    x = conv(x, 128, 1, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
-    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 64]], 2*stage, branch , (weight_decay, 0))
+    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 128]], 2*stage - 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[64], [64, 64], [64, 64, 128]], 2*stage, branch , (weight_decay, 0))
     x3=x
     x = conv(x, num_p, 1, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
