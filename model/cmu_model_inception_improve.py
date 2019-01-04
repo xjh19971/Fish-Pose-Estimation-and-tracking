@@ -36,13 +36,15 @@ def STEM_block(input_tensor, filters, stage, weight_decay):
     x1 = relu(x1)
     x1 = pooling(x1, 2, 2)'''
 
-    x = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
-    x = conv(x, filters4[1], 3, conv_name_base + 'd2', weight_decay)
-    x = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
-    x = add([x, input_tensor])
+    x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = relu(x4)
+    shortcut = conv(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay)
+    shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
+    x = add([x4, shortcut])
     x = relu(x)
     x = pooling(x, 2, 2)
     return x
