@@ -300,12 +300,12 @@ def get_testing_model():
     stage0_out = vgg_block(img_normalized, None)
     outputstemp=[]
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out,x3 = stage1_block(stage0_out, np_branch1, 1, None)
-    outputstemp.append(x3)
+    stage1_branch1_out,x2 = stage1_block(stage0_out, np_branch1, 1, None)
+    outputstemp.append(x2)
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out,x3 = stage1_block(stage0_out, np_branch2, 2, None)
     outputstemp.append(x3)
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
+    x = Concatenate()([x2, x3, stage0_out])
 
     # stage t >= 2
     for sn in range(2, stages + 1):
