@@ -174,7 +174,7 @@ def vgg_block(x, weight_decay):
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
 
     x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
-    x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
+    x = STEM_block(x, [64, 64], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 
@@ -182,9 +182,6 @@ def vgg_block(x, weight_decay):
 def stage1_block(x, num_p, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    x = relu(x)
     x1 = x
     x = conv(x, 128, 3, "Mconv2_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
