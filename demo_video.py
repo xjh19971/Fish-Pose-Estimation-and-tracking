@@ -34,7 +34,7 @@ g_filter = [[[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ],
             [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
             [[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ]]
 input_names = ['input_1']
-output_names = ['batch_normalization_22/FusedBatchNorm_1','batch_normalization_24/FusedBatchNorm_1']
+output_names = ['batch_normalization_30/FusedBatchNorm_1','batch_normalization_32/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
