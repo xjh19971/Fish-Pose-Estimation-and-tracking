@@ -288,7 +288,7 @@ def get_training_model(weight_decay):
 
         if (sn < stages):
             x = stage0_out
-            for snc in range(1,sn+2):
+            for snc in range(1,sn+1):
                 x = Concatenate()([outputstemp[2*snc-2], outputstemp[2*snc-1], x])
 
     model = Model(inputs=inputs, outputs=outputs)
