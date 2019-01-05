@@ -174,7 +174,7 @@ def vgg_block(x, weight_decay):
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
 
     x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
-    x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
+    x = STEM_block(x, [64, 64], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 
