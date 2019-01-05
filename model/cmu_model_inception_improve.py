@@ -202,15 +202,15 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = add([x2, x])
     x = relu(x)
     x3 = x
-    x = conv(x, 128, 3, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv6_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = conv(x, 128, 3, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv7_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = add([x3, x])
     x = relu(x)
     x4 = x
-    x = conv(x, num_p, 1, "Mconv6_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, num_p, 1, "Mconv8_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x,x3
 
