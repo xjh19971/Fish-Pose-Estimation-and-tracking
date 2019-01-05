@@ -130,7 +130,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 1].tolist()
         temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
-        temp = merge(temp)
+        #temp = merge(temp)
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 2].tolist()
@@ -139,7 +139,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         check = check + len(temp)
     t3 = time.time()
     mid_num = 10
-    limit = [[100, 10], [100, 10]]
+    limit = [[100, 20], [100, 20]]
     subset_all = []
     candidate_all = []
     checkpoint = 0
@@ -313,7 +313,6 @@ def process(input_image, f, params, model_params, tf_sess, flist):
             centerx = -1
             centery = -1
             loc = []
-            lost = 1
             for i in [1, 0, 2]:
                 idx = int(subset[n][i])
                 if int(subset[n][i]) != -1:
@@ -329,26 +328,11 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                     if i == 1:
                         centerx = location[0]
                         centery = location[1]
-                else:
-                    lost = 1
-            newloc = []
-            for x in loc:
-                newloc.append(x[0])
-                newloc.append(x[1])
             if f != 0:
                 dis, index = tree.query([centerx,centery])
                 if dis > 10:
                     lenflistnew = lenflistnew + 1
                     No = lenflistnew
-                    '''if lost !=1:
-                        if lost == 0:
-                            loc = [(2*loc[0][0]-loc[1][0],2*loc[0][0]-loc[1][0]), loc[0], loc[1]]
-                            newloc = [2*newloc[0]-newloc[2], 2*newloc[1]-newloc[3], newloc[0], newloc[1], newloc[2],
-                                      newloc[3]]
-                        else:
-                            loc = [loc[0], loc[1],(2*loc[1][0]-loc[0][0],2*loc[1][0]-loc[0][0])]
-                            newloc = [newloc[0], newloc[1], newloc[2],
-                                      newloc[3],2*newloc[2]-newloc[0], 2*newloc[3]-newloc[1]]'''
                 else:
                     No = flist[index][4]
                     if fish_detected[No] == 1:
@@ -356,27 +340,19 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                         continue
                     else:
                         fish_detected[No] = 1
-
-                        '''if lost != 1:
-                            if lost == 0:
-                                loc = [(flist[index][5][0], flist[index][5][1]), loc[0], loc[1]]
-                                newloc = [flist[index][5][0], flist[index][5][1], newloc[0], newloc[1], newloc[2],
-                                          newloc[3]]
-                            else:
-                                loc = [loc[0], loc[1], (flist[index][5][4], flist[index][5][5])]
-                                newloc = [newloc[0], newloc[1], newloc[2],
-                                          newloc[3], flist[index][5][0], flist[index][5][1]]'''
             else:
                 lenflistnew = lenflistnew + 1
                 No = lenflistnew
+
             for i in range(len(loc)):
                 cv2.circle(canvas, loc[i], 4, colors[i], thickness=-1)
+
             maxx = centerx + PAD
             maxy = centery + PAD
             minx = centerx - PAD
             miny = centery - PAD
             cv2.putText(canvas, str(No), (centerx, centery), font, 0.8, (255, 255, 255), 2)
-            flistnew.append((maxx, maxy, minx, miny, No, newloc))
+            flistnew.append((maxx, maxy, minx, miny, No))
         t5 = time.time()
         for i in range(2):
             for n in range(len(subset)):
@@ -385,17 +361,6 @@ def process(input_image, f, params, model_params, tf_sess, flist):
                     continue
                 Y = candidate[index.astype(int) - checkpoint, 0] + locx
                 X = candidate[index.astype(int) - checkpoint, 1] + locy
-                '''cur_canvas = canvas.copy()
-                Y = candidate[index.astype(int) - checkpoint, 0] + locx
-                X = candidate[index.astype(int) - checkpoint, 1] + locy
-                mX = np.mean(X)
-                mY = np.mean(Y)
-                length = ((X[0] - X[1]) ** 2 + (Y[0] - Y[1]) ** 2) ** 0.5
-                angle = math.degrees(math.atan2(X[0] - X[1], Y[0] - Y[1]))
-                polygon = cv2.ellipse2Poly((int(mY), int(mX)), (int(length / 2), stickwidth), int(angle), 0,
-                                           360, 1)
-                cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
-                canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)'''
                 canvas = cv2.line(canvas, (int(Y[1]), int(X[1])), (int(Y[0]), int(X[0])), colors[i], 2)
     flist = flistnew
     t6 = time.time()
@@ -467,14 +432,14 @@ if __name__ == '__main__':
             map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input'),
                                    perm=[0, 2, 1, 3])
             mapshape = tf.shape(map_ori)
-            filter = tf.constant(g_filter, dtype=tf.float32)
+            '''filter = tf.constant(g_filter, dtype=tf.float32)
             temp1 = tf.expand_dims(map_ori[:, :, :, 0], -1)
             temp2 = tf.expand_dims(map_ori[:, :, :, 1], -1)
             temp3 = tf.expand_dims(map_ori[:, :, :, 2], -1)
             temp1 = tf.nn.conv2d(temp1, filter, strides=[1, 1, 1, 1], padding='SAME')
             temp2 = tf.nn.conv2d(temp2, filter, strides=[1, 1, 1, 1], padding='SAME')
             temp3 = tf.nn.conv2d(temp3, filter, strides=[1, 1, 1, 1], padding='SAME')
-            map_ori = tf.concat([temp1, temp2, temp3], -1)
+            map_ori = tf.concat([temp1, temp2, temp3], -1)'''
             '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
             map_ori2 = tf.expand_dims(map_ori3, -1)
             map_ori1 = tf.expand_dims(map_ori2, 1)
@@ -507,7 +472,7 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = 0  # default is 0
+    i = -5  # default is 0
     flist = []
 
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
@@ -522,7 +487,7 @@ if __name__ == '__main__':
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
-            #cv2.imwrite('can.png',canvas)
+            cv2.imwrite('can.png',canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
