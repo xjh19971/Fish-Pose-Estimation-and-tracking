@@ -173,8 +173,8 @@ def vgg_block(x, weight_decay):
     x = Activation('relu')(x)  # 激活函数#
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)  # 最大池化层#
 
-    x = STEM_block(x, [64, 64], 1, (weight_decay, 0))
-    x = STEM_block(x, [64, 64], 2, (weight_decay, 0))
+    x = STEM_block(x, [128, 128], 1, (weight_decay, 0))
+    x = STEM_block(x, [128, 128], 2, (weight_decay, 0))
     x = pooling(x, 2, 2)
     return x
 
@@ -192,8 +192,9 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = conv(x, 128, 3, "Mconv3_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = add([x1, x])
-    x2 = relu(x)
-    x = conv(x2, 128, 3, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = relu(x)
+    x2 = x
+    x = conv(x, 128, 3, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     x = conv(x, 128, 3, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
@@ -201,6 +202,14 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = add([x2, x])
     x = relu(x)
     x3 = x
+    x = conv(x, 128, 3, "Mconv4_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 128, 3, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = add([x3, x])
+    x = relu(x)
+    x4 = x
     x = conv(x, num_p, 1, "Mconv6_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x,x3
@@ -212,12 +221,34 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2*stage - 1, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2*stage, branch , (weight_decay, 0))
-    x3=x
-    x = conv(x, num_p, 1, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x1 = x
+    x = conv(x, 128, 3, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    return x,x3
+    x = relu(x)
+    x = conv(x, 128, 3, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = add([x1, x])
+    x = relu(x)
+    x2 = x
+    x = conv(x, 128, 3, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 128, 3, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = add([x2, x])
+    x = relu(x)
+    x3 = x
+    x = conv(x, 128, 3, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = relu(x)
+    x = conv(x, 128, 3, "Mconv7_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = add([x3, x])
+    x = relu(x)
+    x4 = x
+    x = conv(x, num_p, 1,"Mconv8_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    return x,x4
 
 
 def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
