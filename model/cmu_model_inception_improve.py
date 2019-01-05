@@ -257,8 +257,8 @@ def get_training_model(weight_decay):
     stage0_out = vgg_block(img_normalized, weight_decay)
 
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out,x3 = stage1_block(stage0_out, np_branch1, 1, weight_decay)
-    outputstemp.append(x3)
+    stage1_branch1_out,x2 = stage1_block(stage0_out, np_branch1, 1, weight_decay)
+    outputstemp.append(x2)
     w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1, True)
 
     # stage 1 - branch 2 (confidence maps)
@@ -266,7 +266,7 @@ def get_training_model(weight_decay):
     outputstemp.append(x3)
     w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2, False)
 
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
+    x = Concatenate()([x2, x3, stage0_out])
 
     outputs.append(w1)
     outputs.append(w2)
@@ -288,7 +288,7 @@ def get_training_model(weight_decay):
 
         if (sn < stages):
             x = stage0_out
-            for snc in range(1,sn+1):
+            for snc in range(1,sn+2):
                 x = Concatenate()([outputstemp[2*snc-2], outputstemp[2*snc-1], x])
 
     model = Model(inputs=inputs, outputs=outputs)
@@ -311,12 +311,12 @@ def get_testing_model():
     stage0_out = vgg_block(img_normalized, None)
     outputstemp=[]
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out,x3 = stage1_block(stage0_out, np_branch1, 1, None)
-    outputstemp.append(x3)
+    stage1_branch1_out,x2 = stage1_block(stage0_out, np_branch1, 1, None)
+    outputstemp.append(x2)
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out,x3 = stage1_block(stage0_out, np_branch2, 2, None)
     outputstemp.append(x3)
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
+    x = Concatenate()([x2, x3, stage0_out])
 
     # stage t >= 2
     for sn in range(2, stages + 1):
