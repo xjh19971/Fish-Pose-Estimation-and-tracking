@@ -255,7 +255,7 @@ def get_training_model(weight_decay):
     outputstemp.append(x3)
     w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2, False)
 
-    x = Concatenate()([x3, stage1_branch2_out, stage0_out])
+    x = Concatenate()([x2, x3, stage0_out])
 
     outputs.append(w1)
     outputs.append(w2)
