@@ -218,7 +218,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 
 def get_training_model(weight_decay):
-    stages = 6
+    stages = 5
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
     img_size = 320
@@ -255,8 +255,6 @@ def get_training_model(weight_decay):
 
     x = Concatenate()([x2, x3, stage0_out])
 
-    outputs.append(w1)
-    outputs.append(w2)
 
     # stage sn >= 2
     for sn in range(2, stages + 1):
@@ -270,19 +268,19 @@ def get_training_model(weight_decay):
         outputstemp.append(x3)
         w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2, is_weight=False)
 
-        outputs.append(w1)
-        outputs.append(w2)
+
 
         if (sn < stages):
             x = Concatenate()([outputstemp[2*sn-2], outputstemp[2*sn-1], x])
-
+    outputs.append(w1)
+    outputs.append(w2)
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
     return model
 
 
 def get_testing_model():
-    stages = 6
+    stages = 5
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
