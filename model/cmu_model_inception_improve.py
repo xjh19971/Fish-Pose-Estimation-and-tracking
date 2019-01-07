@@ -185,9 +185,8 @@ def stage1_block(x, num_p, branch, weight_decay):
     x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 3 * 1 - 2, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 3 * 1 - 1, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 3 * 1, branch , (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * 1 - 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * 1 , branch, (weight_decay, 0))
     x3=x
     x = conv(x, num_p, 1, "Mconv5_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
@@ -200,9 +199,8 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 3 * stage - 2, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 3 * stage - 1, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 3 * stage, branch , (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * stage - 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * stage , branch, (weight_decay, 0))
     x3=x
     x = conv(x, num_p, 1, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
@@ -220,7 +218,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 
 
 def get_training_model(weight_decay):
-    stages = 4
+    stages = 6
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
     img_size = 320
@@ -276,9 +274,7 @@ def get_training_model(weight_decay):
         outputs.append(w2)
 
         if (sn < stages):
-            x = stage0_out
-            for snc in range(1,sn+1):
-                x = Concatenate()([outputstemp[2*snc-2], outputstemp[2*snc-1], x])
+            x = Concatenate()([outputstemp[2*sn-2], outputstemp[2*sn-1], x])
 
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
@@ -286,7 +282,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 4
+    stages = 6
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
@@ -315,10 +311,7 @@ def get_testing_model():
         outputstemp.append(x3)
 
         if (sn < stages):
-            x = stage0_out
-            for snc in range(1,sn+1):
-                x = Concatenate()([outputstemp[2*snc-2], outputstemp[2*snc-1], x])
-
+            x = Concatenate()([outputstemp[2*sn-2], outputstemp[2*sn-1], x])
     
     model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
     model.summary()
