@@ -200,6 +200,9 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * stage - 1, branch, (weight_decay, 0))
     x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * stage , branch, (weight_decay, 0))
     x3=x
+    if stage == 5:
+        x = conv(x, num_p, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+        x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x,x3
 
 
