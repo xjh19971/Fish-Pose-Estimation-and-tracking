@@ -34,7 +34,7 @@ g_filter = [[[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ],
             [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
             [[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ]]
 input_names = ['input_1']
-output_names = ['batch_normalization_14/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1']
+output_names = ['batch_normalization_14/FusedBatchNorm_1', 'batch_normalization_16/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -74,10 +74,10 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         paf_avg = np.zeros((lenimg, oriImg.shape[0], oriImg.shape[1], 4))
         orishape = [oriImg.shape[1], oriImg.shape[0]]
     else:
-        oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_REPLICATE)
+        oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT,value=[128,128,128])
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
         for fish in flist:
-            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[3] + PAD:fish[1] + PAD, fish[2] + PAD:fish[0] + PAD, :]
+            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -130,7 +130,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 1].tolist()
         temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
-        #temp = merge(temp)
+        # temp = merge(temp)
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 2].tolist()
@@ -267,104 +267,154 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         subset_all.append(subset)
         candidate_all.append(candidate)
         checkpoint = checkpoint + len(candidate)
-    return candidate_all, subset_all, all_peaks, t1, t2, t3
+    return subset_all, all_peaks, t1, t2, t3
 
 
-def process(input_image, f, params, model_params, tf_sess, flist):
-    scale_search = [1]
+def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
+    scale_search = [1.1]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
-        candidate_all, subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess)
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess)
     else:
-        candidate_all, subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess,
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess,
                                                                        lenimg=len(flist) if len(flist) != 0 else 1,
                                                                        flist=flist)
 
     canvas = input_image  # B,G,R order
 
     t4 = time.time()
-    flistnew = []
-    lenflistnew = len(flist)
-    fish_detected = np.zeros(len(flist) + 5)
+    flistnew = flist
+    detected = [0 for i in range(lenflistnew + 1)]
     checkpoint = 0
-    tree = []
+    save = []
     if f != 0:
-        points = [[x[0]-PAD,x[1]-PAD] for x in flist]
-        tree=KDTree(points)
+        points = [[x[0], x[1]] for x in flist]
+        tree = KDTree(points)
 
     for k in range(len(subset_all)):
         subset = subset_all[k]
-        candidate = candidate_all[k]
         all_peaks = all_peaks_all[k]
+        newloc_all=[]
         if k != 0:
             checkpoint = checkpoint + len(candidate_all[k - 1])
         if f % video_process == 0:
             locx = 0
             locy = 0
         else:
-            locx = flist[k][2]
-            locy = flist[k][3]
+            locx = flist[k][0]-PAD
+            locy = flist[k][1]-PAD
+
         for n in range(len(subset)):
-            maxx = -1
-            maxy = -1
-            minx = 10000
-            miny = 10000
-            centerx = -1
-            centery = -1
             loc = []
+            newloc = []
+            lost = 1
             for i in [1, 0, 2]:
                 idx = int(subset[n][i])
                 if int(subset[n][i]) != -1:
                     location = list(map(int, all_peaks[i][int(idx - all_peaks[i][0][3])][0:2]))
                     location[0] = location[0] + locx
                     location[1] = location[1] + locy
+                    newloc.append(location[0])
+                    newloc.append(location[1])
                     location = tuple(location)
-                    if (maxx < location[0]): maxx = location[0]
-                    if (maxy < location[1]): maxy = location[1]
-                    if (minx > location[0]): minx = location[0]
-                    if (miny > location[1]): miny = location[1]
                     loc.append(location)
-                    if i == 1:
-                        centerx = location[0]
-                        centery = location[1]
+                else:
+                    lost = i
+            newloc.append(lost)
+            newloc_all.append(newloc)
+        if f % video_process == 0 and video_process!=1 and f!=0:
+            dis = []
+            idx = []
+            for newloc in newloc_all:
+                distemp = math.sqrt(pow(flist[k][0] - newloc[0], 2) + pow(flist[k][1] - newloc[1], 2))
+                if distemp < 10:
+                    dis.append(distemp)
+                    idx.append(newloc)
+            newloc_all=[idx[dis.index(min(dis))]]
+        for newloc in newloc_all:
             if f != 0:
-                dis, index = tree.query([centerx,centery])
+                dis, index = tree.query([newloc[0], newloc[1]])
                 if dis > 20:
                     lenflistnew = lenflistnew + 1
                     No = lenflistnew
+                    detected.append(1)
+                    flist.append(newloc)
                 else:
-                    No = flist[index][4]
-                    if fish_detected[No] == 1:
+                    No = index
+                    if detected[No] == 1:
+                        save.append(newloc)
                         subset[n]=[-1,-1,-1,-1,-1]
                         continue
                     else:
-                        fish_detected[No] = 1
+                        detected[No] = 1
+                        flist[No] = newloc
             else:
                 lenflistnew = lenflistnew + 1
                 No = lenflistnew
+                detected.append(1)
+                flistnew.append(newloc)
 
+    t5 = time.time()
+    if save:
+        for savefish in save:
+            newloc = savefish
+            lost = newloc[-1]
+            find = 0
+            dis=[]
+            idx=[]
+            for i in range(len(detected)):
+                distemp=math.sqrt(pow(flist[i][0] - newloc[0], 2)+ pow(flist[i][1] - newloc[1], 2))
+                if distemp < 20:
+                    dis.append(distemp)
+                    idx.append(i)
+            dis_sorttemp=dis
+            dis.sort()
+            for mydis in dis:
+                i=idx[dis_sorttemp.index(mydis)]
+                if detected[i]==0:
+                    find = 1
+                    No = i
+                    if lost == 0:
+                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], newloc[4]]
+                    elif lost == 2:
+                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], newloc[4]]
+                    break
+                elif flistnew[i][-1]!=1 and lost==1:
+                    find = 1
+                    No = i
+                    if lost == 0:
+                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], newloc[4]]
+                    elif lost == 2:
+                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], newloc[4]]
+                    break
+            if find == 1:
+                flist[No] = newloc
+
+
+    for newloc in flistnew:
+        lost = newloc[-1]
+        if lost == 0:
+            loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
+            cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
+            cv2.circle(canvas, loc[1], 4, colors[2], thickness=-1)
+            canvas = cv2.line(canvas, loc[0], loc[1], colors[1], 2)
+        elif lost == 2:
+            loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
+            cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
+            cv2.circle(canvas, loc[1], 4, colors[1], thickness=-1)
+            canvas = cv2.line(canvas, loc[0], loc[1], colors[0], 2)
+        else:
+            loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3]), (newloc[4], newloc[5])]
             for i in range(len(loc)):
                 cv2.circle(canvas, loc[i], 4, colors[i], thickness=-1)
-
-            maxx = centerx + PAD
-            maxy = centery + PAD
-            minx = centerx - PAD
-            miny = centery - PAD
-            cv2.putText(canvas, str(No), (centerx, centery), font, 0.8, (255, 255, 255), 2)
-            flistnew.append((maxx, maxy, minx, miny, No))
-        t5 = time.time()
-        for i in range(2):
-            for n in range(len(subset)):
-                index = subset[n][np.array(limbSeq[i]) - 1]
-                if -1 in index:
-                    continue
-                Y = candidate[index.astype(int) - checkpoint, 0] + locx
-                X = candidate[index.astype(int) - checkpoint, 1] + locy
-                canvas = cv2.line(canvas, (int(Y[1]), int(X[1])), (int(Y[0]), int(X[0])), colors[i], 2)
+            canvas = cv2.line(canvas, loc[1], loc[0], colors[0], 2)
+            canvas = cv2.line(canvas, loc[0], loc[2], colors[1], 2)
+        cv2.putText(canvas, str(flistnew.index(newloc)), loc[0], font, 0.8, (255, 255, 255), 2)
     flist = flistnew
     t6 = time.time()
-    return canvas, t1, t2, t3, t4, t5, t6, flist
+
+    return canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew
 
 
 if __name__ == '__main__':
@@ -472,22 +522,23 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = -5  # default is 0
+    i = 0  # default is 0
     flist = []
-
+    lenflistnew = -1
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
         if i % frame_rate_ratio == 0 and i >= 0:
             scale = 1
             input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
             # generate image with body parts
-            canvas, t1, t2, t3, t4, t5, t6, flist = process(input_image, i, params, model_params, sess1_1, flist)
+            canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew = process(input_image, i, params, model_params, sess1_1,
+                                                                         flist, lenflistnew)
             print('processing frame is %d' % i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
-            cv2.imwrite('can.png',canvas)
+            cv2.imwrite('can.png', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
