@@ -335,7 +335,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
         for newloc in newloc_all:
             if f != 0:
                 dis, index = tree.query([newloc[0], newloc[1]])
-                if dis > 25:
+                if dis > 50:
                     lenflistnew = lenflistnew + 1
                     No = lenflistnew
                     detected.append(1)
@@ -365,7 +365,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
             idx=[]
             for i in range(len(detected)):
                 distemp=math.sqrt(pow(flist[i][0] - newloc[0], 2)+ pow(flist[i][1] - newloc[1], 2))
-                if distemp < 25:
+                if distemp < 50:
                     dis.append(distemp)
                     idx.append(i)
             dis_sorttemp=dis
