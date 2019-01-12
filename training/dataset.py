@@ -170,7 +170,7 @@ def build_sample(components):
 
     #for fpn
     heatmap0 = create_heatmap(JointsLoader.num_joints_and_bkg, 40, 40,
-                             meta.aug_joints, 3.0, stride=8)
+                             meta.aug_joints, 5.0, stride=8)
 
     pafmap0 = create_paf(JointsLoader.num_connections, 40, 40,
                         meta.aug_joints, 1, stride=8)
