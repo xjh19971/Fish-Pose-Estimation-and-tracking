@@ -335,7 +335,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
         for newloc in newloc_all:
             if f != 0:
                 dis, index = tree.query([newloc[0], newloc[1]])
-                if dis > 20:
+                if dis > 25:
                     lenflistnew = lenflistnew + 1
                     No = lenflistnew
                     detected.append(1)
