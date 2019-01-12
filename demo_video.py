@@ -365,7 +365,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
             idx=[]
             for i in range(len(detected)):
                 distemp=math.sqrt(pow(flist[i][0] - newloc[0], 2)+ pow(flist[i][1] - newloc[1], 2))
-                if distemp < 20:
+                if distemp < 25:
                     dis.append(distemp)
                     idx.append(i)
             dis_sorttemp=dis
