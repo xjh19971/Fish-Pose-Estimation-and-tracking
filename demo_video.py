@@ -34,7 +34,7 @@ g_filter = [[[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ],
             [[[0.0375]], [[0.0443]], [[0.0469]], [[0.0443]], [[0.0375]], ],
             [[[0.0318]], [[0.0375]], [[0.0397]], [[0.0375]], [[0.0318]], ]]
 input_names = ['input_1']
-output_names = ['batch_normalization_14/FusedBatchNorm_1', 'batch_normalization_16/FusedBatchNorm_1']
+output_names = ['batch_normalization_10/FusedBatchNorm_1', 'batch_normalization_12/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -508,7 +508,7 @@ if __name__ == '__main__':
             tempb = mapx[:, 1:, :] < 0
             tempc = mapy[:, :, :-1] > 0
             tempd = mapy[:, :, 1:] < 0
-            tempe = map_ori > 0.1
+            tempe = map_ori > 0.15
             A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)
@@ -522,7 +522,7 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = 0  # default is 0
+    i = -70  # default is 0
     flist = []
     lenflistnew = -1
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
@@ -538,7 +538,7 @@ if __name__ == '__main__':
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
-            cv2.imwrite('can.png', canvas)
+            #cv2.imwrite('can.png', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
