@@ -522,7 +522,7 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = -70  # default is 0
+    i = -300  # default is 0
     flist = []
     lenflistnew = -1
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
