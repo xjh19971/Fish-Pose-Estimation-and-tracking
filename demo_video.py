@@ -376,17 +376,17 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
                     find = 1
                     No = i
                     if lost == 0:
-                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], newloc[4]]
+                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
                     elif lost == 2:
-                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], newloc[4]]
+                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
                     break
                 elif flistnew[i][-1]!=1 and lost==1:
                     find = 1
                     No = i
                     if lost == 0:
-                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], newloc[4]]
+                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
                     elif lost == 2:
-                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], newloc[4]]
+                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
                     break
             if find == 1:
                 flist[No] = newloc
