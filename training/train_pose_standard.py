@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
 #from model.cmu_model_resnet import get_training_model
 from model.cmu_model import get_training_model
-#from training.optimizers import MultiSGD
+from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
@@ -111,18 +111,23 @@ def get_lr_multipliers(model):
             # stage = 1
             if re.match("Mconv\d_stage1.*", layer.name):
                 kernel_name = layer.weights[0].name
+                bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 1
+                lr_mult[bias_name] = 2
 
             # stage > 1
             elif re.match("Mconv\d_stage.*", layer.name):
                 kernel_name = layer.weights[0].name
+                bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 4
+                lr_mult[bias_name] = 8
 
             # vgg
             else:
                 kernel_name = layer.weights[0].name
+                bias_name = layer.weights[1].name
                 lr_mult[kernel_name] = 1
-
+                lr_mult[bias_name] = 2
 
     return lr_mult
 
@@ -230,13 +235,13 @@ if __name__ == '__main__':
 
     # sgd optimizer with lr multipliers
 
-    #multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0,
-     #                   nesterov=False, lr_mult=lr_multipliers)
+    multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0,
+                        nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-    adam=optimizers.Nadam(lr=base_lr)
+
     loss_funcs = get_loss_funcs()
-    model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
+    model.compile(loss=loss_funcs, optimizer=multisgd, metrics=["accuracy"])
     model.fit_generator(train_gen,
                         steps_per_epoch=train_samples // batch_size,
                         epochs=max_iter,
