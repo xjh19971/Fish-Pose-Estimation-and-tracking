@@ -220,7 +220,7 @@ def get_training_model(weight_decay):
     stages = 5
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
-    img_size = 320
+    img_size = 368
     img_input_shape = (img_size, img_size, 3)
     vec_input_shape = (None, None, KEY_POINT_LINK)
     heat_input_shape = (None, None, KEY_POINT_NUM)
