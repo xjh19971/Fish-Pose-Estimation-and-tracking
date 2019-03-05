@@ -130,10 +130,10 @@ def build_debug_sample(components):
         mask_paf = create_all_mask(meta.mask, 6, stride=8)
         mask_heatmap = create_all_mask(meta.mask, 4, stride=8)
 
-    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, 40, 40,
+    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, 46, 46,
                                  meta.aug_joints, 5.0, stride=8)
 
-    pafmap = create_paf(JointsLoader.num_connections, 40, 40,
+    pafmap = create_paf(JointsLoader.num_connections, 46, 46,
                            meta.aug_joints, 1, stride=8)
 
     return [meta, mask_paf, mask_heatmap, pafmap, heatmap]
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     curr_dir = os.path.dirname(__file__)
     annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
     img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
-    df = CocoDataFlow((320, 320), annot_path, img_dir)#, select_ids=[1000])
+    df = CocoDataFlow((368, 368), annot_path, img_dir)#, select_ids=[1000])
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)
