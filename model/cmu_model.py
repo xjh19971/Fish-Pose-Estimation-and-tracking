@@ -6,12 +6,8 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-from keras.layers import  BatchNormalization
-import keras.backend as K
 
-KEY_POINT_NUM=3+1
-KEY_POINT_LINK=2*2
-STAGE_NUM=6
+
 def relu(x): return Activation('relu')(x)
 
 
@@ -30,6 +26,7 @@ def conv(x, nf, ks, name, weight_decay):
 def pooling(x, ks, st, name):
     x = MaxPooling2D((ks, ks), strides=(st, st), name=name)(x)
     return x
+
 
 def vgg_block(x, weight_decay):
     # Block 1
@@ -106,10 +103,9 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     return x
 
 
-
-def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
+def apply_mask(x, mask1, mask2, num_p, stage, branch):
     w_name = "weight_stage%d_L%d" % (stage, branch)
-    if is_weight:
+    if num_p == 38:
         w = Multiply(name=w_name)([x, mask1]) # vec_weight
 
     else:
@@ -120,12 +116,12 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
 def get_training_model(weight_decay):
 
     stages = 6
-    np_branch1 = KEY_POINT_LINK
-    np_branch2 = KEY_POINT_NUM
+    np_branch1 = 4
+    np_branch2 = 4
 
-    img_input_shape = (368, 368, 3)
-    vec_input_shape = (46, 46, KEY_POINT_LINK)
-    heat_input_shape = (46, 46, KEY_POINT_NUM)
+    img_input_shape = (None, None, 3)
+    vec_input_shape = (None, None, 4)
+    heat_input_shape = (None, None, 4)
 
     inputs = []
     outputs = []
@@ -145,11 +141,11 @@ def get_training_model(weight_decay):
 
     # stage 1 - branch 1 (PAF)
     stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, weight_decay)
-    w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1,True)
+    w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1)
 
     # stage 1 - branch 2 (confidence maps)
     stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
-    w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2,False)
+    w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2)
 
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
@@ -160,11 +156,11 @@ def get_training_model(weight_decay):
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
         stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
-        w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1,is_weight=True)
+        w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1)
 
         # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
-        w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2,is_weight=False)
+        w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2)
 
         outputs.append(w1)
         outputs.append(w2)
@@ -173,13 +169,14 @@ def get_training_model(weight_decay):
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
 
     model = Model(inputs=inputs, outputs=outputs)
+
     return model
 
 
 def get_testing_model():
-    stages = STAGE_NUM
-    np_branch1 = KEY_POINT_LINK
-    np_branch2 = KEY_POINT_NUM
+    stages = 6
+    np_branch1 = 4
+    np_branch2 = 4
 
     img_input_shape = (None, None, 3)
 
