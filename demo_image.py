@@ -302,46 +302,38 @@ if __name__ == '__main__':
             sess1 = tf.Session(config=tf_config)
     with sess2.as_default():
         with sess2.graph.as_default():
-            map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input'),
-                                   perm=[0, 2, 1, 3])
+            map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, 3], name='input'), perm=[1, 0, 2])
             mapshape = tf.shape(map_ori)
-            '''filter = tf.constant(g_filter, dtype=tf.float32)
-            temp1 = tf.expand_dims(map_ori[:, :, :, 0], -1)
-            temp2 = tf.expand_dims(map_ori[:, :, :, 1], -1)
-            temp3 = tf.expand_dims(map_ori[:, :, :, 2], -1)
-            temp1 = tf.nn.conv2d(temp1, filter, strides=[1, 1, 1, 1], padding='SAME')
-            temp2 = tf.nn.conv2d(temp2, filter, strides=[1, 1, 1, 1], padding='SAME')
-            temp3 = tf.nn.conv2d(temp3, filter, strides=[1, 1, 1, 1], padding='SAME')
-            map_ori = tf.concat([temp1, temp2, temp3], -1)'''
             '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
             map_ori2 = tf.expand_dims(map_ori3, -1)
             map_ori1 = tf.expand_dims(map_ori2, 1)
             map_ori = tf.nn.conv2d(map_ori1, w, [1, 1], 'SAME')'''
-            a = map_ori[:, 1:, :]
-            b = map_ori[:, :-1, :]
-            c = map_ori[:, :, 1:]
-            d = map_ori[:, :, :-1]
-            padx = tf.zeros([mapshape[0], 1, mapshape[2], 3])
-            pady = tf.zeros([mapshape[0], mapshape[1], 1, 3])
-            mapx = tf.concat([np.subtract(a, b), padx], 1)
-            mapy = tf.concat([np.subtract(c, d), pady], 2)
+            a = map_ori[1:, :]
+            b = map_ori[:-1, :]
+            c = map_ori[:, 1:]
+            d = map_ori[:, :-1]
+            padx = tf.zeros([1, mapshape[1], 3])
+            pady = tf.zeros([mapshape[0], 1, 3])
+            mapx = tf.concat([np.subtract(a, b), padx], 0)
+            mapy = tf.concat([np.subtract(c, d), pady], 1)
             padxb = tf.cast(padx, dtype=tf.bool)
             padyb = tf.cast(pady, dtype=tf.bool)
-            tempa = mapx[:, :-1, :] > 0
-            tempb = mapx[:, 1:, :] < 0
-            tempc = mapy[:, :, :-1] > 0
-            tempd = mapy[:, :, 1:] < 0
+            tempa = mapx[:-1, :] > 0
+            tempb = mapx[1:, :] < 0
+            tempc = mapy[:, :-1] > 0
+            tempd = mapy[:, 1:] < 0
             tempe = map_ori > 0.15
-            A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
-            B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
-            C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)
-            D = tf.expand_dims(tf.concat([tempd, padyb], 2), -1)
+            A = tf.expand_dims(tf.concat([tempa, padxb], 0), -1)
+            B = tf.expand_dims(tf.concat([tempb, padxb], 0), -1)
+            C = tf.expand_dims(tf.concat([tempc, padyb], 1), -1)
+            D = tf.expand_dims(tf.concat([tempd, padyb], 1), -1)
             E = tf.expand_dims(tempe, -1)
-            mask = tf.reduce_all(tf.concat([A, B, C, D, E], 4), 4)
+            mask = tf.reduce_all(tf.concat([A, B, C, D, E], 3), 3)
             xy = tf.where(mask)
             floatxy = tf.cast(xy, tf.float32)
             score = tf.expand_dims(tf.cast(tf.gather_nd(map_ori, xy), dtype=tf.float32), 1)
             output = tf.concat([floatxy, score], 1, name='output0')
+            # output0=tf.concat([xy])
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
@@ -361,8 +353,7 @@ if __name__ == '__main__':
         #cv2.imwrite('result.png', canvas)
         data['im_path']=filename
         data['joints']=subset
-        if(n>=10):
-            cv2.imwrite('result.png',canvas)
+        #cv2.imwrite('result.png',canvas)
         csv_data.append(data)
         n=n+1
     sess1.close()

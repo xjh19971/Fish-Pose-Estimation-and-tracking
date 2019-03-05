@@ -5,32 +5,25 @@ import pickle
 import json
 import codecs
 
-def computeOks(gts,dts,score):
+def computeOks(gts,dts):
     # dimention here should be Nxm
-    inds = np.argsort([-d for d in score], kind='mergesort')
-    dts = [dts[i] for i in inds]
-    # if len(gts) == 0 and len(dts) == 0:
-    if len(gts) == 0 or len(dts) == 0:
-        return []
-    ious = np.zeros((len(dts), len(gts)))
-    sigmas = np.array([.3, .3, .3]) / 10.0
-    vars = (sigmas * 2) ** 2
-    # compute oks between each detection and ground truth object
+    ious = np.zeros((len(gts), len(dts)))
+    gts=np.array(gts)
+    dts = np.array(dts)
     for j, gt in enumerate(gts):
-        # create bounds for ignore regions(double the gt bbox)
-        g = np.array(gt)
-        xg = g[0::2]
-        yg = g[1::2]
-        for i, dt in enumerate(dts):
-            d = np.array(dt)
-            xd = d[0::2]
-            yd = d[1::2]
-            # measure the per-keypoint distance if keypoints visible
+        xg = gt[0]
+        yg = gt[1]
+
+        for k, dt in enumerate(dts):
+            xd = dt[0]
+            yd = dt[1]
+
             dx = xd - xg
             dy = yd - yg
-            e = (dx ** 2 + dy ** 2) / vars / (2500 + np.spacing(1)) / 2
-            ious[i, j] = np.sum(np.exp(-e)) / e.shape[0]
-    return ious
+            e = (dx ** 2 + dy ** 2) / 50
+            ious[j, k] = np.sum(np.exp(-e))
+    iousmax = ious.max(axis=1)
+    return np.sum(iousmax)/gts.shape[0]
 
 if __name__ == '__main__':
     dataset = {}
@@ -46,37 +39,49 @@ if __name__ == '__main__':
     dtt=dtt.tolist()
     gts=[]
     for gt in gtt:
+        gts1 = []
+        gts2 = []
+        gts3 = []
         myjoint = gt.replace('[', '').replace(']', '').replace(' ', '').split(',')
         myjointintalone = list(map(eval, myjoint))
-        gtsalone=[]
         for num in range(0, len(myjointintalone), 9):
-            gtstemp = []
+            gts1temp = []
+            gts2temp = []
+            gts3temp = []
             tempnum=num
             temp = myjointintalone[tempnum:tempnum + 3]
             tempnum=tempnum+3
-            gtstemp.append(temp[1])
-            gtstemp.append(temp[2])
+            gts1temp.append(temp[1])
+            gts1temp.append(temp[2])
             temp = myjointintalone[tempnum:tempnum + 3]
             tempnum=tempnum+3
-            gtstemp.append(temp[1])
-            gtstemp.append(temp[2])
+            gts2temp.append(temp[1])
+            gts2temp.append(temp[2])
             temp = myjointintalone[tempnum:tempnum + 3]
-            gtstemp.append(temp[1])
-            gtstemp.append(temp[2])
-            gtsalone.append(gtstemp)
-        gts.append(gtsalone)
+            gts3temp.append(temp[1])
+            gts3temp.append(temp[2])
+            gts1.append(gts1temp)
+            gts2.append(gts2temp)
+            gts3.append(gts3temp)
+        gts.append([gts1,gts2,gts3])
     dts=[]
     score=[]
     for dt in dtt:
+        dts1 = []
+        dts2 = []
+        dts3 = []
         myjoint = dt.replace('[', '').replace(']', '').replace(' ', '').split(',')
         if myjoint == ['']:
+            dts.append([])
+            score.append([0])
             continue
         myjointintalone = list(map(eval, myjoint))
-        dtsalone=[]
         scorealone=[]
         num=0
         while num < len(myjointintalone):
-            dtstemp = []
+            dts1temp = []
+            dts2temp = []
+            dts3temp = []
             lost=-1
             tempnum=num
             if myjointintalone[num+7]==2:
@@ -85,53 +90,64 @@ if __name__ == '__main__':
                 else:
                     lost=2
             if lost==0:
-                dtstemp.append(100000)
-                dtstemp.append(100000)
+                dts1temp.append(100000)
+                dts1temp.append(100000)
             else:
                 temp = myjointintalone[tempnum:tempnum + 3]
                 tempnum=tempnum+3
-                dtstemp.append(temp[0])
-                dtstemp.append(temp[1])
+                dts1temp.append(temp[0])
+                dts1temp.append(temp[1])
             temp = myjointintalone[tempnum:tempnum + 3]
             tempnum=tempnum+3
-            dtstemp.append(temp[0])
-            dtstemp.append(temp[1])
+            dts2temp.append(temp[0])
+            dts2temp.append(temp[1])
             if lost == 2:
-                dtstemp.append(100000)
-                dtstemp.append(100000)
+                dts3temp.append(100000)
+                dts3temp.append(100000)
             else:
                 temp = myjointintalone[tempnum:tempnum + 3]
                 tempnum = tempnum + 3
-                dtstemp.append(temp[0])
-                dtstemp.append(temp[1])
+                dts3temp.append(temp[0])
+                dts3temp.append(temp[1])
             if lost==-1:
                 scorealone.append(myjointintalone[num+9])
             else:
                 scorealone.append(myjointintalone[num + 6])
-            dtsalone.append(dtstemp)
+            dts1.append(dts1temp)
+            dts2.append(dts2temp)
+            dts3.append(dts3temp)
             if lost!=-1:
                 num=num-3
             num=num+11
-        dts.append(dtsalone)
-        score.append(scorealone)
+        dts.append([dts1,dts2,dts3])
+
     ious=[]
     gtt=gts
     dtt=dts
-    APthre1=[i for i in np.arange(0.05,0.95,0.05)]
-    realmAP=[]
+    APthre1=[i for i in np.arange(0.05,1,0.05)]
+    iousmaxall=[]
     for i,dn in enumerate(dnn):
         gind=gnn.index(dn)
         gts=gtt[gind]
         dts=dtt[i]
-        ious=computeOks(gts,dts,score[i])
-        iousmax=ious.max(axis=1)
-        mAP = 0
-        for APthre in APthre1:
-            AP=len((np.where(iousmax>APthre,iousmax,0)).nonzero())/iousmax.shape[0]
-            mAP=mAP+AP
-        mAP=mAP/len(APthre1)
-        realmAP.append(mAP)
-    print(realmAP)
+        iousmax=np.zeros(3)
+        if dts == []:
+            continue
+        for j in range(0,3):
+            iousmax[j]=computeOks(gts[j],dts[j])
+        iousmaxall.append(iousmax)
+    '''for APthre in APthre1:
+        for OKS in iousmax[j]:'''
+    AP=0
+    for APthre in APthre1:
+        count=np.zeros(3)
+        for img in iousmaxall:
+            for j in range(0,3):
+                if img[j]>=APthre:
+                    count[j]=count[j]+1
+        AP=AP+count/len(iousmaxall)
+    mAP=AP/len(APthre1)
+    print(mAP)
 
 
 
