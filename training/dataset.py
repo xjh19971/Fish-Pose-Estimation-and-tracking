@@ -17,15 +17,15 @@ KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2
 
 ALL_PAF_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
+    np.ones((40, 40, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
 
 ALL_HEATMAP_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
+    np.ones((40, 40, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
 
 AUGMENTORS_LIST = [
 
         ScaleAug(scale_min=1,
-                 scale_max=2,
+                 scale_max=1,
                  target_dist=0.15,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=180,
@@ -33,7 +33,7 @@ AUGMENTORS_LIST = [
                   border=cv2.BORDER_CONSTANT,
                   border_value=(128, 128, 128), mask_border_val=1),
 
-        CropAug(368, 368, center_perterb_max=40, border_value=(128, 128, 128), #40
+        CropAug(320, 320, center_perterb_max=40, border_value=(128, 128, 128), #40
                  mask_border_val=1),
 
         FlipAug(num_parts=KEY_POINT_NUM-1, prob=0.5),
@@ -173,7 +173,7 @@ def build_sample(components):
                              meta.aug_joints, 5.0, stride=8)
 
     pafmap0 = create_paf(JointsLoader.num_connections, 40, 40,
-                        meta.aug_joints, 0.3, stride=8)
+                        meta.aug_joints, 1, stride=8)
 
     # release reference to the image/mask/augmented data. Otherwise it would easily consume all memory at some point
     meta.mask = None
@@ -192,7 +192,7 @@ def get_dataflow(annot_path, img_dir):
     :param img_dir: path to the images
     :return: dataflow object
     """
-    df = CocoDataFlow((368, 368), annot_path, img_dir)
+    df = CocoDataFlow((320, 320), annot_path, img_dir)
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)
@@ -219,7 +219,7 @@ def batch_dataflow(df, batch_size):
     #             )
     df = MapData(df, lambda x: (
         [x[0], x[1], x[2]],
-        [x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4]])
+        [x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],])
                  )
     df.reset_state()
     return df
