@@ -18,7 +18,7 @@ K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
 #from model.cmu_model_resnet import get_training_model
-from model.cmu_model import get_training_model
+from model.cmu_model_inception_improve import get_training_model
 #from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
@@ -137,18 +137,18 @@ def get_loss_funcs():
         return K.sum(K.square(x - y)) / batch_size / 2
 
     losses = {}
-    losses["weight_stage1_L1"] = _eucl_loss
+    '''losses["weight_stage1_L1"] = _eucl_loss
     losses["weight_stage1_L2"] = _eucl_loss
     losses["weight_stage2_L1"] = _eucl_loss
     losses["weight_stage2_L2"] = _eucl_loss
     losses["weight_stage3_L1"] = _eucl_loss
     losses["weight_stage3_L2"] = _eucl_loss
     losses["weight_stage4_L1"] = _eucl_loss
-    losses["weight_stage4_L2"] = _eucl_loss
+    losses["weight_stage4_L2"] = _eucl_loss'''
     losses["weight_stage5_L1"] = _eucl_loss
     losses["weight_stage5_L2"] = _eucl_loss
-    losses["weight_stage6_L1"] = _eucl_loss
-    losses["weight_stage6_L2"] = _eucl_loss
+    '''losses["weight_stage6_L1"] = _eucl_loss
+    losses["weight_stage6_L2"] = _eucl_loss'''
 
     return losses
 
