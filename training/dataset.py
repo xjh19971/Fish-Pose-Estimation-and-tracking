@@ -25,7 +25,7 @@ ALL_HEATMAP_MASK = np.repeat(
 AUGMENTORS_LIST = [
 
         ScaleAug(scale_min=1,
-                 scale_max=1,
+                 scale_max=3,
                  target_dist=0.15,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=180,
@@ -173,7 +173,7 @@ def build_sample(components):
                              meta.aug_joints, 5.0, stride=8)
 
     pafmap0 = create_paf(JointsLoader.num_connections, 40, 40,
-                        meta.aug_joints, 1, stride=8)
+                        meta.aug_joints, 0.3, stride=8)
 
     # release reference to the image/mask/augmented data. Otherwise it would easily consume all memory at some point
     meta.mask = None
