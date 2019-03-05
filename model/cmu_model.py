@@ -105,7 +105,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
 
 def apply_mask(x, mask1, mask2, num_p, stage, branch):
     w_name = "weight_stage%d_L%d" % (stage, branch)
-    if num_p == 38:
+    if num_p == 4:
         w = Multiply(name=w_name)([x, mask1]) # vec_weight
 
     else:
