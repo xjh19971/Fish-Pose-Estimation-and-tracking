@@ -18,23 +18,18 @@ def relu(x): return Activation('relu')(x)
 def conv(x, nf, ks, name, weight_decay):
     kernel_reg = l2(weight_decay[0]) if weight_decay else None
     bias_reg = l2(weight_decay[1]) if weight_decay else None
-    if K.image_data_format() == 'channels_last':
-        bn_axis = 3
-    else:
-        bn_axis = 1
+
     x = Conv2D(nf, (ks, ks), padding='same', name=name,
                kernel_regularizer=kernel_reg,
                bias_regularizer=bias_reg,
                kernel_initializer=random_normal(stddev=0.01),
                bias_initializer=constant(0.0))(x)
-    x=BatchNormalization(axis=bn_axis, name=name+'BN')(x)
     return x
 
 
 def pooling(x, ks, st, name):
     x = MaxPooling2D((ks, ks), strides=(st, st), name=name)(x)
     return x
-
 
 def vgg_block(x, weight_decay):
     # Block 1
@@ -109,6 +104,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     x = conv(x, num_p, 1, "Mconv7_stage%d_L%d" % (stage, branch), (weight_decay, 0))
 
     return x
+
 
 
 def apply_mask(x, mask1, mask2, num_p, stage, branch, is_weight):
