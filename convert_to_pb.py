@@ -63,8 +63,8 @@ if __name__ == '__main__':
     model = get_testing_model()
     model.load_weights(keras_weights_file,by_name=True)
     frozen_graph = freeze_session(K.get_session(),output_names=['batch_normalization_14/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1'])
-    tf.train.write_graph(frozen_graph, ".", "tf_model_real.pb", as_text=False)
-    trt_graph = trt.create_inference_graph(
+    tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
+    '''trt_graph = trt.create_inference_graph(
         input_graph_def=frozen_graph,
         outputs=['batch_normalization_14/FusedBatchNorm_1','batch_normalization_16/FusedBatchNorm_1'],
         max_batch_size=10,
@@ -72,5 +72,5 @@ if __name__ == '__main__':
         precision_mode='FP16',
         minimum_segment_size=2  )
     #trt_graph=trt.calib_graph_to_infer_graph(trt_graph)
-    tf.train.write_graph(trt_graph, ".", "tf_model.pb", as_text=False)
+    tf.train.write_graph(trt_graph, ".", "tf_model.pb", as_text=False)'''
 
