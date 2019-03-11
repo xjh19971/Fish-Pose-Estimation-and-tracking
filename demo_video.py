@@ -138,8 +138,8 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         all_peaks[i].append(temp)
         check = check + len(temp)
     t3 = time.time()
-    mid_num = 10
-    limit = [[100, 20], [100, 20]]
+    mid_num = 5
+    limit = [[300, 20], [300, 20]]
     subset_all = []
     candidate_all = []
     checkpoint = 0
@@ -189,7 +189,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
                         # score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
                         #    0.5 * oriImg.shape[0] / norm - 1, 0)
                         score_with_dist_prior = sum(score_midpts) / len(score_midpts)
-                        criterion1 = len(np.nonzero(score_midpts > 0.01)[0]) > 0.8 * len(
+                        criterion1 = len(np.nonzero(score_midpts > 0.005)[0]) > 0.8 * len(
                             score_midpts)
                         criterion2 = score_with_dist_prior > 0
                         if criterion1 and criterion2:
@@ -261,7 +261,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         # delete some rows of subset which has few parts occur
         deleteIdx = [];
         for i in range(len(subset)):
-            if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.2:
+            if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.1:
                 deleteIdx.append(i)
         subset = np.delete(subset, deleteIdx, axis=0)
         subset_all.append(subset)
@@ -271,7 +271,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
 
 
 def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
-    scale_search = [1.1]
+    scale_search = [0.5]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
@@ -356,7 +356,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
                 flistnew.append(newloc)
 
     t5 = time.time()
-    if save:
+    '''if save:
         for savefish in save:
             newloc = savefish
             lost = newloc[-1]
@@ -390,7 +390,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
                     break
             if find == 1:
                 flist[No] = newloc
-
+'''
 
     for newloc in flistnew:
         lost = newloc[-1]
@@ -465,7 +465,6 @@ if __name__ == '__main__':
     out = cv2.VideoWriter(video_output, fourcc, output_fps,
                           (int(input_image.shape[1]), int(input_image.shape[0])))
     tf_config = tf.ConfigProto()
-    tf_config.gpu_options.per_process_gpu_memory_fraction = 0.75
     tf_config.gpu_options.allow_growth = True
     with sess1_1.as_default():
         with sess1_1.graph.as_default():
@@ -473,7 +472,7 @@ if __name__ == '__main__':
             with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
-            summary_write = tf.summary.FileWriter("./logdir", output_graph_def)
+            #summary_write = tf.summary.FileWriter("./logdir", output_graph_def)
             init = tf.global_variables_initializer()
             sess1_1.run(init)
             sess1_1 = tf.Session(config=tf_config)
@@ -508,7 +507,7 @@ if __name__ == '__main__':
             tempb = mapx[:, 1:, :] < 0
             tempc = mapy[:, :, :-1] > 0
             tempd = mapy[:, :, 1:] < 0
-            tempe = map_ori > 0.15
+            tempe = map_ori > 0.03
             A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)
@@ -522,13 +521,11 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = -300  # default is 0
+    i = 0 # default is 0
     flist = []
     lenflistnew = -1
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
         if i % frame_rate_ratio == 0 and i >= 0:
-            scale = 1
-            input_image = cv2.resize(input_image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
             tic = time.time()
             # generate image with body parts
             canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew = process(input_image, i, params, model_params, sess1_1,

@@ -1,42 +1,37 @@
+
 import argparse
 import math
-import os
-import sys
 import time
 
 import cv2
 import numpy as np
 import tensorflow as tf
-from scipy.spatial import KDTree
-from scipy.ndimage.filters import gaussian_filter
+import os
 import util
 from config_reader import config_reader
+import shutil
+import re
+import json
+from scipy.ndimage.filters import gaussian_filter
+import pandas as pd
 
-currentDT = time.localtime()
-start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-
-limbSeq = [[1, 2], [2, 3]]
+# find connection in the specified sequence, center 29 is in the position 15
+limbSeq = [[1,2],[2,3]]
 
 # the middle joints heatmap correpondence
-mapIdx = [[2, 3], [4, 5]]
+mapIdx = [[2,3],[4,5]]
 
 # visualize
-colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
+colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 
-input_names = ['input_1']
-output_names = ['batch_normalization_10/FusedBatchNorm_1', 'batch_normalization_12/FusedBatchNorm_1']
-font = cv2.FONT_HERSHEY_SIMPLEX
-g1_1 = tf.Graph()
-sess1_1 = tf.Session(graph=g1_1)
-
+g1 = tf.Graph()
+sess1 = tf.Session(graph=g1)
+input_names=['input_1']
+output_names= ['batch_normalization_10/FusedBatchNorm_1','batch_normalization_12/FusedBatchNorm_1']
 def process (input_image, params, model_params):
 
-    oriImg = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
-
-    scale_search = [1,] # [.5, 1, 1.5, 2]
-    scale_search = scale_search[0:process_speed]
-
-    multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
+    oriImg = cv2.imread(input_image)  # B,G,R order
+    multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in params['scale_search']]
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
@@ -50,10 +45,12 @@ def process (input_image, params, model_params):
 
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
 
-        tf_input = sess1_1.graph.get_tensor_by_name(input_names[0] + ':0')
-        tf_paf = sess1_1.graph.get_tensor_by_name(output_names[0] + ':0')
-        tf_heatmap = sess1_1.graph.get_tensor_by_name(output_names[1] + ':0')
-        tf_paf, tf_heatmap = sess1_1.run([tf_paf, tf_heatmap],
+        tf_input = sess1.graph.get_tensor_by_name(input_names[0] + ':0')
+        tf_paf = sess1.graph.get_tensor_by_name(output_names[0] + ':0')
+        tf_heatmap = sess1.graph.get_tensor_by_name(output_names[1] + ':0')
+        input_img = np.transpose(np.float32(imageToTest_padded[:, :, :, np.newaxis]),
+                                 (3, 0, 1, 2))  # required shape (1, width, height, channels)
+        tf_paf, tf_heatmap =sess1.run([tf_paf, tf_heatmap],
                                          feed_dict={
                                              tf_input: input_img
                                          })
@@ -209,12 +206,11 @@ def process (input_image, params, model_params):
     # delete some rows of subset which has few parts occur
     deleteIdx = [];
     for i in range(len(subset)):
-        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.1:
+        if subset[i][-1] < 4 or subset[i][-2] / subset[i][-1] < 0.4:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
-    canvas = input_image
-
+    canvas = cv2.imread(input_image)  # B,G,R order
     for i in range(3):
         for j in range(len(all_peaks[i])):
             cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
@@ -238,80 +234,54 @@ def process (input_image, params, model_params):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return canvas
+    return  all_peaks[:][:][0:2],canvas
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video', type=str, required=True, help='input video file name')
-    parser.add_argument('--frame_ratio', type=int, default=1, help='analyze every [n] frames')
-    parser.add_argument('--process_speed', type=int, default=1, help='Int 1 (fastest, lowest quality) to 4 (slowest, highest quality)')
-    parser.add_argument('--end', type=int, default=None, help='Last video frame to analyze')
+    parser.add_argument('--image', type=str, required=True, help='input image')
+    parser.add_argument('--output', type=str, default='result.png', help='output image')
+    parser.add_argument('--model', type=str, default='model/keras/model.h5', help='path to the weights file')
 
     args = parser.parse_args()
-
-    frame_rate_ratio = args.frame_ratio
-    process_speed = args.process_speed
-    ending_frame = args.end
-
-    print('start processing...')
-
-    # Video input
-    video = args.video
-    video_path = 'videos/'
-    video_file = video
-
-    # Output location
-    output_path = 'videos/outputs/'
-    output_format = '.mp4'
-    video_output = video + str(start_datetime) + output_format
-
-    # load model
-    # authors of original model don't use
-    # vgg normalization (subtracting mean) on input images
-
-    # load config
-    params, model_params = config_reader()
-
-    # Video reader
-    cam = cv2.VideoCapture(video_file)
-    input_fps = cam.get(cv2.CAP_PROP_FPS)
-    ret_val, input_image = cam.read()
-    video_length = int(cam.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    if ending_frame == None:
-        ending_frame = video_length
-
-    # Video writer
-    output_fps = input_fps / frame_rate_ratio
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_output, fourcc, output_fps,
-                          (int(input_image.shape[1]), int(input_image.shape[0])))
+    input_image = args.image
+    output = args.output
+    keras_weights_file = args.model
     tf_config = tf.ConfigProto()
     tf_config.gpu_options.allow_growth = True
-    with sess1_1.as_default():
-        with sess1_1.graph.as_default():
+    with sess1.as_default():
+        with sess1.graph.as_default():
             output_graph_def = tf.GraphDef()
             with open('tf_model.pb', "rb") as f:
                 output_graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(output_graph_def, name="")
-            #summary_write = tf.summary.FileWriter("./logdir", output_graph_def)
             init = tf.global_variables_initializer()
-            sess1_1.run(init)
-            sess1_1 = tf.Session(config=tf_config)
-    i = 0 # default is 0
-    while(cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i%frame_rate_ratio == 0:
-
+            sess1.run(init)
+            sess1 = tf.Session(config=tf_config)
+    # load model
+    params, model_params = config_reader()
+    csv_data=[]
+    n=0
+    mode=1
+    if mode==1:
+        for filename in os.listdir(input_image):
+            data = {}
             tic = time.time()
-
-            # generate image with body parts
-            canvas = process(input_image, params, model_params)
-
-            print('Processing frame: ', i)
+            subset,canvas = process('E:\\xjh\\keras_Realtime_Multi-Person_Pose_Estimation\\'+input_image+'\\'+filename, params, model_params)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
+            data['im_path']=filename
+            data['joints']=subset
+            #cv2.imwrite('result.png',canvas)
+            csv_data.append(data)
+            n=n+1
+    else:
+        tic = time.time()
+        subset, canvas = process(input_image, params, model_params)
+        toc = time.time()
+        print('processing time is %.5f' % (toc - tic))
+        cv2.imwrite('result.png', canvas)
+    sess1.close()
+    df=pd.DataFrame(csv_data,columns=['im_path','joints'])
+    df.to_csv("val.csv",index=False)
 
-            out.write(canvas)
-        ret_val, input_image = cam.read()
-        i += 1

@@ -342,20 +342,31 @@ if __name__ == '__main__':
     # generate image with body parts
     csv_data=[]
     n=0
-    for filename in os.listdir(r"./"+input_image):
-        data = {}
-        tic = time.time()
-        subset,canvas,t1,t2,t3,t4,t5 = process(r"./"+input_image+'/'+filename, params, model_params,sess1,sess2)
-        toc = time.time()
-        print ('processing time is %.5f' % (toc - tic))
-        print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
+    mode=1
+    if mode==1:
+        for filename in os.listdir(r"./"+input_image):
+            data = {}
+            tic = time.time()
+            subset,canvas,t1,t2,t3,t4,t5 = process(r"./"+input_image+'/'+filename, params, model_params,sess1,sess2)
+            toc = time.time()
+            print ('processing time is %.5f' % (toc - tic))
+            print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
                     toc - t5))
-        #cv2.imwrite('result.png', canvas)
-        data['im_path']=filename
-        data['joints']=subset
-        #cv2.imwrite('result.png',canvas)
-        csv_data.append(data)
-        n=n+1
+            #cv2.imwrite('result.png', canvas)
+            data['im_path']=filename
+            data['joints']=subset
+            #cv2.imwrite('result.png',canvas)
+            csv_data.append(data)
+            n=n+1
+    else:
+        tic = time.time()
+        subset, canvas, t1, t2, t3, t4, t5 = process(input_image, params, model_params, sess1,
+                                                     sess2)
+        toc = time.time()
+        print('processing time is %.5f' % (toc - tic))
+        print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
+            toc - t5))
+        cv2.imwrite('result.png', canvas)
     sess1.close()
     sess2.close()
     df=pd.DataFrame(csv_data,columns=['im_path','joints'])
