@@ -211,9 +211,11 @@ def process (input_image, params, model_params):
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = cv2.imread(input_image)  # B,G,R order
+    tempdata=[[] for i in range(3)]
     for i in range(3):
         for j in range(len(all_peaks[i])):
             cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
+            tempdata[i].append(all_peaks[i][j][0:2])
 
     stickwidth = 4
 
@@ -234,7 +236,7 @@ def process (input_image, params, model_params):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return  all_peaks[:][:][0:2],canvas
+    return  tempdata,canvas
 
 
 if __name__ == '__main__':
@@ -271,8 +273,10 @@ if __name__ == '__main__':
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
             data['im_path']=filename
-            data['joints']=subset
-            #cv2.imwrite('result.png',canvas)
+            data['joints1']=subset[0]
+            data['joints2'] = subset[1]
+            data['joints3'] = subset[2]
+            cv2.imwrite('result.png',canvas)
             csv_data.append(data)
             n=n+1
     else:
@@ -282,6 +286,6 @@ if __name__ == '__main__':
         print('processing time is %.5f' % (toc - tic))
         cv2.imwrite('result.png', canvas)
     sess1.close()
-    df=pd.DataFrame(csv_data,columns=['im_path','joints'])
+    df=pd.DataFrame(csv_data,columns=['im_path','joints1','joints2','joints3'])
     df.to_csv("val.csv",index=False)
 
