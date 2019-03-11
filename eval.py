@@ -32,11 +32,16 @@ if __name__ == '__main__':
     gnn=gf['im_path'].str[:]
     gtt=gf['joints'].str[:]
     dnn=df['im_path'].str[:]
-    dtt=df['joints'].str[:]
+    dt1 = df['joints1'].str[:]
+    dt2 = df['joints2'].str[:]
+    dt3 = df['joints3'].str[:]
+    dtt = []
     gnn=gnn.tolist()
     gtt=gtt.tolist()
     dnn=dnn.tolist()
-    dtt=dtt.tolist()
+    dtt.append(dt1.tolist())
+    dtt.append(dt2.tolist())
+    dtt.append(dt3.tolist())
     gts=[]
     for gt in gtt:
         gts1 = []
@@ -66,60 +71,23 @@ if __name__ == '__main__':
         gts.append([gts1,gts2,gts3])
     dts=[]
     score=[]
-    for dt in dtt:
-        dts1 = []
-        dts2 = []
-        dts3 = []
-        myjoint = dt.replace('[', '').replace(']', '').replace(' ', '').split(',')
-        if myjoint == ['']:
-            dts.append([])
-            score.append([0])
-            continue
-        myjointintalone = list(map(eval, myjoint))
-        scorealone=[]
-        num=0
-        while num < len(myjointintalone):
-            dts1temp = []
-            dts2temp = []
-            dts3temp = []
-            lost=-1
-            tempnum=num
-            if myjointintalone[num+7]==2:
-                if myjointintalone[num+2]==1:
-                    lost=0
-                else:
-                    lost=2
-            if lost==0:
-                dts1temp.append(100000)
-                dts1temp.append(100000)
-            else:
-                temp = myjointintalone[tempnum:tempnum + 3]
-                tempnum=tempnum+3
+    for mydt in dtt:
+        mydts = []
+        for dt in mydt:
+            dtstemp=[]
+            myjoint = dt.replace('[', '').replace(']', '').replace(' ', '').replace('(', '').replace(')', '').split(',')
+            if myjoint==['']:
+                mydts.append([])
+                continue
+            myjointintalone = list(map(eval, myjoint))
+            for num in range(0, len(myjointintalone), 2):
+                dts1temp = []
+                temp = myjointintalone[num:num + 2]
                 dts1temp.append(temp[0])
                 dts1temp.append(temp[1])
-            temp = myjointintalone[tempnum:tempnum + 3]
-            tempnum=tempnum+3
-            dts2temp.append(temp[0])
-            dts2temp.append(temp[1])
-            if lost == 2:
-                dts3temp.append(100000)
-                dts3temp.append(100000)
-            else:
-                temp = myjointintalone[tempnum:tempnum + 3]
-                tempnum = tempnum + 3
-                dts3temp.append(temp[0])
-                dts3temp.append(temp[1])
-            if lost==-1:
-                scorealone.append(myjointintalone[num+9])
-            else:
-                scorealone.append(myjointintalone[num + 6])
-            dts1.append(dts1temp)
-            dts2.append(dts2temp)
-            dts3.append(dts3temp)
-            if lost!=-1:
-                num=num-3
-            num=num+11
-        dts.append([dts1,dts2,dts3])
+                dtstemp.append(dts1temp)
+            mydts.append(dtstemp)
+        dts.append(mydts)
 
     ious=[]
     gtt=gts
