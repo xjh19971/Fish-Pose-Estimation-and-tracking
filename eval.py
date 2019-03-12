@@ -4,8 +4,8 @@ import numpy as np
 import pickle
 import json
 import codecs
-
-def computeOks(gts,dts):
+sigma=[18,50,32]
+def computeOks(gts,dts,i):
     # dimention here should be Nxm
     ious = np.zeros((len(gts), len(dts)))
     gts=np.array(gts)
@@ -20,9 +20,12 @@ def computeOks(gts,dts):
 
             dx = xd - xg
             dy = yd - yg
-            e = (dx ** 2 + dy ** 2) / 50
+            e = (dx ** 2 + dy ** 2) / sigma[i]
             ious[j, k] = np.sum(np.exp(-e))
-    iousmax = ious.max(axis=1)
+    if ious.size==0:
+        iousmax=0
+    else:
+        iousmax = ious.max(axis=1)
     return np.sum(iousmax)/gts.shape[0]
 
 if __name__ == '__main__':
@@ -71,8 +74,9 @@ if __name__ == '__main__':
         gts.append([gts1,gts2,gts3])
     dts=[]
     score=[]
-    for mydt in dtt:
+    for i in range(len(dtt[0])):
         mydts = []
+        mydt=[dtt[0][i],dtt[1][i],dtt[2][i]]
         for dt in mydt:
             dtstemp=[]
             myjoint = dt.replace('[', '').replace(']', '').replace(' ', '').replace('(', '').replace(')', '').split(',')
@@ -102,7 +106,7 @@ if __name__ == '__main__':
         if dts == []:
             continue
         for j in range(0,3):
-            iousmax[j]=computeOks(gts[j],dts[j])
+            iousmax[j]=computeOks(gts[j],dts[j],j)
         iousmaxall.append(iousmax)
     '''for APthre in APthre1:
         for OKS in iousmax[j]:'''
