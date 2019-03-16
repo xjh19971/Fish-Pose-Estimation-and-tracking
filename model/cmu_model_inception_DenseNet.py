@@ -189,28 +189,25 @@ def vgg_block(x, weight_decay):
 def stage1_block(x, num_p, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
+    x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * 1 - 1, branch, (weight_decay, 0))
     x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * 1 , branch, (weight_decay, 0))
-    x3=x
-    return x,x3
-
+    return x
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
+    x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * stage - 1, branch, (weight_decay, 0))
     x = tiny_inception_block(x, [[128], [64, 128], [64, 64, 128]], 2 * stage , branch, (weight_decay, 0))
-    x3=x
     if stage == 3:
         x = conv(x, num_p, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
         x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
-    return x,x3
+    return x
 
 
 def apply_mask(x, mask1, mask2,num_p, stage, branch, is_weight):
@@ -234,7 +231,6 @@ def get_training_model(weight_decay):
 
     inputs = []
     outputs = []
-    outputstemp = []
 
     img_input = Input(shape=img_input_shape)
     vec_weight_input = Input(shape=vec_input_shape)
@@ -250,26 +246,25 @@ def get_training_model(weight_decay):
     stage0_out = vgg_block(img_normalized, weight_decay)
 
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out,x2 = stage1_block(stage0_out, np_branch1, 1, weight_decay)
-    outputstemp.append(x2)
+    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, weight_decay)
 
     # stage 1 - branch 2 (confidence maps)
-    stage1_branch2_out,x3 = stage1_block(stage0_out, np_branch2, 2, weight_decay)
-    outputstemp.append(x3)
+    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
 
-    x = Concatenate()([x2, x3, stage0_out])
+    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
 
 
     # stage sn >= 2
     for sn in range(2, stages + 1):
+        outputstemp=[]
         # stage SN - branch 1 (PAF)
-        stageT_branch1_out,x3 = stageT_block(x, np_branch1, sn, 1, weight_decay)
-        outputstemp.append(x3)
+        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
+        outputstemp.append(stageT_branch1_out)
         # stage SN - branch 2 (confidence maps)
-        stageT_branch2_out,x3 = stageT_block(x, np_branch2, sn, 2, weight_decay)
-        outputstemp.append(x3)
+        stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
+        outputstemp.append(stageT_branch2_out)
         if (sn < stages):
-            x = Concatenate()([outputstemp[2*sn-2], outputstemp[2*sn-1], x])
+            x = Concatenate()([outputstemp[0], outputstemp[1], x])
     w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1, is_weight=True)
     w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2, is_weight=False)
     outputs.append(w1)
@@ -280,7 +275,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 6
+    stages = 3
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
 
