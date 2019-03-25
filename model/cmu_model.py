@@ -1,25 +1,25 @@
 from keras.models import Model
 from keras.layers.merge import Concatenate
-from keras.layers import Activation, Input, Lambda
+from keras.layers import Activation, Input, Lambda,BatchNormalization
 from keras.layers.convolutional import Conv2D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import Multiply
 from keras.regularizers import l2
 from keras.initializers import random_normal,constant
-
+import keras.backend as K
 
 def relu(x): return Activation('relu')(x)
 
 
 def conv(x, nf, ks, name, weight_decay):
+    bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     kernel_reg = l2(weight_decay[0]) if weight_decay else None
-    bias_reg = l2(weight_decay[1]) if weight_decay else None
 
     x = Conv2D(nf, (ks, ks), padding='same', name=name,
                kernel_regularizer=kernel_reg,
-               bias_regularizer=bias_reg,
                kernel_initializer=random_normal(stddev=0.01),
-               bias_initializer=constant(0.0))(x)
+              )(x)
+    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     return x
 
 
@@ -29,6 +29,7 @@ def pooling(x, ks, st, name):
 
 
 def vgg_block(x, weight_decay):
+
     # Block 1
     x = conv(x, 64, 3, "conv1_1", (weight_decay, 0))
     x = relu(x)
@@ -86,15 +87,15 @@ def stage1_block(x, num_p, branch, weight_decay):
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     # Block 1
-    x = conv(x, 128, 7, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv2_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv3_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv4_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = relu(x)
-    x = conv(x, 128, 7, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 3, "Mconv5_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = relu(x)
     x = conv(x, 128, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = relu(x)
@@ -115,7 +116,7 @@ def apply_mask(x, mask1, mask2, num_p, stage, branch):
 
 def get_training_model(weight_decay):
 
-    stages = 6
+    stages = 5
     np_branch1 = 4
     np_branch2 = 4
 
@@ -174,7 +175,7 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 6
+    stages = 5
     np_branch1 = 4
     np_branch2 = 4
 
