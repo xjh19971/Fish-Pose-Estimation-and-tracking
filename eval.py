@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 import json
 import codecs
-sigma=[18,50,32]
+sigma=[32,50,32]
 def computeOks(gts,dts,i):
     # dimention here should be Nxm
     ious = np.zeros((len(gts), len(dts)))
