@@ -22,9 +22,6 @@ mapIdx = [[2,3],[4,5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
-filt=   [[0.0751,    0.1238 ,   0.0751,],
-    [0.1238,    0.2042,    0.1238,],
-    [0.0751,    0.1238 ,   0.0751,]]
 g1 = tf.Graph()
 g2 = tf.Graph()
 sess1 = tf.Session(graph=g1)
@@ -38,6 +35,7 @@ def process (input_image, params, model_params,tf_sess,sess2):
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
+
     t1 = time.time()
     for m in range(len(multiplier)):
         scale = multiplier[m]
@@ -71,40 +69,30 @@ def process (input_image, params, model_params,tf_sess,sess2):
 
         heatmap_avg = heatmap_avg + heatmap / len(multiplier)
         paf_avg = paf_avg + paf / len(multiplier)
+
     t2 = time.time()
-    all_peaks = []
-    peak_counter = 0
     input = sess2.graph.get_tensor_by_name('input:0')
     output0 = sess2.graph.get_tensor_by_name('output0:0')
     output0= sess2.run(output0, feed_dict={input: heatmap_avg[:, :, 0:3]})
-    '''for part in [0,1,2]:
-        peaks_binary=0
-        #,mapx[1:,:]<0,mapy[:,:-1]>0,mapy[:,1:]>0,map_ori>params['thre2']
-        peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
-        peaks_with_score = [x + (heatmap_avg[x[1], x[0],part],) for x in peaks]
-        id = range(peak_counter, peak_counter + len(peaks))
-        peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
+    all_peaks = []
+    check = 0
+    temp = output0[output0[:, 2] == 0].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    check = check + len(temp)
+    all_peaks.append(temp)
+    temp = output0[output0[:, 2] == 1].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    check = check + len(temp)
+    all_peaks.append(temp)
+    temp = output0[output0[:, 2] == 2].tolist()
+    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
+    all_peaks.append(temp)
 
-        all_peaks.append(peaks_with_score_and_id)
-        peak_counter += len(peaks)'''
     t3 = time.time()
     connection_all = []
     special_k = []
     mid_num = 10
     limit=[[100,20],[100,20]]
-    all_peaks=[]
-    check=0
-    temp=output0[output0[:, 2] == 0].tolist()
-    temp=[[x[0],x[1],x[3],temp.index(x)+check] for x in temp]
-    check= check+len(temp)
-    all_peaks.append(temp)
-    temp = output0[output0[:, 2] == 1].tolist()
-    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
-    check = check+len(temp)
-    all_peaks.append(temp)
-    temp = output0[output0[:, 2] == 2].tolist()
-    temp = [[x[0], x[1], x[3], temp.index(x) + check] for x in temp]
-    all_peaks.append(temp)
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
@@ -145,8 +133,7 @@ def process (input_image, params, model_params,tf_sess,sess2):
                          for I in range(len(startend))])
 
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
-                    score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
-                        0.5 * oriImg.shape[0] / norm - 1, 0)
+                    score_with_dist_prior = sum(score_midpts) / len(score_midpts)
                     criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.8 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
@@ -167,12 +154,12 @@ def process (input_image, params, model_params,tf_sess,sess2):
         else:
             special_k.append(k)
             connection_all.append([])
+
     t4 = time.time()
     # last number in each row is the total parts number of that person
     # the second last number in each row is the score of the overall configuration
     subset = -1 * np.ones((0, 5))
     candidate = np.array([item for sublist in all_peaks for item in sublist])
-
     for k in range(len(mapIdx)):
         if k not in special_k:
             partAs = connection_all[k][:, 0]
@@ -288,8 +275,7 @@ if __name__ == '__main__':
 
     # authors of original model don't use
     # vgg normalization (subtracting mean) on input images
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.67)
-    tf_config = tf.ConfigProto(gpu_options=gpu_options)
+    tf_config = tf.ConfigProto()
     tf_config.gpu_options.allow_growth = True
     with sess1.as_default():
         with sess1.graph.as_default():
