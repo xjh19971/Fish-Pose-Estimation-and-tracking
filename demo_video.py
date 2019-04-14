@@ -58,7 +58,57 @@ sess2 = tf.Session(graph=g2)
             middlepeaklist.remove(middlepeaklist[j])
     return middlepeaklist'''
 
+def CreateKalman(newloc):
+    kalman1 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
+    kalman1.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
+    kalman1.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
+    kalman1.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+                                      np.float32) * 0.03  # 系统过程噪声协方差
+    kalman0 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
+    kalman0.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
+    kalman0.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
+    kalman0.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+                                      np.float32) * 0.03  # 系统过程噪声协方差
+    kalman2 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
+    kalman2.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
+    kalman2.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
+    kalman2.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+                                      np.float32) * 0.03  # 系统过程噪声协方差
 
+    return [kalman0,kalman1,kalman2]
+def MoveKalman(location,kalman):
+
+    if location!=[]:
+        current_measurement = np.array([[np.float32(location[0])], [np.float32(location[1])]])  # 当前测量
+        kalman.correct(current_measurement)  # 用当前测量来校正卡尔曼滤波器
+        current_prediction = kalman.predict()  # 计算卡尔曼预测值，作为当前预测
+        return current_prediction,kalman
+    else:
+        current_prediction = kalman.predict()  # 计算卡尔曼预测值，作为当前预测
+        return current_prediction,kalman
+
+def Update(newloc,kalmangroup):
+    temploc,kalmangroup[1] = MoveKalman([newloc[0], newloc[1]], kalmangroup[1])
+    if newloc[-1] == 0:
+        temploc1,kalmangroup[0] = MoveKalman([], kalmangroup[0])
+        temploc2,kalmangroup[2] = MoveKalman([newloc[2], newloc[3]], kalmangroup[2])
+    elif newloc[-1] == 2:
+        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0])
+        temploc2,kalmangroup[2] = MoveKalman([], kalmangroup[2])
+    else:
+        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0])
+        temploc2,kalmangroup[2] = MoveKalman([newloc[4], newloc[5]], kalmangroup[2])
+    newlocfinal=[int(temploc[0]),int(temploc[1]),int(temploc1[0]),int(temploc1[1]),int(temploc2[0]),int(temploc2[1]),1]
+    return newlocfinal,kalmangroup
+def Match(newloc1,newloc):
+    if newloc[-1]==0:
+        temploc=[newloc1[0],newloc1[1],newloc1[4],newloc1[5],0]
+        return temploc==newloc
+    elif newloc[-1]==2:
+        temploc = [newloc1[0], newloc1[1], newloc1[2], newloc1[3], 2]
+        return temploc == newloc
+    else:
+        return newloc1 == newloc
 def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
@@ -207,7 +257,6 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
             else:
                 special_k.append(k)
                 connection_all.append([])
-        t6=time.time()
         # last number in each row is the total parts number of that person
         # the second last number in each row is the score of the overall configuration
         subset = -1 * np.ones((0, 5))
@@ -265,17 +314,17 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         subset_all.append(subset)
         candidate_all.append(candidate)
         checkpoint = checkpoint + len(candidate)
-    return subset_all, all_peaks, t1, t2, t3,t6
+    return subset_all, all_peaks, t1, t2, t3
 
 
-def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
+def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,kalmangroup):
     scale_search = [2]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
-        subset_all, all_peaks_all, t1, t2, t3, t7 = predict(oriImg, scale_search, model_params, tf_sess)
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess)
     else:
-        subset_all, all_peaks_all, t1, t2, t3, t7 = predict(oriImg, scale_search, model_params, tf_sess,
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess,
                                                                        lenimg=len(flist) if len(flist) != 0 else 1,
                                                                        flist=flist)
 
@@ -337,7 +386,12 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
                 if dis > 30:
                     lenflistnew = lenflistnew + 1
                     detected.append(1)
-                    flistnew.append(newloc)
+                    newKalman = CreateKalman(newloc)
+                    newloc1 = [0, 0, 0, 0, 0, 0, 1]
+                    while(Match(newloc1,newloc)==False):
+                        newloc1, newKalman = Update(newloc, newKalman)
+                    kalmangroup.append(newKalman)
+                    flistnew.append(newloc1)
                 else:
                     No = index
                     if detected[No] == 1:
@@ -346,17 +400,25 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
                         continue
                     else:
                         detected[No] = 1
+                        newloc,kalmangroup[No]=Update(newloc, kalmangroup[No])
                         flist[No] = newloc
             else:
                 lenflistnew = lenflistnew + 1
                 detected.append(1)
-                flistnew.append(newloc)
+                newKalman=CreateKalman(newloc)
+                newloc1 = [0, 0, 0, 0, 0, 0, 1]
+                while(Match(newloc1,newloc)==False):
+                    newloc1, newKalman=Update(newloc,newKalman)
+                kalmangroup.append(newKalman)
+                flistnew.append(newloc1)
     for item in detected:
         if item==0:
             deindex=detected.index(item)
             lenflistnew=lenflistnew-1
             flistnew.remove(flistnew[deindex])
             detected.remove(detected[deindex])
+            kalmangroup.remove(kalmangroup[deindex])
+
     t5 = time.time()
     '''if save:
         for savefish in save:
@@ -416,7 +478,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew):
     flist = flistnew
     t6 = time.time()
 
-    return canvas, t1, t2, t3, t4, t5, t6,t7, flist, lenflistnew
+    return canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew,kalmangroup
 
 
 if __name__ == '__main__':
@@ -509,7 +571,7 @@ if __name__ == '__main__':
             tempb = mapx[:, 1:, :] < 0
             tempc = mapy[:, :, :-1] > 0
             tempd = mapy[:, :, 1:] < 0
-            tempe = map_ori > 0.1
+            tempe = map_ori > 0.15
             A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)
@@ -525,19 +587,20 @@ if __name__ == '__main__':
             sess2 = tf.Session(config=tf_config)
     i = -500 # default is 0
     flist = []
+    kalmangroup=[]
     lenflistnew = -1
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
         if i % frame_rate_ratio == 0 and i >= 0:
             tic = time.time()
             # generate image with body parts
-            canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew = process(input_image, i, params, model_params, sess1_1,
-                                                                         flist, lenflistnew)
+            canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew,kalmangroup = process(input_image, i, params, model_params, sess1_1,
+                                                                         flist, lenflistnew,kalmangroup)
             print('processing frame is %d' % i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
-            #cv2.imwrite('can.png', canvas)
+            cv2.imwrite('can.png', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
