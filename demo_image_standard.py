@@ -9,9 +9,7 @@ import tensorflow as tf
 import os
 import util
 from config_reader import config_reader
-import shutil
-import re
-import json
+
 from scipy.ndimage.filters import gaussian_filter
 import pandas as pd
 
@@ -27,7 +25,7 @@ colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
 g1 = tf.Graph()
 sess1 = tf.Session(graph=g1)
 input_names=['input_1']
-output_names= ['batch_normalization_10/FusedBatchNorm_1','batch_normalization_12/FusedBatchNorm_1']
+output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
 def process (input_image, params, model_params):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
@@ -101,7 +99,7 @@ def process (input_image, params, model_params):
 
     connection_all = []
     special_k = []
-    mid_num = 10
+    mid_num = 20
 
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
@@ -142,7 +140,7 @@ def process (input_image, params, model_params):
                                                      score_with_dist_prior + candA[i][2] + candB[j][2]])
 
             connection_candidate = sorted(connection_candidate, key=lambda x: x[2], reverse=True)
-            connection = np.zeros((0, 5))
+            connection = np.zeros((0,5))
             for c in range(len(connection_candidate)):
                 i, j, s = connection_candidate[c][0:3]
                 if (i not in connection[:, 3] and j not in connection[:, 4]):
@@ -206,7 +204,7 @@ def process (input_image, params, model_params):
     # delete some rows of subset which has few parts occur
     deleteIdx = [];
     for i in range(len(subset)):
-        if subset[i][-1] < 4 or subset[i][-2] / subset[i][-1] < 0.4:
+        if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.4:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
@@ -214,10 +212,10 @@ def process (input_image, params, model_params):
     tempdata=[[] for i in range(3)]
     for i in range(3):
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
+            cv2.circle(canvas, all_peaks[i][j][0:2], 1, colors[i], thickness=-1)
             tempdata[i].append(all_peaks[i][j][0:2])
 
-    stickwidth = 4
+    stickwidth = 1
 
     for i in range(2):
         for n in range(len(subset)):
@@ -272,11 +270,11 @@ if __name__ == '__main__':
             subset,canvas = process('E:\\xjh\\keras_Realtime_Multi-Person_Pose_Estimation\\'+input_image+'\\'+filename, params, model_params)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
-            data['im_path']=filename
+            data['im_path']=filename[:-4]
             data['joints1']=subset[0]
             data['joints2'] = subset[1]
             data['joints3'] = subset[2]
-            cv2.imwrite('result.png',canvas)
+            #cv2.imwrite('result.png',canvas)
             csv_data.append(data)
             n=n+1
     else:

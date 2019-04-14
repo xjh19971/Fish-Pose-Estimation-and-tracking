@@ -27,7 +27,7 @@ g2 = tf.Graph()
 sess1 = tf.Session(graph=g1)
 sess2 = tf.Session(graph=g2)
 input_names=['input_1']
-output_names= ['batch_normalization_10/FusedBatchNorm_1','batch_normalization_12/FusedBatchNorm_1']
+output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
 def process (input_image, params, model_params,tf_sess,sess2):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
@@ -92,7 +92,7 @@ def process (input_image, params, model_params,tf_sess,sess2):
     connection_all = []
     special_k = []
     mid_num = 10
-    limit=[[100,20],[100,20]]
+    limit=[[200,10],[200,10]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
         candA = all_peaks[limbSeq[k][0] - 1]
@@ -134,7 +134,7 @@ def process (input_image, params, model_params,tf_sess,sess2):
 
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
                     score_with_dist_prior = sum(score_midpts) / len(score_midpts)
-                    criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.8 * len(
+                    criterion1 = len(np.nonzero(score_midpts >0.01)[0]) > 0.8 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
                     if criterion1 and criterion2:
@@ -214,22 +214,24 @@ def process (input_image, params, model_params,tf_sess,sess2):
     '''for i in [0,1,2]:
         for j in range(len(all_peaks[i])):
             cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)'''
-    allpeaks=[]
+    allpeaks = []
+    tempdata=[[] for i in range(3)]
     for n in range(len(subset)):
-        peaks=[]
+        peaks = []
         for i in [0, 1, 2]:
-            idx=int(subset[n][i])
-            if int(subset[n][i])!=-1:
-                location=tuple(map(int,all_peaks[i][int(idx-all_peaks[i][0][3])][0:2]))
-                cv2.circle(canvas,location, 4, colors[i], thickness=-1)
-                peaks.append([all_peaks[i][int(idx-all_peaks[i][0][3])][0:2],i])
+            idx = int(subset[n][i])
+            if int(subset[n][i]) != -1:
+                location = tuple(map(int, all_peaks[i][int(idx - all_peaks[i][0][3])][0:2]))
+                cv2.circle(canvas, location, 4, colors[i], thickness=-1)
+                peaks.append([all_peaks[i][int(idx - all_peaks[i][0][3])][0:2], i])
+                tempdata[i].append(all_peaks[i][int(idx - all_peaks[i][0][3])][0:2])
         peaks.append(subset[n][3])
         peaks.append(subset[n][4])
-        allpeaks.append(peaks)
+
 
     stickwidth = 4
 
-    for i in range(2):
+    '''for i in range(2):
         for n in range(len(subset)):
             index = subset[n][np.array(limbSeq[i]) - 1]
             if -1 in index:
@@ -244,9 +246,9 @@ def process (input_image, params, model_params,tf_sess,sess2):
             polygon = cv2.ellipse2Poly((int(mY), int(mX)), (int(length / 2), stickwidth), int(angle), 0,
                                        360, 1)
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
-            canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
+            canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)'''
 
-    return allpeaks,canvas,t1,t2,t3,t4,t5
+    return tempdata,canvas,t1,t2,t3,t4,t5
 
 
 if __name__ == '__main__':
@@ -308,7 +310,7 @@ if __name__ == '__main__':
             tempb = mapx[1:, :] < 0
             tempc = mapy[:, :-1] > 0
             tempd = mapy[:, 1:] < 0
-            tempe = map_ori > 0.1
+            tempe = map_ori > 0.05
             A = tf.expand_dims(tf.concat([tempa, padxb], 0), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 0), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 1), -1)
@@ -338,10 +340,10 @@ if __name__ == '__main__':
             print ('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
                     toc - t5))
-            #cv2.imwrite('result.png', canvas)
             data['im_path']=filename
-            data['joints']=subset
-            #cv2.imwrite('result.png',canvas)
+            data['joints1']= subset[0]
+            data['joints2'] = subset[1]
+            data['joints3'] = subset[2]
             csv_data.append(data)
             n=n+1
     else:
@@ -355,5 +357,5 @@ if __name__ == '__main__':
         cv2.imwrite('result.png', canvas)
     sess1.close()
     sess2.close()
-    df=pd.DataFrame(csv_data,columns=['im_path','joints'])
+    df=pd.DataFrame(csv_data,columns=['im_path','joints1','joints2','joints3'])
     df.to_csv("val.csv",index=False)

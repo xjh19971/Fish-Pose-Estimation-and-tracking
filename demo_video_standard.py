@@ -24,7 +24,7 @@ mapIdx = [[2, 3], [4, 5]]
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 
 input_names = ['input_1']
-output_names = ['batch_normalization_10/FusedBatchNorm_1', 'batch_normalization_12/FusedBatchNorm_1']
+output_names = ['batch_normalization_12/FusedBatchNorm_1', 'batch_normalization_14/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 g1_1 = tf.Graph()
 sess1_1 = tf.Session(graph=g1_1)
@@ -33,8 +33,7 @@ def process (input_image, params, model_params):
 
     oriImg = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
 
-    scale_search = [1,] # [.5, 1, 1.5, 2]
-    scale_search = scale_search[0:process_speed]
+    scale_search = [2] # [.5, 1, 1.5, 2]
 
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
 
@@ -135,8 +134,8 @@ def process (input_image, params, model_params):
                          for I in range(len(startend))])
 
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
-                    score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
-                        0.5 * oriImg.shape[0] / norm - 1, 0)
+                    score_with_dist_prior = sum(score_midpts) / len(score_midpts)
+                                            #+ min(0.5 * oriImg.shape[0] / norm - 1, 0)
                     criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.8 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
@@ -217,9 +216,9 @@ def process (input_image, params, model_params):
 
     for i in range(3):
         for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 4, colors[i], thickness=-1)
+            cv2.circle(canvas, all_peaks[i][j][0:2], 1, colors[i], thickness=-1)
 
-    stickwidth = 4
+    stickwidth = 1
 
     for i in range(2):
         for n in range(len(subset)):
@@ -301,7 +300,7 @@ if __name__ == '__main__':
             sess1_1 = tf.Session(config=tf_config)
     i = 0 # default is 0
     while(cam.isOpened()) and ret_val == True and i < ending_frame:
-        if i%frame_rate_ratio == 0:
+        if i%frame_rate_ratio == 0 and i >= 0:
 
             tic = time.time()
 
