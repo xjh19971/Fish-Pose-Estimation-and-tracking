@@ -12,7 +12,6 @@ from scipy.ndimage.filters import gaussian_filter
 import util
 from config_reader import config_reader
 
-# from kalmenfilter import  Kalman2D
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -20,6 +19,8 @@ currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 60
 video_process = 1
+Kalman=True
+detected = []
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
 
@@ -100,6 +101,7 @@ def Update(newloc,kalmangroup):
         temploc2,kalmangroup[2] = MoveKalman([newloc[4], newloc[5]], kalmangroup[2])
     newlocfinal=[int(temploc[0]),int(temploc[1]),int(temploc1[0]),int(temploc1[1]),int(temploc2[0]),int(temploc2[1]),1]
     return newlocfinal,kalmangroup
+
 def Match(newloc1,newloc):
     if newloc[-1]==0:
         temploc=[newloc1[0],newloc1[1],newloc1[4],newloc1[5],0]
@@ -109,6 +111,7 @@ def Match(newloc1,newloc):
         return temploc == newloc
     else:
         return newloc1 == newloc
+
 def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
@@ -127,6 +130,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
+
     for i in range(0, lenimg):
         imageToTest = cv2.resize(ROI[i, :, :, :], (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
         imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
@@ -138,6 +142,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
             input_img = np.transpose(np.float32(imageToTest_padded[:, :, :, np.newaxis]),
                                      (3, 0, 1, 2))  # required shape (1, width, height, channels)
             realinput_img = np.append(realinput_img, input_img, axis=0)
+
     tf_input = tf_sess.graph.get_tensor_by_name(input_names[0] + ':0')
     tf_paf = tf_sess.graph.get_tensor_by_name(output_names[0] + ':0')
     tf_heatmap = tf_sess.graph.get_tensor_by_name(output_names[1] + ':0')
@@ -149,6 +154,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     # extract outputs, resize, and remove padding
     heatmaptemp = output_blobs[1]  # output 1 is heatmaps
     paftemp = output_blobs[0]  # output 0 is PAFs
+
     for i in range(0, lenimg):
         heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=8, fy=8,
                              interpolation=cv2.INTER_CUBIC)
@@ -167,6 +173,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     input = sess2.graph.get_tensor_by_name('input:0')
     output0 = sess2.graph.get_tensor_by_name('output0:0')
     output0 = sess2.run(output0, feed_dict={input: heatmap_avg[:, :, :, 0:3]})
+
     all_peaks = [[] for i in range(lenimg)]
     check = 0
     for i in range(0, lenimg):
@@ -218,11 +225,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
                     for j in candlist[i]:
                         vec = np.subtract(candB[j][:2], candA[i][:2])
                         norm = math.sqrt(vec[0] * vec[0] + vec[1] * vec[1])
-                        # failure case when 2 body parts overlaps
-                        if norm == 0:
-                            continue
                         vec = np.divide(vec, norm)
-
                         startend = list(zip(np.linspace(candA[i][0], candB[j][0], num=mid_num), \
                                             np.linspace(candA[i][1], candB[j][1], num=mid_num)))
 
@@ -332,7 +335,6 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,ka
 
     t4 = time.time()
     flistnew = flist
-    detected = [0 for i in range(lenflistnew + 1)]
     checkpoint = 0
     save = []
     tree=[]
@@ -371,110 +373,116 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,ka
                     lost = i
             newloc.append(lost)
             newloc_all.append(newloc)
-        if f % video_process == 0 and video_process!=1 and f!=0:
-            dis = []
-            idx = []
-            for newloc in newloc_all:
-                distemp = math.sqrt(pow(flist[k][0] - newloc[0], 2) + pow(flist[k][1] - newloc[1], 2))
-                if distemp < 10:
-                    dis.append(distemp)
-                    idx.append(newloc)
-            newloc_all=[idx[dis.index(min(dis))]]
+
         for newloc in newloc_all:
             if f != 0 and tree!=[]:
                 dis, index = tree.query([newloc[0], newloc[1]])
-                if dis > 30:
+                if dis > 50:
                     lenflistnew = lenflistnew + 1
                     detected.append(1)
-                    newKalman = CreateKalman(newloc)
-                    newloc1 = [0, 0, 0, 0, 0, 0, 1]
-                    while(Match(newloc1,newloc)==False):
-                        newloc1, newKalman = Update(newloc, newKalman)
-                    kalmangroup.append(newKalman)
-                    flistnew.append(newloc1)
+                    if Kalman:
+                        newKalman = CreateKalman(newloc)
+                        newloc1 = [0, 0, 0, 0, 0, 0, 1]
+                        while(Match(newloc1,newloc)==False):
+                            newloc1, newKalman = Update(newloc, newKalman)
+                        kalmangroup.append(newKalman)
+                        flistnew.append(newloc1)
+                    else:
+                        flistnew.append(newloc)
                 else:
                     No = index
                     if detected[No] == 1:
                         save.append(newloc)
-                        subset[n]=[-1,-1,-1,-1,-1]
+                        subset[newloc_all.index(newloc)]=[-1,-1,-1,-1,-1]
                         continue
                     else:
                         detected[No] = 1
-                        newloc,kalmangroup[No]=Update(newloc, kalmangroup[No])
+                        if Kalman:
+                            newloc,kalmangroup[No]=Update(newloc, kalmangroup[No])
                         flist[No] = newloc
             else:
                 lenflistnew = lenflistnew + 1
                 detected.append(1)
-                newKalman=CreateKalman(newloc)
-                newloc1 = [0, 0, 0, 0, 0, 0, 1]
-                while(Match(newloc1,newloc)==False):
-                    newloc1, newKalman=Update(newloc,newKalman)
-                kalmangroup.append(newKalman)
-                flistnew.append(newloc1)
+                if Kalman:
+                    newKalman=CreateKalman(newloc)
+                    newloc1 = [0, 0, 0, 0, 0, 0, 1]
+                    while(Match(newloc1,newloc)==False):
+                        newloc1, newKalman=Update(newloc,newKalman)
+                    kalmangroup.append(newKalman)
+                    flistnew.append(newloc1)
+                else:
+                    flistnew.append(newloc)
+
+    '''if save:
+            for savefish in save:
+                newloc = savefish
+                lost = newloc[-1]
+                find = 0
+                dis=[]
+                idx=[]
+                for i in range(len(detected)):
+                    distemp=math.sqrt(pow(flist[i][0] - newloc[0], 2)+ pow(flist[i][1] - newloc[1], 2))
+                    if distemp < 50:
+                        dis.append(distemp)
+                        idx.append(i)
+                dis_sorttemp=dis
+                dis.sort()
+                for mydis in dis:
+                    i=idx[dis_sorttemp.index(mydis)]
+                    if detected[i]==0:
+                        find = 1
+                        No = i
+                        if lost == 0:
+                            newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
+                        elif lost == 2:
+                            newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
+                        break
+                    elif flistnew[i][-1]!=1 and lost==1:
+                        find = 1
+                        No = i
+                        if lost == 0:
+                            newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
+                        elif lost == 2:
+                            newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
+                        break
+                if find == 1:
+                    flist[No] = newloc
+    '''
+
     for item in detected:
-        if item==0:
+        if item<=-10:
             deindex=detected.index(item)
             lenflistnew=lenflistnew-1
             flistnew.remove(flistnew[deindex])
             detected.remove(detected[deindex])
-            kalmangroup.remove(kalmangroup[deindex])
-
+            if Kalman:
+                kalmangroup.remove(kalmangroup[deindex])
+    for i in range(len(detected)):
+        detected[i]=detected[i]-1
     t5 = time.time()
-    '''if save:
-        for savefish in save:
-            newloc = savefish
-            lost = newloc[-1]
-            find = 0
-            dis=[]
-            idx=[]
-            for i in range(len(detected)):
-                distemp=math.sqrt(pow(flist[i][0] - newloc[0], 2)+ pow(flist[i][1] - newloc[1], 2))
-                if distemp < 50:
-                    dis.append(distemp)
-                    idx.append(i)
-            dis_sorttemp=dis
-            dis.sort()
-            for mydis in dis:
-                i=idx[dis_sorttemp.index(mydis)]
-                if detected[i]==0:
-                    find = 1
-                    No = i
-                    if lost == 0:
-                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
-                    elif lost == 2:
-                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
-                    break
-                elif flistnew[i][-1]!=1 and lost==1:
-                    find = 1
-                    No = i
-                    if lost == 0:
-                        newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
-                    elif lost == 2:
-                        newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
-                    break
-            if find == 1:
-                flist[No] = newloc
-'''
+
 
     for newloc in flistnew:
-        lost = newloc[-1]
-        if lost == 0:
-            loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
-            cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
-            cv2.circle(canvas, loc[1], 4, colors[2], thickness=-1)
-            canvas = cv2.line(canvas, loc[0], loc[1], colors[1], 2)
-        elif lost == 2:
-            loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
-            cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
-            cv2.circle(canvas, loc[1], 4, colors[1], thickness=-1)
-            canvas = cv2.line(canvas, loc[0], loc[1], colors[0], 2)
-        else:
-            loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3]), (newloc[4], newloc[5])]
-            for i in range(len(loc)):
-                cv2.circle(canvas, loc[i], 4, colors[i], thickness=-1)
-            canvas = cv2.line(canvas, loc[1], loc[0], colors[0], 2)
-            canvas = cv2.line(canvas, loc[0], loc[2], colors[1], 2)
-        cv2.putText(canvas, str(flistnew.index(newloc)), loc[0], font, 0.8, (255, 255, 255), 2)
+        if detected[flistnew.index(newloc)]==0:
+            lost = newloc[-1]
+            if lost == 0:
+                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
+                cv2.circle(canvas, loc[0], 4, colors[1], thickness=-1)
+                cv2.circle(canvas, loc[1], 4, colors[2], thickness=-1)
+                canvas = cv2.line(canvas, loc[0], loc[1], colors[1], 2)
+            elif lost == 2:
+                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
+                cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
+                cv2.circle(canvas, loc[1], 4, colors[1], thickness=-1)
+                canvas = cv2.line(canvas, loc[0], loc[1], colors[0], 2)
+            else:
+                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3]), (newloc[4], newloc[5])]
+                cv2.circle(canvas, loc[0], 4, colors[1], thickness=-1)
+                cv2.circle(canvas, loc[1], 4, colors[0], thickness=-1)
+                cv2.circle(canvas, loc[2], 4, colors[2], thickness=-1)
+                canvas = cv2.line(canvas, loc[1], loc[0], colors[0], 2)
+                canvas = cv2.line(canvas, loc[0], loc[2], colors[1], 2)
+            cv2.putText(canvas, str(flistnew.index(newloc)), loc[0], font, 0.8, (255, 255, 255), 2)
     flist = flistnew
     t6 = time.time()
 
@@ -571,7 +579,7 @@ if __name__ == '__main__':
             tempb = mapx[:, 1:, :] < 0
             tempc = mapy[:, :, :-1] > 0
             tempd = mapy[:, :, 1:] < 0
-            tempe = map_ori > 0.15
+            tempe = map_ori > 0.1
             A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)
@@ -600,7 +608,9 @@ if __name__ == '__main__':
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
-            cv2.imwrite('can.png', canvas)
+            #cv2.imwrite('can.png', canvas)
+            if i>=60:
+                cv2.imwrite(str(i)+'.png', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
