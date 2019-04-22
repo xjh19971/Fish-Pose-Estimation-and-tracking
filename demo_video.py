@@ -17,8 +17,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-PAD = 60
-video_process = 1
+PAD = 50
+video_process = 10
 Kalman=True
 detected = []
 # find connection in the specified sequence, center 29 is in the position 15
@@ -31,7 +31,7 @@ mapIdx = [[2, 3], [4, 5]]
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 
 input_names = ['input_1']
-output_names = ['batch_normalization_12/FusedBatchNorm_1', 'batch_normalization_14/FusedBatchNorm_1']
+output_names = ['batch_normalization_10/FusedBatchNorm_1', 'batch_normalization_12/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -59,46 +59,65 @@ sess2 = tf.Session(graph=g2)
             middlepeaklist.remove(middlepeaklist[j])
     return middlepeaklist'''
 
-def CreateKalman(newloc):
+def CreateKalman():
     kalman1 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
     kalman1.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman1.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman1.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+                                      np.float32) * 0.01  # 系统过程噪声协方差
+    kalman1.measurementNoiseCov = np.array([[1, 0], [0, 1]],
                                       np.float32) * 0.03  # 系统过程噪声协方差
     kalman0 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
     kalman0.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman0.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman0.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-                                      np.float32) * 0.03  # 系统过程噪声协方差
+                                       np.float32) * 0.01  # 系统过程噪声协方差
+    kalman0.measurementNoiseCov = np.array([[1, 0], [0, 1]],
+                                       np.float32) * 0.03  # 系统过程噪声协方差
     kalman2 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
     kalman2.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman2.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman2.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-                                      np.float32) * 0.03  # 系统过程噪声协方差
+                                      np.float32) * 0.01  # 系统过程噪声协方差
+    kalman2.measurementNoiseCov = np.array([[1, 0], [0, 1]],
+                                       np.float32) * 0.03  # 系统过程噪声协方差
 
     return [kalman0,kalman1,kalman2]
-def MoveKalman(location,kalman):
+def MoveKalman(location,kalman,l,w):
 
     if location!=[]:
         current_measurement = np.array([[np.float32(location[0])], [np.float32(location[1])]])  # 当前测量
         kalman.correct(current_measurement)  # 用当前测量来校正卡尔曼滤波器
         current_prediction = kalman.predict()  # 计算卡尔曼预测值，作为当前预测
-        return current_prediction,kalman
     else:
         current_prediction = kalman.predict()  # 计算卡尔曼预测值，作为当前预测
-        return current_prediction,kalman
+    if current_prediction[0]<0:
+        current_prediction[0]=0
+    if  current_prediction[0]>l-1:
+        current_prediction[0]=l-1
+    if current_prediction[1]<0:
+        current_prediction[1]=0
+    if  current_prediction[1]>w-1:
+        current_prediction[1]=w-1
+    return current_prediction,kalman
 
-def Update(newloc,kalmangroup):
-    temploc,kalmangroup[1] = MoveKalman([newloc[0], newloc[1]], kalmangroup[1])
+def Update(newloc,kalmangroup,l,w,first=False):
+    temploc,kalmangroup[1] = MoveKalman([newloc[0], newloc[1]], kalmangroup[1],l,w)
     if newloc[-1] == 0:
-        temploc1,kalmangroup[0] = MoveKalman([], kalmangroup[0])
-        temploc2,kalmangroup[2] = MoveKalman([newloc[2], newloc[3]], kalmangroup[2])
+        if first:
+            temploc1,kalmangroup[0] = MoveKalman([newloc[0], newloc[1]], kalmangroup[0],l,w)
+        else:
+            temploc1, kalmangroup[0] = MoveKalman([], kalmangroup[0], l, w)
+        temploc2,kalmangroup[2] = MoveKalman([newloc[2], newloc[3]], kalmangroup[2],l,w)
     elif newloc[-1] == 2:
-        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0])
-        temploc2,kalmangroup[2] = MoveKalman([], kalmangroup[2])
+        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0],l,w)
+        if first:
+            temploc2,kalmangroup[2] = MoveKalman([newloc[0], newloc[1]], kalmangroup[2],l,w)
+        else:
+            temploc2, kalmangroup[2] = MoveKalman([], kalmangroup[2], l, w)
     else:
-        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0])
-        temploc2,kalmangroup[2] = MoveKalman([newloc[4], newloc[5]], kalmangroup[2])
+        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0],l,w)
+        temploc2,kalmangroup[2] = MoveKalman([newloc[4], newloc[5]], kalmangroup[2],l,w)
     newlocfinal=[int(temploc[0]),int(temploc[1]),int(temploc1[0]),int(temploc1[1]),int(temploc2[0]),int(temploc2[1]),1]
     return newlocfinal,kalmangroup
 
@@ -112,10 +131,32 @@ def Match(newloc1,newloc):
     else:
         return newloc1 == newloc
 
+def Fuse(newloc,oldloc):
+    fuseloc=oldloc
+    if oldloc[-1]==1:
+        if(newloc[-1]==1):
+            for i in range(len(oldloc)):
+                fuseloc[i]=(oldloc[i]+newloc[i])/2
+    else:
+        if(newloc[-1]!=oldloc[-1]):
+            if newloc[-1]==1:
+                fuseloc=newloc
+            else:
+                if(newloc[-1]==2):
+                    fuseloc=[oldloc[0],oldloc[1],newloc[2],newloc[3],oldloc[2],oldloc[3],-1]
+                else:
+                    fuseloc=[oldloc[0], oldloc[1], oldloc[2], oldloc[3], newloc[2], newloc[3] -1]
+    return fuseloc
+
+
+
 def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
     scale = multiplier[0]
+    l=input_image.shape[1]
+    w=input_image.shape[0]
+    predictfish=[]
     if lenimg == 1:
         ROI = np.zeros((1, oriImg.shape[0], oriImg.shape[1], 3))
         ROI[0, :, :, :] = oriImg[:, :, :]
@@ -125,8 +166,11 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     else:
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT,value=[128,128,128])
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
-        for fish in flist:
-            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
+        for i in range(len(flist)):
+            current_prediction,temp = MoveKalman([],kalmangroup[i],l,w)  # 计算卡尔曼预测值，作为当前预测
+            fish=list(map(int,current_prediction))
+            predictfish.append(fish)
+            ROI[flist[i], :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -156,12 +200,12 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     paftemp = output_blobs[0]  # output 0 is PAFs
 
     for i in range(0, lenimg):
-        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=8, fy=8,
+        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=4, fy=4,
                              interpolation=cv2.INTER_CUBIC)
         heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
         heatmap = cv2.resize(heatmap, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
-        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=8, fy=8,
+        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=4, fy=4,
                          interpolation=cv2.INTER_CUBIC)
         paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
         paf = cv2.resize(paf, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
@@ -317,27 +361,26 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         subset_all.append(subset)
         candidate_all.append(candidate)
         checkpoint = checkpoint + len(candidate)
-    return subset_all, all_peaks, t1, t2, t3
+    return subset_all, all_peaks, t1, t2, t3,predictfish
 
 
-def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,kalmangroup):
-    scale_search = [2]
+def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
+    scale_search = [1]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
-        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess)
+        subset_all, all_peaks_all, t1, t2, t3,predictfish = predict(oriImg, scale_search, model_params, tf_sess)
     else:
-        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess,
+        subset_all, all_peaks_all, t1, t2, t3,predictfish = predict(oriImg, scale_search, model_params, tf_sess,
                                                                        lenimg=len(flist) if len(flist) != 0 else 1,
                                                                        flist=flist)
 
     canvas = input_image  # B,G,R order
 
     t4 = time.time()
-    flistnew = flist
-    checkpoint = 0
-    save = []
+    flistnew = flist.copy()
     tree=[]
+
     if f != 0 and flist!=[]:
         points = [[x[0], x[1]] for x in flist]
         tree = KDTree(points)
@@ -346,14 +389,12 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,ka
         subset = subset_all[k]
         all_peaks = all_peaks_all[k]
         newloc_all=[]
-        if k != 0:
-            checkpoint = checkpoint + len(candidate_all[k - 1])
         if f % video_process == 0:
             locx = 0
             locy = 0
         else:
-            locx = flist[k][0]-PAD
-            locy = flist[k][1]-PAD
+            locx = predictfish[k][0]-PAD
+            locy = predictfish[k][1]-PAD
 
         for n in range(len(subset)):
             loc = []
@@ -377,86 +418,42 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,ka
         for newloc in newloc_all:
             if f != 0 and tree!=[]:
                 dis, index = tree.query([newloc[0], newloc[1]])
-                if dis > 50:
-                    lenflistnew = lenflistnew + 1
+                if dis > 30:
                     detected.append(1)
-                    if Kalman:
-                        newKalman = CreateKalman(newloc)
-                        newloc1 = [0, 0, 0, 0, 0, 0, 1]
-                        while(Match(newloc1,newloc)==False):
-                            newloc1, newKalman = Update(newloc, newKalman)
-                        kalmangroup.append(newKalman)
-                        flistnew.append(newloc1)
-                    else:
-                        flistnew.append(newloc)
+                    flistnew.append(newloc)
                 else:
                     No = index
                     if detected[No] == 1:
-                        save.append(newloc)
-                        subset[newloc_all.index(newloc)]=[-1,-1,-1,-1,-1]
+                        flistnew[No] =Fuse(newloc,flistnew[No])
                         continue
                     else:
                         detected[No] = 1
-                        if Kalman:
-                            newloc,kalmangroup[No]=Update(newloc, kalmangroup[No])
-                        flist[No] = newloc
+                        flistnew[No] = newloc
             else:
-                lenflistnew = lenflistnew + 1
                 detected.append(1)
-                if Kalman:
-                    newKalman=CreateKalman(newloc)
-                    newloc1 = [0, 0, 0, 0, 0, 0, 1]
-                    while(Match(newloc1,newloc)==False):
-                        newloc1, newKalman=Update(newloc,newKalman)
-                    kalmangroup.append(newKalman)
-                    flistnew.append(newloc1)
-                else:
-                    flistnew.append(newloc)
+                flistnew.append(newloc)
 
-    '''if save:
-            for savefish in save:
-                newloc = savefish
-                lost = newloc[-1]
-                find = 0
-                dis=[]
-                idx=[]
-                for i in range(len(detected)):
-                    distemp=math.sqrt(pow(flist[i][0] - newloc[0], 2)+ pow(flist[i][1] - newloc[1], 2))
-                    if distemp < 50:
-                        dis.append(distemp)
-                        idx.append(i)
-                dis_sorttemp=dis
-                dis.sort()
-                for mydis in dis:
-                    i=idx[dis_sorttemp.index(mydis)]
-                    if detected[i]==0:
-                        find = 1
-                        No = i
-                        if lost == 0:
-                            newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
-                        elif lost == 2:
-                            newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
-                        break
-                    elif flistnew[i][-1]!=1 and lost==1:
-                        find = 1
-                        No = i
-                        if lost == 0:
-                            newloc = [newloc[0], newloc[1], flist[i][2], flist[i][3], newloc[2], newloc[3], 1]
-                        elif lost == 2:
-                            newloc = [newloc[0], newloc[1], newloc[2], newloc[3], flist[i][4], flist[i][5], 1]
-                        break
-                if find == 1:
-                    flist[No] = newloc
-    '''
-
+    if Kalman:
+        for i in range(len(flistnew)):
+            if i >=len(flist):
+                newKalman = CreateKalman()
+                newloc1 = [0, 0, 0, 0, 0, 0, 1]
+                n=0
+                while (Match(newloc1, flistnew[i]) == False and n<=10):
+                    newloc1, newKalman = Update(flistnew[i], newKalman,input_image.shape[1],input_image.shape[0],first=True)
+                    n=n+1
+                kalmangroup.append(newKalman)
+                flistnew[i]=newloc1
+            else:
+                flistnew[i], kalmangroup[i] = Update(flistnew[i], kalmangroup[i],input_image.shape[1],input_image.shape[0])
     for item in detected:
         if item<=-10:
             deindex=detected.index(item)
-            lenflistnew=lenflistnew-1
             flistnew.remove(flistnew[deindex])
             detected.remove(detected[deindex])
             if Kalman:
                 kalmangroup.remove(kalmangroup[deindex])
+
     for i in range(len(detected)):
         detected[i]=detected[i]-1
     t5 = time.time()
@@ -464,19 +461,20 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,ka
 
     for newloc in flistnew:
         if detected[flistnew.index(newloc)]==0:
+            newloc1=list(map(int,newloc))
             lost = newloc[-1]
             if lost == 0:
-                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
+                loc = [(newloc1[0], newloc1[1]), (newloc1[2], newloc1[3])]
                 cv2.circle(canvas, loc[0], 4, colors[1], thickness=-1)
                 cv2.circle(canvas, loc[1], 4, colors[2], thickness=-1)
                 canvas = cv2.line(canvas, loc[0], loc[1], colors[1], 2)
             elif lost == 2:
-                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
+                loc = [(newloc1[0], newloc1[1]), (newloc1[2], newloc1[3])]
                 cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
                 cv2.circle(canvas, loc[1], 4, colors[1], thickness=-1)
                 canvas = cv2.line(canvas, loc[0], loc[1], colors[0], 2)
             else:
-                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3]), (newloc[4], newloc[5])]
+                loc = [(newloc1[0], newloc1[1]), (newloc1[2], newloc1[3]), (newloc1[4], newloc1[5])]
                 cv2.circle(canvas, loc[0], 4, colors[1], thickness=-1)
                 cv2.circle(canvas, loc[1], 4, colors[0], thickness=-1)
                 cv2.circle(canvas, loc[2], 4, colors[2], thickness=-1)
@@ -486,7 +484,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, lenflistnew,ka
     flist = flistnew
     t6 = time.time()
 
-    return canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew,kalmangroup
+    return canvas, t1, t2, t3, t4, t5, t6, flist,kalmangroup
 
 
 if __name__ == '__main__':
@@ -596,21 +594,19 @@ if __name__ == '__main__':
     i = -500 # default is 0
     flist = []
     kalmangroup=[]
-    lenflistnew = -1
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
         if i % frame_rate_ratio == 0 and i >= 0:
             tic = time.time()
             # generate image with body parts
-            canvas, t1, t2, t3, t4, t5, t6, flist, lenflistnew,kalmangroup = process(input_image, i, params, model_params, sess1_1,
-                                                                         flist, lenflistnew,kalmangroup)
+            canvas, t1, t2, t3, t4, t5, t6, flist,kalmangroup = process(input_image, i, params, model_params, sess1_1,
+                                                                         flist,kalmangroup)
             print('processing frame is %d' % i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
+            #if i>38:
             #cv2.imwrite('can.png', canvas)
-            if i>=60:
-                cv2.imwrite(str(i)+'.png', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
