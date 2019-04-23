@@ -289,32 +289,32 @@ def get_testing_model():
     img_input_shape = (None, None, 3)
 
     inputs = []
-
+    outputs = []
     img_input = Input(shape=img_input_shape)
     inputs.append(img_input)
 
     img_normalized = Lambda(lambda x: x / 256 - 0.5)(img_input)  # [-0.5, 0.5]
 
-    # VGG
-    stage0_out,x1 = vgg_block(img_normalized, None)
-
+    stage0_out,x1 = vgg_block(img_normalized,None)
+    x = Concatenate()([x1,stage0_out])
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, None)
+    stage1_branch1_out = stage1_block(x, np_branch1, 1,None)
 
     # stage 1 - branch 2 (confidence maps)
-    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, None)
+    stage1_branch2_out = stage1_block(x, np_branch2, 2, None)
 
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out,x1])
+    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, x])
 
-    # stage t >= 2
+    # stage sn >= 2
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
-        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1,None)
+        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, None)
         # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, None)
         if (sn < stages):
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, x])
-
-    model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
+    outputs.append(stageT_branch1_out)
+    outputs.append(stageT_branch2_out)
+    model = Model(inputs=inputs, outputs=outputs)
     model.summary()
     return model
