@@ -314,15 +314,15 @@ def get_testing_model():
     img_normalized = Lambda(lambda x: x / 256 - 0.5)(img_input)  # [-0.5, 0.5]
 
     # VGG
-    stage0_out,x1 = vgg_block(img_normalized, None)
-
+    stage0_out, x1 = vgg_block(img_normalized, weight_decay)
+    x = Concatenate()([x1, stage0_out])
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, None)
+    stage1_branch1_out = stage1_block(x, np_branch1, 1, weight_decay)
 
     # stage 1 - branch 2 (confidence maps)
-    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, None)
+    stage1_branch2_out = stage1_block(x, np_branch2, 2, weight_decay)
 
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out,x1])
+    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, x])
 
     # stage t >= 2
     for sn in range(2, stages + 1):
