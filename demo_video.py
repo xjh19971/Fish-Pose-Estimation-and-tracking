@@ -17,8 +17,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-PAD = 50
-video_process = 10
+PAD =60
+video_process = 1
 Kalman=True
 detected = []
 # find connection in the specified sequence, center 29 is in the position 15
@@ -136,7 +136,7 @@ def Fuse(newloc,oldloc):
     if oldloc[-1]==1:
         if(newloc[-1]==1):
             for i in range(len(oldloc)):
-                fuseloc[i]=(oldloc[i]+newloc[i])/2
+                fuseloc[i]=int((oldloc[i]+newloc[i])/2)
     else:
         if(newloc[-1]!=oldloc[-1]):
             if newloc[-1]==1:
@@ -154,9 +154,6 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
     multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
     scale = multiplier[0]
-    l=input_image.shape[1]
-    w=input_image.shape[0]
-    predictfish=[]
     if lenimg == 1:
         ROI = np.zeros((1, oriImg.shape[0], oriImg.shape[1], 3))
         ROI[0, :, :, :] = oriImg[:, :, :]
@@ -166,11 +163,9 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     else:
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT,value=[128,128,128])
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
-        for i in range(len(flist)):
-            current_prediction,temp = MoveKalman([],kalmangroup[i],l,w)  # 计算卡尔曼预测值，作为当前预测
-            fish=list(map(int,current_prediction))
-            predictfish.append(fish)
-            ROI[flist[i], :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
+        for fish in flist:
+            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
+            #cv2.imwrite('can.png', ROI[flist.index(fish), :, :, :])
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -200,12 +195,12 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     paftemp = output_blobs[0]  # output 0 is PAFs
 
     for i in range(0, lenimg):
-        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=4, fy=4,
+        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=8, fy=8,
                              interpolation=cv2.INTER_CUBIC)
         heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
         heatmap = cv2.resize(heatmap, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
-        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=4, fy=4,
+        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=8, fy=8,
                          interpolation=cv2.INTER_CUBIC)
         paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
         paf = cv2.resize(paf, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
@@ -361,7 +356,7 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
         subset_all.append(subset)
         candidate_all.append(candidate)
         checkpoint = checkpoint + len(candidate)
-    return subset_all, all_peaks, t1, t2, t3,predictfish
+    return subset_all, all_peaks, t1, t2, t3
 
 
 def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
@@ -369,9 +364,9 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
-        subset_all, all_peaks_all, t1, t2, t3,predictfish = predict(oriImg, scale_search, model_params, tf_sess)
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess)
     else:
-        subset_all, all_peaks_all, t1, t2, t3,predictfish = predict(oriImg, scale_search, model_params, tf_sess,
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess,
                                                                        lenimg=len(flist) if len(flist) != 0 else 1,
                                                                        flist=flist)
 
@@ -393,8 +388,8 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
             locx = 0
             locy = 0
         else:
-            locx = predictfish[k][0]-PAD
-            locy = predictfish[k][1]-PAD
+            locx = flist[k][0]-PAD
+            locy = flist[k][1]-PAD
 
         for n in range(len(subset)):
             loc = []
@@ -460,21 +455,20 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
 
 
     for newloc in flistnew:
-        if detected[flistnew.index(newloc)]==0:
-            newloc1=list(map(int,newloc))
+        if detected[flistnew.index(newloc)]<=0:
             lost = newloc[-1]
             if lost == 0:
-                loc = [(newloc1[0], newloc1[1]), (newloc1[2], newloc1[3])]
+                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
                 cv2.circle(canvas, loc[0], 4, colors[1], thickness=-1)
                 cv2.circle(canvas, loc[1], 4, colors[2], thickness=-1)
                 canvas = cv2.line(canvas, loc[0], loc[1], colors[1], 2)
             elif lost == 2:
-                loc = [(newloc1[0], newloc1[1]), (newloc1[2], newloc1[3])]
+                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
                 cv2.circle(canvas, loc[0], 4, colors[0], thickness=-1)
                 cv2.circle(canvas, loc[1], 4, colors[1], thickness=-1)
                 canvas = cv2.line(canvas, loc[0], loc[1], colors[0], 2)
             else:
-                loc = [(newloc1[0], newloc1[1]), (newloc1[2], newloc1[3]), (newloc1[4], newloc1[5])]
+                loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3]), (newloc[4], newloc[5])]
                 cv2.circle(canvas, loc[0], 4, colors[1], thickness=-1)
                 cv2.circle(canvas, loc[1], 4, colors[0], thickness=-1)
                 cv2.circle(canvas, loc[2], 4, colors[2], thickness=-1)
