@@ -110,7 +110,7 @@ def tiny_inception_block(input_tensor, filters, stage, branch, weight_decay):
     x4 = relu(x4)'''
 
     x = Concatenate()([x1,x2,x3])
-    x = conv(x, 128, 1, conv_name_base + 'd', weight_decay)
+    x = conv(x, 256, 1, conv_name_base + 'd', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + 'e', epsilon=1e-5, momentum=0.9)(x)
     x = add([x, input_tensor])
     x= relu(x)
@@ -215,19 +215,19 @@ def vgg_block(x, weight_decay):
 def stage1_block(x, num_p, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 256, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 128, 128]], 2 * 1 - 1, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [64, 128], [64, 128, 128]], 2 * 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2 * 1 - 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2 * 1, branch, (weight_decay, 0))
     return x
 
 
 def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-
-    x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    input=x
+    x = conv(x, 256, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2 * stage - 1, branch, (weight_decay, 0))

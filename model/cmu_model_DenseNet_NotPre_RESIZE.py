@@ -255,14 +255,18 @@ def stage1_block(x, num_p, branch, weight_decay):
 def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-
+    input=x
     x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     x = tiny_inception_block(x, [[64], [128, 128], [64, 64, 128]], 2 * stage - 1, branch, (weight_decay, 0))
     x = tiny_inception_block(x, [[64], [128, 128], [64, 64, 128]], 2 * stage, branch, (weight_decay, 0))
     if stage == 5:
-        x = STEM_block_trans(x, [128, 128], 5, (weight_decay, 0), change=True,branch=branch)
+        x = Concatenate()([input,x])
+        x = conv(x, 128, 1, "Mconv6_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+        x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+        x = relu(x)
+        x = STEM_block_trans(x, [128, 128], 5, (weight_decay, 0), branch=branch)
         x = STEM_block_trans(x, [128, 128], 6, (weight_decay, 0),  branch=branch)
         x = STEM_block_trans(x, [128, 128], 7, (weight_decay, 0),  branch=branch)
         x = STEM_block_trans(x, [128, 128], 8, (weight_decay, 0),change=True,branch=branch,strides=(2,2))
@@ -336,35 +340,45 @@ def get_testing_model():
     stages = 5
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
-    img_input_shape = (None, None, 3)
+    img_size = None
+    img_input_shape = (img_size, img_size, 3)
+    vec_input_shape = (None, None, KEY_POINT_LINK)
+    heat_input_shape = (None, None, KEY_POINT_NUM)
 
     inputs = []
+    outputs = []
 
     img_input = Input(shape=img_input_shape)
+    vec_weight_input = Input(shape=vec_input_shape)
+    heat_weight_input = Input(shape=heat_input_shape)
+
     inputs.append(img_input)
+    inputs.append(vec_weight_input)
+    inputs.append(heat_weight_input)
 
     img_normalized = Lambda(lambda x: x / 256 - 0.5)(img_input)  # [-0.5, 0.5]
 
     # VGG
-    stage0_out = vgg_block(img_normalized, None)
-
+    stage0_out, x1 = vgg_block(img_normalized, None)
+    x = Concatenate()([x1, stage0_out])
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, None)
+    stage1_branch1_out = stage1_block(x, np_branch1, 1, None)
 
     # stage 1 - branch 2 (confidence maps)
-    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, None)
+    stage1_branch2_out = stage1_block(x, np_branch2, 2,None)
 
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
+    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, x])
 
-    # stage t >= 2
+    # stage sn >= 2
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
-        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1,None)
+        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, None)
         # stage SN - branch 2 (confidence maps)
         stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, None)
         if (sn < stages):
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, x])
-
-    model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
+    outputs.append(stageT_branch1_out)
+    outputs.append(stageT_branch2_out)
+    model = Model(inputs=inputs, outputs=outputs)
     model.summary()
     return model

@@ -17,8 +17,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-PAD =60
-video_process = 1
+PAD = 60
+video_process = 5
 Kalman=True
 detected = []
 # find connection in the specified sequence, center 29 is in the position 15
@@ -31,7 +31,7 @@ mapIdx = [[2, 3], [4, 5]]
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 
 input_names = ['input_1']
-output_names = ['batch_normalization_10/FusedBatchNorm_1', 'batch_normalization_12/FusedBatchNorm_1']
+output_names = ['batch_normalization_11/FusedBatchNorm_1', 'batch_normalization_14/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -40,45 +40,28 @@ sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
 
 
-'''def merge(middlepeaklist):
-    mergelist = np.zeros(len(middlepeaklist))
-    num = 0
-    for i in range(len(middlepeaklist)):
-        middlepeaklist[i][3] = middlepeaklist[i][3] - num
-        for j in range(i + 1, len(middlepeaklist)):
-            if math.sqrt(pow(middlepeaklist[i][0] - middlepeaklist[j][0], 2)
-                         + pow(middlepeaklist[i][1] - middlepeaklist[j][1], 2)) < 10 and mergelist[j] == 0:
-                middlepeaklist[i] = [int((middlepeaklist[i][0] + middlepeaklist[j][0]) / 2),
-                                     int((middlepeaklist[i][1] + middlepeaklist[j][1]) / 2),
-                                     (middlepeaklist[i][2] + middlepeaklist[j][2]) / 2,
-                                     middlepeaklist[i][3]]
-                mergelist[j] = 1
-                num = num + 1
-    for j in range(len(mergelist) - 1, -1, -1):
-        if mergelist[j]:
-            middlepeaklist.remove(middlepeaklist[j])
-    return middlepeaklist'''
+
 
 def CreateKalman():
     kalman1 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
     kalman1.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman1.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman1.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-                                      np.float32) * 0.01  # 系统过程噪声协方差
+                                      np.float32) * 0.003  # 系统过程噪声协方差
     kalman1.measurementNoiseCov = np.array([[1, 0], [0, 1]],
                                       np.float32) * 0.03  # 系统过程噪声协方差
     kalman0 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
     kalman0.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman0.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman0.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-                                       np.float32) * 0.01  # 系统过程噪声协方差
+                                       np.float32) * 0.003  # 系统过程噪声协方差
     kalman0.measurementNoiseCov = np.array([[1, 0], [0, 1]],
                                        np.float32) * 0.03  # 系统过程噪声协方差
     kalman2 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
     kalman2.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman2.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman2.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-                                      np.float32) * 0.01  # 系统过程噪声协方差
+                                      np.float32) * 0.003  # 系统过程噪声协方差
     kalman2.measurementNoiseCov = np.array([[1, 0], [0, 1]],
                                        np.float32) * 0.03  # 系统过程噪声协方差
 
@@ -99,29 +82,29 @@ def MoveKalman(location,kalman,l,w):
         current_prediction[1]=0
     if  current_prediction[1]>w-1:
         current_prediction[1]=w-1
-    return current_prediction,kalman
+    return current_prediction
 
 def Update(newloc,kalmangroup,l,w,first=False):
-    temploc,kalmangroup[1] = MoveKalman([newloc[0], newloc[1]], kalmangroup[1],l,w)
+    temploc = MoveKalman([newloc[0], newloc[1]], kalmangroup[1],l,w)
     if newloc[-1] == 0:
         if first:
-            temploc1,kalmangroup[0] = MoveKalman([newloc[0], newloc[1]], kalmangroup[0],l,w)
+            temploc1 = MoveKalman([newloc[0], newloc[1]], kalmangroup[0],l,w)
         else:
-            temploc1, kalmangroup[0] = MoveKalman([], kalmangroup[0], l, w)
-        temploc2,kalmangroup[2] = MoveKalman([newloc[2], newloc[3]], kalmangroup[2],l,w)
+            temploc1 = MoveKalman([], kalmangroup[0], l, w)
+        temploc2 = MoveKalman([newloc[2], newloc[3]], kalmangroup[2],l,w)
     elif newloc[-1] == 2:
-        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0],l,w)
+        temploc1 = MoveKalman([newloc[2], newloc[3]], kalmangroup[0],l,w)
         if first:
-            temploc2,kalmangroup[2] = MoveKalman([newloc[0], newloc[1]], kalmangroup[2],l,w)
+            temploc2 = MoveKalman([newloc[0], newloc[1]], kalmangroup[2],l,w)
         else:
-            temploc2, kalmangroup[2] = MoveKalman([], kalmangroup[2], l, w)
+            temploc2 = MoveKalman([], kalmangroup[2], l, w)
     else:
-        temploc1,kalmangroup[0] = MoveKalman([newloc[2], newloc[3]], kalmangroup[0],l,w)
-        temploc2,kalmangroup[2] = MoveKalman([newloc[4], newloc[5]], kalmangroup[2],l,w)
-    newlocfinal=[int(temploc[0]),int(temploc[1]),int(temploc1[0]),int(temploc1[1]),int(temploc2[0]),int(temploc2[1]),1]
-    return newlocfinal,kalmangroup
+        temploc1 = MoveKalman([newloc[2], newloc[3]], kalmangroup[0], l, w)
+        temploc2 = MoveKalman([newloc[4], newloc[5]], kalmangroup[2], l, w)
+    newlocfinal = [int(temploc[0]), int(temploc[1]), int(temploc1[0]), int(temploc1[1]), int(temploc2[0]), int(temploc2[1]), 1]
+    return newlocfinal
 
-def Match(newloc1,newloc):
+def Match(newloc1, newloc):
     if newloc[-1]==0:
         temploc=[newloc1[0],newloc1[1],newloc1[4],newloc1[5],0]
         return temploc==newloc
@@ -150,9 +133,9 @@ def Fuse(newloc,oldloc):
 
 
 
-def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
+def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
     t1 = time.time()
-    multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in scale_search]
+    multiplier = [1]
     scale = multiplier[0]
     if lenimg == 1:
         ROI = np.zeros((1, oriImg.shape[0], oriImg.shape[1], 3))
@@ -163,9 +146,9 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     else:
         oriImg_Re = cv2.copyMakeBorder(oriImg, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT,value=[128,128,128])
         ROI = np.zeros((len(flist), PAD * 2, PAD * 2, 3))
-        for fish in flist:
-            ROI[flist.index(fish), :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
-            #cv2.imwrite('can.png', ROI[flist.index(fish), :, :, :])
+        for i in range(len(flist)):
+            fish=flist[i]
+            ROI[i, :, :, :] = oriImg_Re[fish[1] :fish[1]+ 2 * PAD, fish[0] :fish[0]+ 2 * PAD, :]
         heatmap_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         paf_avg = np.zeros((lenimg, PAD * 2, PAD * 2, 4))
         orishape = [PAD * 2, PAD * 2]
@@ -195,12 +178,12 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     paftemp = output_blobs[0]  # output 0 is PAFs
 
     for i in range(0, lenimg):
-        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=8, fy=8,
+        heatmap = cv2.resize(heatmaptemp[i, :, :, :], (0, 0), fx=4, fy=4,
                              interpolation=cv2.INTER_CUBIC)
         heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
         heatmap = cv2.resize(heatmap, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
-        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=8, fy=8,
+        paf = cv2.resize(paftemp[i, :, :, :], (0, 0), fx=4, fy=4,
                          interpolation=cv2.INTER_CUBIC)
         paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
         paf = cv2.resize(paf, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
@@ -218,16 +201,16 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
     for i in range(0, lenimg):
         tempall = output0[output0[:, 0] == i]
         temp = tempall[tempall[:, 3] == 0].tolist()
-        temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
+        temp = [[temp[i][1], temp[i][2], temp[i][4], i + check] for i in range(len(temp))]
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 1].tolist()
-        temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
+        temp = [[temp[i][1], temp[i][2], temp[i][4], i + check] for i in range(len(temp))]
         # temp = merge(temp)
         check = check + len(temp)
         all_peaks[i].append(temp)
         temp = tempall[tempall[:, 3] == 2].tolist()
-        temp = [[x[1], x[2], x[4], temp.index(x) + check] for x in temp]
+        temp = [[temp[i][1], temp[i][2], temp[i][4], i + check] for i in range(len(temp))]
         all_peaks[i].append(temp)
         check = check + len(temp)
 
@@ -360,13 +343,12 @@ def predict(oriImg, scale_search, model_params, tf_sess, lenimg=1, flist=None):
 
 
 def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
-    scale_search = [1]
 
     oriImg = input_image  # B,G,R order
     if f % video_process == 0:
-        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess)
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, model_params, tf_sess)
     else:
-        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, scale_search, model_params, tf_sess,
+        subset_all, all_peaks_all, t1, t2, t3 = predict(oriImg, model_params, tf_sess,
                                                                        lenimg=len(flist) if len(flist) != 0 else 1,
                                                                        flist=flist)
 
@@ -375,7 +357,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
     t4 = time.time()
     flistnew = flist.copy()
     tree=[]
-
+    suspectpoint=[]
     if f != 0 and flist!=[]:
         points = [[x[0], x[1]] for x in flist]
         tree = KDTree(points)
@@ -414,8 +396,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
             if f != 0 and tree!=[]:
                 dis, index = tree.query([newloc[0], newloc[1]])
                 if dis > 30:
-                    detected.append(1)
-                    flistnew.append(newloc)
+                    suspectpoint.append([newloc,dis,index])
                 else:
                     No = index
                     if detected[No] == 1:
@@ -427,35 +408,45 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
             else:
                 detected.append(1)
                 flistnew.append(newloc)
-
+    if suspectpoint!=[]:
+        for i in range(len(suspectpoint)):
+            if detected[suspectpoint[i][2]]==1:
+                detected.append(1)
+                flistnew.append(suspectpoint[i][0])
+            else:
+                if suspectpoint[i][1]<=80:
+                    No=suspectpoint[i][2]
+                    detected[No] = 1
+                    flistnew[No] = suspectpoint[i][0]
     if Kalman:
         for i in range(len(flistnew)):
             if i >=len(flist):
                 newKalman = CreateKalman()
-                newloc1 = [0, 0, 0, 0, 0, 0, 1]
                 n=0
-                while (Match(newloc1, flistnew[i]) == False and n<=10):
-                    newloc1, newKalman = Update(flistnew[i], newKalman,input_image.shape[1],input_image.shape[0],first=True)
+                while (n<=20):
+                    newloc1 = Update(flistnew[i], newKalman,input_image.shape[1],input_image.shape[0],first=True)
                     n=n+1
                 kalmangroup.append(newKalman)
                 flistnew[i]=newloc1
             else:
-                flistnew[i], kalmangroup[i] = Update(flistnew[i], kalmangroup[i],input_image.shape[1],input_image.shape[0])
-    for item in detected:
-        if item<=-10:
-            deindex=detected.index(item)
-            flistnew.remove(flistnew[deindex])
-            detected.remove(detected[deindex])
+                if detected[i]>=-5:
+                    flistnew[i] = Update(flistnew[i], kalmangroup[i],input_image.shape[1],input_image.shape[0])
+    for i in range(len(detected)):
+        if i>=len(detected):
+            break
+        item=detected[i]
+        if item<=-20:
+            flistnew.remove(flistnew[i])
+            detected.remove(detected[i])
             if Kalman:
-                kalmangroup.remove(kalmangroup[deindex])
-
+                kalmangroup.remove(kalmangroup[i])
+            i=i-1
     for i in range(len(detected)):
         detected[i]=detected[i]-1
     t5 = time.time()
-
-
-    for newloc in flistnew:
-        if detected[flistnew.index(newloc)]<=0:
+    for i in range(len(flistnew)):
+        newloc=flistnew[i]
+        if detected[i]>=-5:
             lost = newloc[-1]
             if lost == 0:
                 loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
@@ -474,7 +465,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
                 cv2.circle(canvas, loc[2], 4, colors[2], thickness=-1)
                 canvas = cv2.line(canvas, loc[1], loc[0], colors[0], 2)
                 canvas = cv2.line(canvas, loc[0], loc[2], colors[1], 2)
-            cv2.putText(canvas, str(flistnew.index(newloc)), loc[0], font, 0.8, (255, 255, 255), 2)
+            cv2.putText(canvas, str(i), loc[0], font, 0.8, (255, 255, 255), 2)
     flist = flistnew
     t6 = time.time()
 
@@ -545,18 +536,6 @@ if __name__ == '__main__':
             map_ori = tf.transpose(tf.placeholder(tf.float32, shape=[None, None, None, 3], name='input'),
                                    perm=[0, 2, 1, 3])
             mapshape = tf.shape(map_ori)
-            '''filter = tf.constant(g_filter, dtype=tf.float32)
-            temp1 = tf.expand_dims(map_ori[:, :, :, 0], -1)
-            temp2 = tf.expand_dims(map_ori[:, :, :, 1], -1)
-            temp3 = tf.expand_dims(map_ori[:, :, :, 2], -1)
-            temp1 = tf.nn.conv2d(temp1, filter, strides=[1, 1, 1, 1], padding='SAME')
-            temp2 = tf.nn.conv2d(temp2, filter, strides=[1, 1, 1, 1], padding='SAME')
-            temp3 = tf.nn.conv2d(temp3, filter, strides=[1, 1, 1, 1], padding='SAME')
-            map_ori = tf.concat([temp1, temp2, temp3], -1)'''
-            '''w = tf.constant(filt, shape=(3, 3, 1), dtype=tf.float32)
-            map_ori2 = tf.expand_dims(map_ori3, -1)
-            map_ori1 = tf.expand_dims(map_ori2, 1)
-            map_ori = tf.nn.conv2d(map_ori1, w, [1, 1], 'SAME')'''
             a = map_ori[:, 1:, :]
             b = map_ori[:, :-1, :]
             c = map_ori[:, :, 1:]
