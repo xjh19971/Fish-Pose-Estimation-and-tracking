@@ -3,8 +3,8 @@ import re
 import cv2
 import json
 import pandas as pd
-rootdir='./train_data_cut/'
-dstdir='./train_data_final/'
+rootdir='E:\\xjh\\train_data_cut\\'
+dstdir='E:\\xjh\\train_data_final\\'
 list = os.listdir(rootdir)
 datalist=[]
 data={}

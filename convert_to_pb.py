@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras import backend as K
 #import tensorflow.contrib.tensorrt as trt
 from config_reader import config_reader
-from model.cmu_model_inception_DenseNet   import get_testing_model
+from model.cmu_model_DenseNet_NotPre_RESIZE   import get_testing_model
 
 
 def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True):
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # vgg normalization (subtracting mean) on input images
     model = get_testing_model()
     model.load_weights(keras_weights_file,by_name=True)
-    frozen_graph = freeze_session(K.get_session(),output_names=['batch_normalization_10/FusedBatchNorm_1','batch_normalization_12/FusedBatchNorm_1'])
+    frozen_graph = freeze_session(K.get_session(),output_names=['batch_normalization_11/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1'])
     tf.train.write_graph(frozen_graph, ".", "tf_model.pb", as_text=False)
     '''trt_graph = trt.create_inference_graph(
         input_graph_def=frozen_graph,

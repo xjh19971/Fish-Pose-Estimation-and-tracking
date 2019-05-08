@@ -14,6 +14,8 @@ from training.dataset import read_img, gen_mask, augment, apply_mask, \
     create_all_mask, ALL_HEATMAP_MASK, ALL_PAF_MASK
 from training.label_maps import create_heatmap, create_paf
 
+KEY_POINT_NUM=3+1
+KEY_POINT_LINK=2
 
 def _get_bgimg(inp, target_size=None):
     """
@@ -124,17 +126,19 @@ def build_debug_sample(components):
     meta = components[0]
 
     if meta.mask is None:
-        mask_paf = ALL_PAF_MASK
-        mask_heatmap = ALL_HEATMAP_MASK
+        mask_paf = None
+        mask_heatmap = None
     else:
-        mask_paf = create_all_mask(meta.mask, 6, stride=8)
-        mask_heatmap = create_all_mask(meta.mask, 4, stride=8)
+        mask_paf = create_all_mask(meta.mask, KEY_POINT_LINK, stride=4)
+        mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=4)
 
-    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, 46, 46,
-                                 meta.aug_joints, 5.0, stride=8)
 
-    pafmap = create_paf(JointsLoader.num_connections, 46, 46,
-                           meta.aug_joints, 1, stride=8)
+    stride=4
+    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
+                             int(meta.crop_y/stride),int(meta.crop_x/stride), meta.aug_joints, 3.25, stride=stride)
+
+    pafmap = create_paf(JointsLoader.num_connections, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
+                       int(meta.crop_y/stride),int(meta.crop_x/stride),meta.aug_joints, 0.8, stride=stride)
 
     return [meta, mask_paf, mask_heatmap, pafmap, heatmap]
 
@@ -144,7 +148,7 @@ if __name__ == '__main__':
     curr_dir = os.path.dirname(__file__)
     annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
     img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
-    df = CocoDataFlow((368, 368), annot_path, img_dir)#, select_ids=[1000])
+    df = CocoDataFlow((480, 480), annot_path, img_dir)#, select_ids=[1000])
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)

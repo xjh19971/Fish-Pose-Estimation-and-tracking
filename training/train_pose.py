@@ -1,4 +1,4 @@
-import math
+﻿import math
 import os
 import re
 import sys
@@ -17,17 +17,15 @@ sess = tf.Session(config=config)
 K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
-#from model.cmu_model_resnet import get_training_model
-from model.cmu_model_inception_improve import get_training_model
+from model.cmu_model_DenseNet_Hourglass import get_training_model
 #from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 16
+batch_size = 5
 base_lr = 0.01 # 2e-5
-momentum =0.9
 weight_decay = 5e-4
-lr_policy =  "step"
+lr_policy ="step"
 gamma = 0.5
 stepsize =  100000 #   // after each stepsize iterations update learning rate: lr=lr*gamma
 max_iter = 2000 # 600000
@@ -137,18 +135,9 @@ def get_loss_funcs():
         return K.sum(K.square(x - y)) / batch_size / 2
 
     losses = {}
-    '''losses["weight_stage1_L1"] = _eucl_loss
-    losses["weight_stage1_L2"] = _eucl_loss
-    losses["weight_stage2_L1"] = _eucl_loss
-    losses["weight_stage2_L2"] = _eucl_loss
-    losses["weight_stage3_L1"] = _eucl_loss
-    losses["weight_stage3_L2"] = _eucl_loss
-    losses["weight_stage4_L1"] = _eucl_loss
-    losses["weight_stage4_L2"] = _eucl_loss'''
-    losses["weight_stage5_L1"] = _eucl_loss
-    losses["weight_stage5_L2"] = _eucl_loss
-    '''losses["weight_stage6_L1"] = _eucl_loss
-    losses["weight_stage6_L2"] = _eucl_loss'''
+
+    losses["final1bn"] = _eucl_loss
+    losses["final2bn"] = _eucl_loss
 
     return losses
 
@@ -218,7 +207,7 @@ if __name__ == '__main__':
     _step_decay = partial(step_decay,
                           iterations_per_epoch=iterations_per_epoch
                           )
-    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=10, mode='auto')
+    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=20, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
                                  verbose=0, save_best_only=False,
                                  save_weights_only=True, mode='min', period=1)

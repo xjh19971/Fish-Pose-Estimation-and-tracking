@@ -16,8 +16,8 @@ def _to_one_hot(name):
         one_hot_vector[2] = 1
     return one_hot_vector
 
-df=pd.read_csv('/home/xjh/mul_fish_labels.csv')
-EXPAND=6
+df=pd.read_csv('mul_fish_labels.csv')
+EXPAND=20
 name=df['im_path'].str[-9:]
 joint=df['joints'].str[:]
 size=df['im_size'].str[:]
@@ -49,7 +49,7 @@ temp ={}
 temp['id']=1
 temp['name']='fish'
 temp['keypoints']=['top','body','tail']
-temp['skeleton']=[[1,2],[2,3]]
+temp['skeleton']=[[0,1],[1,2]]
 cates_new.append(temp)
 dataset['categories'] = cates_new
 
@@ -58,8 +58,8 @@ Annotations=[]
 sum_n=0
 for myjoints in joint:
     myjoint=myjoints.replace('[','').replace(']','').replace(' ','').split(',')
-    myjointintalone=list(map(eval, myjoint))
-    n=0
+    myjointintalone = list(map(lambda x:int(x), myjoint))
+    n = 0
     points=[]
     l3 = {}
     maxx = -1
@@ -68,8 +68,8 @@ for myjoints in joint:
     miny = 10000
     for num in range(0,len(myjointintalone),3):
         temp=myjointintalone[num:num + 3]
-        x=temp[1]
-        y=temp[2]
+        x=temp[0]
+        y=temp[1]
         v=2
         points.append(x)
         points.append(y)
@@ -86,8 +86,8 @@ for myjoints in joint:
             l3['category_id'] = 1
             l3['id'] = sum_n
             l3['segmentation'] = [[minx, miny, 2, 2, 3, 3]]
-            l3['bbox']=[minx,miny,maxx-minx,maxy-miny]
-            l3['num_keypoints'] = 3
+            l3['bbox']=[minx,miny-EXPAND,maxx-minx,maxy-miny+EXPAND]
+            l3['num_keypoints'] = 30
             l3['iscrowd'] = 0
             l3['area']=1000
             Annotations.append(l3)

@@ -23,8 +23,8 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 16
-base_lr = 2e-5 # 2e-5
+batch_size = 5
+base_lr = 0.01 # 2e-5
 momentum =0.9
 weight_decay = 5e-4
 lr_policy =  "step"
@@ -152,8 +152,8 @@ def get_loss_funcs():
     losses["weight_stage4_L2"] = _eucl_loss
     losses["weight_stage5_L1"] = _eucl_loss
     losses["weight_stage5_L2"] = _eucl_loss
-    losses["weight_stage6_L1"] = _eucl_loss
-    losses["weight_stage6_L2"] = _eucl_loss
+    #losses["weight_stage6_L1"] = _eucl_loss
+    #losses["weight_stage6_L2"] = _eucl_loss
 
     return losses
 
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     _step_decay = partial(step_decay,
                           iterations_per_epoch=iterations_per_epoch
                           )
-    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=10, mode='auto')
+    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=20, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
                                  verbose=0, save_best_only=False,
                                  save_weights_only=True, mode='min', period=1)
@@ -239,9 +239,9 @@ if __name__ == '__main__':
                         nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-
+    adam=optimizers.Nadam(lr=base_lr)
     loss_funcs = get_loss_funcs()
-    model.compile(loss=loss_funcs, optimizer=multisgd, metrics=["accuracy"])
+    model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
     model.fit_generator(train_gen,
                         steps_per_epoch=train_samples // batch_size,
                         epochs=max_iter,

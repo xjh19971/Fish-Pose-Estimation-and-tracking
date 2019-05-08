@@ -99,7 +99,11 @@ class Meta(object):
         'img',
         'mask',
         'aug_center',
-        'aug_joints')
+        'aug_joints',
+        'crop_x',
+        'crop_y',
+        'crop_x_max',
+        'crop_y_max')
 
     def __init__(self, img_path, height, width, center, bbox,
                  area, scale, num_keypoints):
@@ -122,8 +126,10 @@ class Meta(object):
         self.mask = None
         self.aug_center = None
         self.aug_joints = None
-
-
+        self.crop_x = None
+        self.crop_y = None
+        self.crop_x_max = None
+        self.crop_y_max = None
 class CocoDataFlow(RNGDataFlow):
     """
     Tensorpack dataflow serving coco data points.

@@ -27,7 +27,7 @@ g2 = tf.Graph()
 sess1 = tf.Session(graph=g1)
 sess2 = tf.Session(graph=g2)
 input_names=['input_1']
-output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
+output_names= ['batch_normalization_10/FusedBatchNorm_1','batch_normalization_12/FusedBatchNorm_1']
 def process (input_image, params, model_params,tf_sess,sess2):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
@@ -310,7 +310,7 @@ if __name__ == '__main__':
             tempb = mapx[1:, :] < 0
             tempc = mapy[:, :-1] > 0
             tempd = mapy[:, 1:] < 0
-            tempe = map_ori > 0.05
+            tempe = map_ori > 0.1
             A = tf.expand_dims(tf.concat([tempa, padxb], 0), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 0), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 1), -1)

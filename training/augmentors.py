@@ -146,7 +146,7 @@ class CropAug(ImageAugmentor):
     """
     Crops images and coordinates
     """
-    def __init__(self, crop_x, crop_y, center_perterb_max=40, border_value=0, mask_border_val=0):
+    def __init__(self, crop_x_max, crop_y_max,crop_x_min, crop_y_min, center_perterb_max=40, border_value=0, mask_border_val=0):
         super(CropAug, self).__init__()
         self._init(locals())
 
@@ -159,6 +159,8 @@ class CropAug(ImageAugmentor):
         center_x = center[0, 0] + x_offset
         center_y = center[0, 1] + y_offset
 
+        self.crop_x = int(np.random.uniform(self.crop_x_min,self.crop_x_max))
+        self.crop_y = int(np.random.uniform(self.crop_y_min, self.crop_y_max))
         left_up = (int(center_x - self.crop_x / 2),
                    int(center_y - self.crop_y / 2))
 
@@ -170,8 +172,8 @@ class CropAug(ImageAugmentor):
 
         x1, y1 = left_up
 
-        npblank = np.ones((self.crop_y, self.crop_x, 3), dtype=np.uint8) * self.border_value
-
+        npblanktemp = np.ones((self.crop_y, self.crop_x, 3), dtype=np.uint8) * self.border_value
+        npblank = np.ones((self.crop_y_max, self.crop_x_max, 3), dtype=np.uint8) * self.border_value
         if x1 < 0:
             dx = -x1
         else:
@@ -189,10 +191,13 @@ class CropAug(ImageAugmentor):
 
         cropped = img[y1:y1+self.crop_y-dy, x1:x1+self.crop_x-dx, :]
         cropped_h, cropped_w = cropped.shape[:2]
-        npblank[dy:dy+cropped_h, dx:dx+cropped_w, :] = cropped
+        npblanktemp[dy:dy+cropped_h, dx:dx+cropped_w, :] = cropped
+        #npblank[:npblanktemp.shape[0],:npblanktemp.shape[1],:]=npblanktemp
+        npblank[int(self.crop_x_max/2-npblanktemp.shape[0]/2):int(self.crop_x_max/2+npblanktemp.shape[0]/2),
+            int( self.crop_y_max/2-npblanktemp.shape[1]/2):int(self.crop_y_max/2+npblanktemp.shape[1]/2), :] = npblanktemp
 
         if mask is not None:
-            new_mask = np.ones((self.crop_y, self.crop_x), dtype=np.uint8) \
+            new_mask = np.ones((self.crop_image_y, self.crop_image_x), dtype=np.uint8) \
                        * self.mask_border_val
             cropped_mask = mask[y1:y1 + self.crop_y - dy, x1:x1 + self.crop_x - dx]
             cropped_h, cropped_w = cropped_mask.shape[:2]

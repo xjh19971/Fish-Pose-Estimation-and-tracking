@@ -1,6 +1,6 @@
 import os
 import re
-rootdir='./train_data/'
+rootdir='.'
 list = os.listdir(rootdir)
 for i in range(0,len(list)):
     path = os.path.join(rootdir,list[i])

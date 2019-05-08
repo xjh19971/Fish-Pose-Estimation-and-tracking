@@ -6,7 +6,7 @@ from pycocotools.coco import maskUtils
 
 from tensorpack.dataflow.common import BatchData, MapData
 from tensorpack.dataflow.common import TestDataSpeed
-from tensorpack.dataflow.parallel import PrefetchDataZMQ
+from tensorpack.dataflow.parallel import PrefetchData
 
 from training.augmentors import ScaleAug, RotateAug, CropAug, FlipAug, \
     joints_to_point8, point8_to_joints, AugImgMetadata
@@ -17,10 +17,11 @@ KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2
 
 ALL_PAF_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
+    np.ones((400, 400, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
 
 ALL_HEATMAP_MASK = np.repeat(
-    np.ones((46, 46, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
+    np.ones((400, 400, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
+
 
 AUGMENTORS_LIST = [
 
@@ -28,12 +29,12 @@ AUGMENTORS_LIST = [
                  scale_max=1,
                  target_dist=0.15,
                  interp=cv2.INTER_CUBIC),
-        RotateAug(rotate_max_deg=180,
+        RotateAug(rotate_max_deg=360,
                   interp=cv2.INTER_CUBIC,
                   border=cv2.BORDER_CONSTANT,
                   border_value=(128, 128, 128), mask_border_val=1),
 
-        CropAug(368, 368, center_perterb_max=40, border_value=(128, 128, 128), #40
+        CropAug(320, 320, 120, 120, center_perterb_max=0, border_value=(128, 128, 128), #40
                  mask_border_val=1),
 
         FlipAug(num_parts=KEY_POINT_NUM-1, prob=0.5),
@@ -101,6 +102,12 @@ def augment(components):
                             scale=meta.scale))
 
         # augment joints
+        if AUGMENTORS_LIST.index(aug)==2:
+            meta.crop_x = aug.crop_x
+            meta.crop_y = aug.crop_y
+            meta.crop_x_max=aug.crop_x_max
+            meta.crop_y_max = aug.crop_y_max
+            params=(params[0]-int(aug.crop_x_max/2-aug.crop_x/2),params[1]-int(aug.crop_y_max/2-aug.crop_y/2))
         aug_joints = aug.augment_coords(aug_joints, params)
 
         # after flipping horizontaly the left side joints and right side joints are also
@@ -165,22 +172,22 @@ def build_sample(components):
         mask_paf = ALL_PAF_MASK
         mask_heatmap = ALL_HEATMAP_MASK
     else:
-        mask_paf = create_all_mask(meta.mask, KEY_POINT_LINK, stride=8)
-        mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=8)
+        mask_paf = create_all_mask(meta.mask, KEY_POINT_LINK, stride=1)
+        mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=1)
 
-    #for fpn
-    heatmap0 = create_heatmap(JointsLoader.num_joints_and_bkg, 46, 46,
-                             meta.aug_joints, 5.0, stride=8)
+    stride=4
+    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
+                             int(meta.crop_y/stride),int(meta.crop_x/stride), meta.aug_joints, 3.25, stride=stride)
 
-    pafmap0 = create_paf(JointsLoader.num_connections, 46, 46,
-                        meta.aug_joints, 1, stride=8)
+    pafmap = create_paf(JointsLoader.num_connections, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
+                       int(meta.crop_y/stride),int(meta.crop_x/stride),meta.aug_joints, 0.8, stride=stride)
 
     # release reference to the image/mask/augmented data. Otherwise it would easily consume all memory at some point
     meta.mask = None
     meta.img = None
     meta.aug_joints = None
     meta.aug_center = None
-    return [image.astype(np.uint8), mask_paf, mask_heatmap, pafmap0, heatmap0]
+    return [image.astype(np.uint8), mask_paf, mask_heatmap, pafmap, heatmap]
 
 
 def get_dataflow(annot_path, img_dir):
@@ -199,7 +206,7 @@ def get_dataflow(annot_path, img_dir):
     df = MapData(df, augment)
     df = MapData(df, apply_mask)
     df = MapData(df, build_sample)
-    df = PrefetchDataZMQ(df, nr_proc=4) #df = PrefetchData(df, 2, 1)
+    df = PrefetchData(df, 2, 1) #df = PrefetchData(df, 2, 1)
 
     return df
 
@@ -213,14 +220,10 @@ def batch_dataflow(df, batch_size):
     :return: dataflow of batches
     """
     df = BatchData(df, batch_size, use_list=False)
-    #df = MapData(df, lambda x: (
-    #    [x[0], x[1], x[2]],
-    #    [x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4]])
-    #             )
     df = MapData(df, lambda x: (
         [x[0], x[1], x[2]],
-        [x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],x[3], x[4],])
-                 )
+        [x[3], x[4]])
+    )
     df.reset_state()
     return df
 
@@ -242,7 +245,7 @@ if __name__ == '__main__':
     df = MapData(df, augment)
     df = MapData(df, apply_mask)
     df = MapData(df, build_sample)
-    df = PrefetchDataZMQ(df, nr_proc=4)
+    df = PrefetchData(df, nr_proc=4)
     df = BatchData(df, batch_size, use_list=False)
     df = MapData(df, lambda x: (
         [x[0], x[1], x[2]],

@@ -11,16 +11,19 @@ from scipy.spatial import KDTree
 from scipy.ndimage.filters import gaussian_filter
 import util
 from config_reader import config_reader
-
+import matplotlib.pyplot as plt
+import pydensecrf.densecrf as dcrf
+from pydensecrf.utils import compute_unary, create_pairwise_bilateral,create_pairwise_gaussian, softmax_to_unary
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
-PAD = 60
-video_process = 5
+PAD = 64
+video_process = 1
 Kalman=True
 detected = []
+CRF=True
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1, 2], [2, 3]]
 
@@ -31,7 +34,7 @@ mapIdx = [[2, 3], [4, 5]]
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 
 input_names = ['input_1']
-output_names = ['batch_normalization_11/FusedBatchNorm_1', 'batch_normalization_14/FusedBatchNorm_1']
+output_names = ['batch_normalization_11/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -189,7 +192,18 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
         paf = cv2.resize(paf, (orishape[0], orishape[1]), interpolation=cv2.INTER_CUBIC)
 
         heatmap_avg[i, :, :, :] = heatmap
-        paf_avg[i, :, :, :] = paf
+        paf_avg[i,:,:,:]=paf
+
+        for j in range(3):
+            heatmap_nom=np.zeros_like(heatmap[:,:,j])
+            cv2.normalize(heatmap[:,:,j],heatmap_nom,255,0,cv2.NORM_MINMAX)
+            heatmap_nom=heatmap_nom.astype(np.uint8)
+            cv2.imwrite('heatmap'+str(j)+'.jpg',heatmap_nom)
+        for j in range(4):
+            paf_nom = np.zeros_like(paf[:, :, j])
+            cv2.normalize(paf[:, :, j], paf_nom, 255, 0, cv2.NORM_MINMAX)
+            paf_nom = paf_nom.astype(np.uint8)
+            cv2.imwrite('paf'+str(j)+'.jpg',paf_nom)
 
     t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
@@ -216,7 +230,7 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
 
     t3 = time.time()
     mid_num = 20
-    limit = [[150, 10], [150, 10]]
+    limit = [[75, 10], [75, 10]]
     subset_all = []
     candidate_all = []
     checkpoint = 0
@@ -262,7 +276,7 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
                         # score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
                         #    0.5 * oriImg.shape[0] / norm - 1, 0)
                         score_with_dist_prior = sum(score_midpts) / len(score_midpts)
-                        criterion1 = len(np.nonzero(score_midpts > 0.01)[0]) > 0.8 * len(
+                        criterion1 = len(np.nonzero(score_midpts > 0.01)[0]) > 0.7 * len(
                             score_midpts)
                         criterion2 = score_with_dist_prior > 0
                         if criterion1 and criterion2:
@@ -564,7 +578,7 @@ if __name__ == '__main__':
             init = tf.global_variables_initializer()
             sess2.run(init)
             sess2 = tf.Session(config=tf_config)
-    i = -500 # default is 0
+    i = 0 # default is 0
     flist = []
     kalmangroup=[]
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
@@ -579,7 +593,7 @@ if __name__ == '__main__':
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
             #if i>38:
-            #cv2.imwrite('can.png', canvas)
+            cv2.imwrite('can.jpg', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
