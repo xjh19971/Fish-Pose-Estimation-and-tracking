@@ -207,5 +207,5 @@ def get_testing_model():
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
 
     model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
-
+    model.summary()
     return model

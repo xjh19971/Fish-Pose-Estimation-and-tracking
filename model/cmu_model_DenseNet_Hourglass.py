@@ -148,28 +148,33 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
+    stage=3
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
     img_size = None
+    weight_decay=None
     img_input_shape = (img_size, img_size, 3)
-
+    vec_input_shape = (None, None, KEY_POINT_LINK)
+    heat_input_shape = (None, None, KEY_POINT_NUM)
 
     inputs = []
 
     img_input = Input(shape=img_input_shape)
-
-    weight_decay=None
+    #vec_weight_input = Input(shape=vec_input_shape)
+    #heat_weight_input = Input(shape=heat_input_shape)
 
     inputs.append(img_input)
-
+    #inputs.append(vec_weight_input)
+    #inputs.append(heat_weight_input)
 
     img_normalized = Lambda(lambda x: x / 256 - 0.5)(img_input)  # [-0.5, 0.5]
 
-    stage0_out = vgg_block(img_normalized, weight_decay, [6, 12, 24, 16])
+    # VGG
+    stage0_out = vgg_block(img_normalized, weight_decay)
 
-    # stage1_out = stage1_block(stage0_out[-1], weight_decay, rates=[1, 2, 3])
+    stage1_out = stage1_block(stage0_out, weight_decay, stage)
 
-    stage2_out = stage2_block(stage0_out[-1], stage0_out, weight_decay, np_branch1, np_branch2, [24, 12, 6])
+    stage2_out = stage2_block(stage1_out, weight_decay, np_branch1, np_branch2)
 
     model = Model(inputs=inputs, outputs=stage2_out)
     model.summary()

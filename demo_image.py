@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 import os
 import util
+import random
 from config_reader import config_reader
 import shutil
 import re
@@ -26,12 +27,17 @@ g1 = tf.Graph()
 g2 = tf.Graph()
 sess1 = tf.Session(graph=g1)
 sess2 = tf.Session(graph=g2)
+RANDOM=True
 input_names=['input_1']
 output_names= ['batch_normalization_10/FusedBatchNorm_1','batch_normalization_12/FusedBatchNorm_1']
 def process (input_image, params, model_params,tf_sess,sess2):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
-    multiplier = [x * model_params['boxsize'] / oriImg.shape[0] for x in params['scale_search']]
+    if RANDOM:
+        sc=random.random()*0.5+1
+    else:
+        sc=1
+    multiplier = [sc]
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
@@ -55,14 +61,14 @@ def process (input_image, params, model_params,tf_sess,sess2):
         output_blobs=[tf_paf,tf_heatmap]
         # extract outputs, resize, and remove padding
         heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
-        heatmap = cv2.resize(heatmap, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+        heatmap = cv2.resize(heatmap, (0, 0), fx=8, fy=8,
                              interpolation=cv2.INTER_CUBIC)
         heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
         heatmap = cv2.resize(heatmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
 
         paf = np.squeeze(output_blobs[0])  # output 0 is PAFs
-        paf = cv2.resize(paf, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+        paf = cv2.resize(paf, (0, 0), fx=8, fy=8,
                          interpolation=cv2.INTER_CUBIC)
         paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
         paf = cv2.resize(paf, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
@@ -91,7 +97,7 @@ def process (input_image, params, model_params,tf_sess,sess2):
     t3 = time.time()
     connection_all = []
     special_k = []
-    mid_num = 10
+    mid_num = 20
     limit=[[200,10],[200,10]]
     for k in range(len(mapIdx)):
         score_mid = paf_avg[:, :, [x - 2 for x in mapIdx[k]]]
@@ -331,6 +337,7 @@ if __name__ == '__main__':
     csv_data=[]
     n=0
     mode=1
+    total=0
     if mode==1:
         for filename in os.listdir(r"./"+input_image):
             data = {}
@@ -340,11 +347,13 @@ if __name__ == '__main__':
             print ('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
                     toc - t5))
+            #cv2.imwrite('result.png', canvas)
             data['im_path']=filename
             data['joints1']= subset[0]
             data['joints2'] = subset[1]
             data['joints3'] = subset[2]
             csv_data.append(data)
+            total=total+toc - tic
             n=n+1
     else:
         tic = time.time()
@@ -354,8 +363,9 @@ if __name__ == '__main__':
         print('processing time is %.5f' % (toc - tic))
         print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) + str(t5 - t4) + str(
             toc - t5))
-        cv2.imwrite('result.png', canvas)
+        #cv2.imwrite('result.png', canvas)
     sess1.close()
     sess2.close()
     df=pd.DataFrame(csv_data,columns=['im_path','joints1','joints2','joints3'])
     df.to_csv("val.csv",index=False)
+    print(total/n)

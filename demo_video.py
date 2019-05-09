@@ -20,7 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 64
-video_process = 1
+video_process = 10
 Kalman=True
 detected = []
 CRF=True
@@ -34,7 +34,7 @@ mapIdx = [[2, 3], [4, 5]]
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 
 input_names = ['input_1']
-output_names = ['batch_normalization_11/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
+output_names= ['batch_normalization_11/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -193,7 +193,8 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
 
         heatmap_avg[i, :, :, :] = heatmap
         paf_avg[i,:,:,:]=paf
-
+        '''
+        ## for debugging
         for j in range(3):
             heatmap_nom=np.zeros_like(heatmap[:,:,j])
             cv2.normalize(heatmap[:,:,j],heatmap_nom,255,0,cv2.NORM_MINMAX)
@@ -204,6 +205,7 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
             cv2.normalize(paf[:, :, j], paf_nom, 255, 0, cv2.NORM_MINMAX)
             paf_nom = paf_nom.astype(np.uint8)
             cv2.imwrite('paf'+str(j)+'.jpg',paf_nom)
+            '''
 
     t2 = time.time()
     input = sess2.graph.get_tensor_by_name('input:0')
@@ -564,7 +566,7 @@ if __name__ == '__main__':
             tempb = mapx[:, 1:, :] < 0
             tempc = mapy[:, :, :-1] > 0
             tempd = mapy[:, :, 1:] < 0
-            tempe = map_ori > 0.1
+            tempe = map_ori > 0.3
             A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)

@@ -287,39 +287,50 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 6
+    stages = 5
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
-    img_size = 368
-    img_input_shape = (None, None, 3)
-
+    img_size = None
+    img_input_shape = (img_size, img_size, 3)
+    vec_input_shape = (None, None, KEY_POINT_LINK)
+    heat_input_shape = (None, None, KEY_POINT_NUM)
+    weight_decay=None
     inputs = []
+    outputs = []
 
     img_input = Input(shape=img_input_shape)
+    #vec_weight_input = Input(shape=vec_input_shape)
+    #heat_weight_input = Input(shape=heat_input_shape)
+
     inputs.append(img_input)
+    #inputs.append(vec_weight_input)
+    #inputs.append(heat_weight_input)
 
     img_normalized = Lambda(lambda x: x / 256 - 0.5)(img_input)  # [-0.5, 0.5]
 
     # VGG
-    stage0_out,x1 = vgg_block(img_normalized, None)
+    stage0_out,x1 = vgg_block(img_normalized, weight_decay)
 
     # stage 1 - branch 1 (PAF)
-    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, None)
+    stage1_branch1_out = stage1_block(stage0_out, np_branch1, 1, weight_decay)
 
     # stage 1 - branch 2 (confidence maps)
-    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, None)
+    stage1_branch2_out = stage1_block(stage0_out, np_branch2, 2, weight_decay)
 
-    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out,x1])
-
-    # stage t >= 2
+    x = Concatenate()([stage1_branch1_out, stage1_branch2_out, stage0_out])
+    #w1 = apply_mask(stage1_branch1_out, vec_weight_input, heat_weight_input, np_branch1, 1, 1, is_weight=True)
+    #w2 = apply_mask(stage1_branch2_out, vec_weight_input, heat_weight_input, np_branch2, 1, 2, is_weight=False)
+    # stage sn >= 2
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
-        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1,None)
+        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
         # stage SN - branch 2 (confidence maps)
-        stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, None)
+        stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
+        #w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1, is_weight=True)
+        #w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2, is_weight=False)
         if (sn < stages):
-            x = Concatenate()([stageT_branch1_out, stageT_branch2_out, x])
+            x = Concatenate()([stageT_branch1_out, stageT_branch2_out, stage0_out])
 
-    model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
+    model = Model(inputs=inputs, outputs=[stageT_branch1_out, stageT_branch2_out])
     model.summary()
     return model

@@ -110,7 +110,7 @@ def tiny_inception_block(input_tensor, filters, stage, branch, weight_decay):
     x4 = relu(x4)'''
 
     x = Concatenate()([x1,x2,x3])
-    x = conv(x, 256, 1, conv_name_base + 'd', weight_decay)
+    x = conv(x, 128, 1, conv_name_base + 'd', weight_decay)
     x = BatchNormalization(axis=bn_axis, name=bn_name_base + 'e', epsilon=1e-5, momentum=0.9)(x)
     x = add([x, input_tensor])
     x= relu(x)
@@ -215,11 +215,11 @@ def vgg_block(x, weight_decay):
 def stage1_block(x, num_p, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
-    x = conv(x, 256, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
+    x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
-    x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2 * 1 - 1, branch, (weight_decay, 0))
-    x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2 * 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [64, 128], [64, 128, 128]], 2 * 1 - 1, branch, (weight_decay, 0))
+    x = tiny_inception_block(x, [[128], [64, 128], [64, 128, 128]], 2 * 1, branch, (weight_decay, 0))
     return x
 
 
@@ -227,7 +227,7 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
     input=x
-    x = conv(x, 256, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
+    x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
     x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
     x = relu(x)
     x = tiny_inception_block(x, [[128], [128, 128], [128, 128, 128]], 2 * stage - 1, branch, (weight_decay, 0))
@@ -300,22 +300,31 @@ def get_training_model(weight_decay):
 
 
 def get_testing_model():
-    stages = 6
+    stages = 5
     np_branch1 = KEY_POINT_LINK
     np_branch2 = KEY_POINT_NUM
-    img_size = 368
-    img_input_shape = (None, None, 3)
+    img_size = None
+    weight_decay=None
+    img_input_shape = (img_size, img_size, 3)
+    vec_input_shape = (None, None, KEY_POINT_LINK)
+    heat_input_shape = (None, None, KEY_POINT_NUM)
 
     inputs = []
+    outputs = []
 
     img_input = Input(shape=img_input_shape)
+    vec_weight_input = Input(shape=vec_input_shape)
+    heat_weight_input = Input(shape=heat_input_shape)
+
     inputs.append(img_input)
+    inputs.append(vec_weight_input)
+    inputs.append(heat_weight_input)
 
     img_normalized = Lambda(lambda x: x / 256 - 0.5)(img_input)  # [-0.5, 0.5]
 
     # VGG
-    stage0_out, x1 = vgg_block(img_normalized, weight_decay)
-    x = Concatenate()([x1, stage0_out])
+    stage0_out,x1 = vgg_block(img_normalized, weight_decay)
+    x = Concatenate()([x1,stage0_out])
     # stage 1 - branch 1 (PAF)
     stage1_branch1_out = stage1_block(x, np_branch1, 1, weight_decay)
 
@@ -324,15 +333,19 @@ def get_testing_model():
 
     x = Concatenate()([stage1_branch1_out, stage1_branch2_out, x])
 
-    # stage t >= 2
+
+    # stage sn >= 2
     for sn in range(2, stages + 1):
         # stage SN - branch 1 (PAF)
-        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1,None)
+        stageT_branch1_out = stageT_block(x, np_branch1, sn, 1, weight_decay)
         # stage SN - branch 2 (confidence maps)
-        stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, None)
+        stageT_branch2_out = stageT_block(x, np_branch2, sn, 2, weight_decay)
         if (sn < stages):
             x = Concatenate()([stageT_branch1_out, stageT_branch2_out, x])
-
-    model = Model(inputs=[img_input], outputs=[stageT_branch1_out, stageT_branch2_out])
+    #w1 = apply_mask(stageT_branch1_out, vec_weight_input, heat_weight_input, np_branch1, sn, 1, is_weight=True)
+    #w2 = apply_mask(stageT_branch2_out, vec_weight_input, heat_weight_input, np_branch2, sn, 2, is_weight=False)
+    outputs.append(stageT_branch1_out)
+    outputs.append(stageT_branch2_out)
+    model = Model(inputs=inputs, outputs=outputs)
     model.summary()
     return model
