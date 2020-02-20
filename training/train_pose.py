@@ -18,11 +18,10 @@ K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
 from model.cmu_model_DenseNet_NotPre_RESIZE import get_training_model
-#from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 
 
-batch_size = 8
+batch_size = 10
 base_lr = 0.01 # 2e-5
 weight_decay = 5e-4
 lr_policy ="step"
@@ -135,7 +134,6 @@ def get_loss_funcs():
         return K.sum(K.square(x - y)) / batch_size / 2
 
     losses = {}
-
     losses["Outputbn_1_1"] = _eucl_loss
     losses["Outputbn_1_2"] = _eucl_loss
     losses["Outputbn_2_1"] = _eucl_loss

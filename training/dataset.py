@@ -11,22 +11,22 @@ from tensorpack.dataflow.parallel import PrefetchData
 from training.augmentors import ScaleAug, RotateAug, CropAug, FlipAug, \
     joints_to_point8, point8_to_joints, AugImgMetadata
 from training.dataflow import CocoDataFlow, JointsLoader
-from training.label_maps import create_heatmap, create_paf
+from training.label_maps import create_heatmap, create_paf, create_mask
 
 KEY_POINT_NUM=3+1
 KEY_POINT_LINK=2
 
 ALL_PAF_MASK = np.repeat(
-    np.ones((400, 400, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
+    np.ones((40, 40, 1), dtype=np.uint8), KEY_POINT_LINK*2, axis=2)
 
 ALL_HEATMAP_MASK = np.repeat(
-    np.ones((400, 400, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
+    np.ones((40, 40, 1), dtype=np.uint8), KEY_POINT_NUM, axis=2)
 
 
 AUGMENTORS_LIST = [
 
-        ScaleAug(scale_min=1,
-                 scale_max=1,
+        ScaleAug(scale_min=1.1,
+                 scale_max=0.9,
                  target_dist=0.15,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=360,
@@ -172,16 +172,19 @@ def build_sample(components):
         mask_paf = ALL_PAF_MASK
         mask_heatmap = ALL_HEATMAP_MASK
     else:
-        mask_paf = create_all_mask(meta.mask, KEY_POINT_LINK, stride=1)
-        mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=1)
+        mask_paf = create_all_mask(meta.mask, KEY_POINT_LINK, stride=4)
+        mask_heatmap = create_all_mask(meta.mask, KEY_POINT_NUM, stride=4)
 
-    stride=4
-    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
-                             int(meta.crop_y/stride),int(meta.crop_x/stride), meta.aug_joints, 3.25, stride=stride)
+    stride = 4
+    heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, int(meta.crop_y_max / stride),
+                             int(meta.crop_x_max / stride),
+                             int(meta.crop_y / stride), int(meta.crop_x / stride), meta.aug_joints, 3.5, stride=stride)
 
-    pafmap = create_paf(JointsLoader.num_connections, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
-                       int(meta.crop_y/stride),int(meta.crop_x/stride),meta.aug_joints, 0.8, stride=stride)
+    pafmap = create_paf(JointsLoader.num_connections, int(meta.crop_y_max / stride), int(meta.crop_x_max / stride),
+                        int(meta.crop_y / stride), int(meta.crop_x / stride), meta.aug_joints, 1.00, stride=stride)
 
+    #maskmap, numlist = create_mask(JointsLoader.num_joints_and_bkg,JointsLoader.num_connections,int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
+    #                   int(meta.crop_y/stride),int(meta.crop_x/stride),meta.aug_joints, 4.00, 1, stride=stride)
     # release reference to the image/mask/augmented data. Otherwise it would easily consume all memory at some point
     meta.mask = None
     meta.img = None
@@ -199,7 +202,7 @@ def get_dataflow(annot_path, img_dir):
     :param img_dir: path to the images
     :return: dataflow object
     """
-    df = CocoDataFlow((368, 368), annot_path, img_dir)
+    df = CocoDataFlow((320, 320), annot_path, img_dir)
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)
@@ -238,7 +241,7 @@ if __name__ == '__main__':
     curr_dir = os.path.dirname(__file__)
     annot_path = os.path.join(curr_dir, '../dataset/annotations/person_keypoints_val2017.json')
     img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/val2017/'))
-    df = CocoDataFlow((368, 368), annot_path, img_dir)#, select_ids=[1000])
+    df = CocoDataFlow((320, 320), annot_path, img_dir)#, select_ids=[1000])
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)

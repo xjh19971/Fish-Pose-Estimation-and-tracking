@@ -27,7 +27,7 @@ def _get_bgimg(inp, target_size=None):
     """
     inp = cv2.cvtColor(inp.astype(np.uint8), cv2.COLOR_BGR2RGB)
     if target_size:
-        inp = cv2.resize(inp, target_size, interpolation=cv2.INTER_AREA)
+        inp = cv2.resize(inp, target_size, interpolation=cv2.INTER_CUBIC)
     return inp
 
 
@@ -135,10 +135,10 @@ def build_debug_sample(components):
 
     stride=4
     heatmap = create_heatmap(JointsLoader.num_joints_and_bkg, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
-                             int(meta.crop_y/stride),int(meta.crop_x/stride), meta.aug_joints, 3.25, stride=stride)
+                             int(meta.crop_y/stride),int(meta.crop_x/stride), meta.aug_joints, 3.5, stride=stride)
 
     pafmap = create_paf(JointsLoader.num_connections, int(meta.crop_y_max/stride), int(meta.crop_x_max/stride),
-                       int(meta.crop_y/stride),int(meta.crop_x/stride),meta.aug_joints, 0.8, stride=stride)
+                       int(meta.crop_y/stride),int(meta.crop_x/stride),meta.aug_joints, 1.00, stride=stride)
 
     return [meta, mask_paf, mask_heatmap, pafmap, heatmap]
 
