@@ -3,11 +3,9 @@ from keras.layers.merge import Concatenate
 from keras.layers import Activation, Input, Lambda, ZeroPadding2D, UpSampling2D, Conv2DTranspose
 from keras.layers.convolutional import Conv2D
 from keras.layers.pooling import MaxPooling2D
-from keras.layers.merge import Multiply
 from keras.regularizers import l2
-from keras.initializers import random_normal, constant
+from keras.initializers import he_normal
 from keras.layers import BatchNormalization, add, ReLU, DepthwiseConv2D
-from keras.layers.advanced_activations import PReLU
 import keras.backend as K
 
 KEY_POINT_NUM = 3 + 1
@@ -25,13 +23,13 @@ def STEM_block_trans(input_tensor, filters, stage, weight_decay, change=False, b
         bn_name_base = 'bn' + str(stage) + '_branch'
 
     x4 = convtrans(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1')(x4)
     x4 = relu(x4)
     x4 = convtrans(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay, strides=strides)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2')(x4)
     if change == True:
         shortcut = convtrans(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay, strides=strides)
-        shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1', epsilon=1e-5, momentum=0.9)(shortcut)
+        shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1')(shortcut)
     else:
         shortcut = input_tensor
     x = add([x4, shortcut])
@@ -50,13 +48,13 @@ def STEM_block(input_tensor, filters, stage, weight_decay, change=False, branch=
         bn_name_base = 'bn' + str(stage) + '_branch'
 
     x4 = conv(input_tensor, filters4[0], 3, conv_name_base + 'd1', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd1')(x4)
     x4 = relu(x4)
     x4 = conv(x4, filters4[1], 3, conv_name_base + 'd2', weight_decay)
-    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2', epsilon=1e-5, momentum=0.9)(x4)
+    x4 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd2')(x4)
     if change == True:
         shortcut = conv(input_tensor, filters4[1], 1, conv_name_base + '1', weight_decay)
-        shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd3', epsilon=1e-5, momentum=0.9)(shortcut)
+        shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + 'd3')(shortcut)
     else:
         shortcut = input_tensor
     x = add([x4, shortcut])
@@ -71,10 +69,10 @@ def tiny_inception_block(input_tensor, filters, stage, branch, weight_decay):
     bn_name_base = 'bn' + str(stage) + '_branch' + str(branch)
 
     x2 = conv(input_tensor, filters2[0], 3, conv_name_base + 'b1', weight_decay)
-    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b1')(x2)
     x2 = relu(x2)
     x2 = conv(x2, filters2[1], 3, conv_name_base + 'b2', weight_decay)
-    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2', epsilon=1e-5, momentum=0.9)(x2)
+    x2 = BatchNormalization(axis=bn_axis, name=bn_name_base + 'b2')(x2)
     x = x2
     x = add([x, input_tensor])
     x = relu(x)
@@ -91,8 +89,7 @@ def convtrans(x, nf, ks, name, weight_decay, strides=(1, 1), use_bias=False):
     x = Conv2DTranspose(nf, (ks, ks), padding='same', name=name, strides=strides,
                         kernel_regularizer=kernel_reg,
                         bias_regularizer=bias_reg,
-                        kernel_initializer=random_normal(stddev=0.01),
-                        bias_initializer=constant(0.0),
+                        kernel_initializer=he_normal(),
                         use_bias=use_bias)(x)
     return x
 
@@ -101,7 +98,7 @@ def conv(x, nf, ks, name, weight_decay, strides=(1, 1), use_bias=False):
     kernel_reg = l2(weight_decay[0]) if weight_decay else None
     x = Conv2D(nf, (ks, ks), padding='same', name=name, strides=strides,
                kernel_regularizer=kernel_reg,
-               kernel_initializer=random_normal(stddev=0.01),
+               kernel_initializer=he_normal(),
                use_bias=use_bias)(x)
     return x
 
@@ -138,17 +135,17 @@ def stage1_block(x, num_p, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
     x = conv(x, 128, 1, "Mconv1_stage1_L%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = BatchNormalization(axis=bn_axis)(x)
     x = relu(x)
     x = tiny_inception_block(x, [128, 128], 2 * 1 - 1, branch, (weight_decay, 0))
     x = tiny_inception_block(x, [128, 128], 2 * 1, branch, (weight_decay, 0))
     x1 = convtrans(x, num_p, 4, "Output_1_%d" % branch, (weight_decay, 0), strides=(2, 2), use_bias=True)
     x2 = conv(x1, int(x.shape[3]), 4, "Output2_1_%d" % branch, (weight_decay, 0), strides=(2, 2))
-    x2 = BatchNormalization(name="Outputbn2_1_%d" % branch, axis=bn_axis, epsilon=1e-5, momentum=0.9)(x2)
+    x2 = BatchNormalization(name="Outputbn2_1_%d" % branch, axis=bn_axis)(x2)
     x2 = relu(x2)
     x = Concatenate()([x, x2])
     x = conv(x, int(int(x.shape[3]) / 2), 1, "Output3_1_%d" % branch, (weight_decay, 0))
-    x = BatchNormalization(name="Outputbn3_1_%d" % branch, axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = BatchNormalization(name="Outputbn3_1_%d" % branch, axis=bn_axis)(x)
     x = relu(x)
     return x, x1
 
@@ -157,17 +154,17 @@ def stageT_block(x, num_p, stage, branch, weight_decay):
     bn_axis = 1 if K.image_data_format() == 'channels_first' else -1
     # Block 1
     x = conv(x, 128, 1, "Mconv1_stage%d_L%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = BatchNormalization(axis=bn_axis)(x)
     x = relu(x)
     x = tiny_inception_block(x, [128, 128], 2 * stage - 1, branch, (weight_decay, 0))
     x = tiny_inception_block(x, [128, 128], 2 * stage, branch, (weight_decay, 0))
     x1 = convtrans(x, num_p, 4, "Output_%d_%d" % (stage, branch), (weight_decay, 0), strides=(2, 2), use_bias=True)
     x2 = conv(x1, int(x.shape[3]), 4, "Output2_%d_%d" % (stage, branch), (weight_decay, 0), strides=(2, 2))
-    x2 = BatchNormalization(name="Outputbn2_%d_%d" % (stage, branch), axis=bn_axis, epsilon=1e-5, momentum=0.9)(x2)
+    x2 = BatchNormalization(name="Outputbn2_%d_%d" % (stage, branch), axis=bn_axis)(x2)
     x2 = relu(x2)
     x = Concatenate()([x, x2])
     x = conv(x, int(int(x.shape[3]) / 2), 1, "Output3_%d_%d" % (stage, branch), (weight_decay, 0))
-    x = BatchNormalization(name="Outputbn3_%d_%d" % (stage, branch), axis=bn_axis, epsilon=1e-5, momentum=0.9)(x)
+    x = BatchNormalization(name="Outputbn3_%d_%d" % (stage, branch), axis=bn_axis)(x)
     x = relu(x)
     return x, x1
 
