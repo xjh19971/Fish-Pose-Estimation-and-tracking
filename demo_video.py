@@ -14,13 +14,14 @@ from config_reader import config_reader
 import matplotlib.pyplot as plt
 import pydensecrf.densecrf as dcrf
 from pydensecrf.utils import compute_unary, create_pairwise_bilateral,create_pairwise_gaussian, softmax_to_unary
+import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 currentDT = time.localtime()
 start_datetime = time.strftime("-%m-%d-%H-%M-%S", currentDT)
 PAD = 64
-video_process = 10
+video_process = 1
 Kalman=True
 detected = []
 CRF=True
@@ -34,7 +35,7 @@ mapIdx = [[2, 3], [4, 5]]
 colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
 
 input_names = ['input_1']
-output_names= ['batch_normalization_11/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
+output_names= ['Output_5_1/BiasAdd', 'Output_5_2/BiasAdd']
 font = cv2.FONT_HERSHEY_SIMPLEX
 filterlist = []
 g1_1 = tf.Graph()
@@ -43,7 +44,11 @@ sess1_1 = tf.Session(graph=g1_1)
 sess2 = tf.Session(graph=g2)
 
 
-
+def dataToCsv(file, data, columns):
+    data = list(data)
+    columns = list(columns)
+    file_data = pd.DataFrame(data, index=range(len(data)), columns=columns)
+    file_data.to_csv(file)
 
 def CreateKalman():
     kalman1 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
@@ -57,7 +62,7 @@ def CreateKalman():
     kalman0.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)  # 系统测量矩阵
     kalman0.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)  # 状态转移矩阵
     kalman0.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-                                       np.float32) * 0.003  # 系统过程噪声协方差
+                                       np.float32) * 0.003 # 系统过程噪声协方差
     kalman0.measurementNoiseCov = np.array([[1, 0], [0, 1]],
                                        np.float32) * 0.03  # 系统过程噪声协方差
     kalman2 = cv2.KalmanFilter(4, 2)  # 4：状态数，包括（x，y，dx，dy）坐标及速度（每次移动的距离）；2：观测量，能看到的是坐标值
@@ -208,10 +213,11 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
             '''
 
     t2 = time.time()
+
     input = sess2.graph.get_tensor_by_name('input:0')
     output0 = sess2.graph.get_tensor_by_name('output0:0')
     output0 = sess2.run(output0, feed_dict={input: heatmap_avg[:, :, :, 0:3]})
-
+    '''
     all_peaks = [[] for i in range(lenimg)]
     check = 0
     for i in range(0, lenimg):
@@ -229,10 +235,35 @@ def predict(oriImg, model_params, tf_sess, lenimg=1, flist=None):
         temp = [[temp[i][1], temp[i][2], temp[i][4], i + check] for i in range(len(temp))]
         all_peaks[i].append(temp)
         check = check + len(temp)
+'''
+    all_peaks = [[] for i in range(lenimg)]
+    peak_counter = 0
+    for i in range(0, lenimg):
+        for part in range(3):
+            map_ori = heatmap_avg[i,: , :, part]
+            map = gaussian_filter(map_ori, sigma=3.5)
 
+            map_left = np.zeros(map.shape)
+            map_left[1:, :] = map[:-1, :]
+            map_right = np.zeros(map.shape)
+            map_right[:-1, :] = map[1:, :]
+            map_up = np.zeros(map.shape)
+            map_up[:, 1:] = map[:, :-1]
+            map_down = np.zeros(map.shape)
+            map_down[:, :-1] = map[:, 1:]
+
+            peaks_binary = np.logical_and.reduce(
+                (map >= map_left, map >= map_right, map >= map_up, map >= map_down, map > 0.2))
+            peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
+            peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
+            id = range(peak_counter, peak_counter + len(peaks))
+            peaks_with_score_and_id = [peaks_with_score[i] + (id[i],) for i in range(len(id))]
+
+            all_peaks[i].append(peaks_with_score_and_id)
+            peak_counter += len(peaks)
     t3 = time.time()
     mid_num = 20
-    limit = [[75, 10], [75, 10]]
+    limit = [[100, 5], [100, 5]]
     subset_all = []
     candidate_all = []
     checkpoint = 0
@@ -415,54 +446,61 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
                     suspectpoint.append([newloc,dis,index])
                 else:
                     No = index
-                    if detected[No] == 1:
+                    detected[No][1] = min(detected[No][1] + 1, 3)
+                    detected[No][0] = 1
+                    flistnew[No] = newloc
+                    '''if detected[No][0] == 1:
                         flistnew[No] =Fuse(newloc,flistnew[No])
                         continue
                     else:
-                        detected[No] = 1
-                        flistnew[No] = newloc
+                        detected[No][1] = min(detected[No][1]+1,3)
+                        detected[No][0] = 1
+                        flistnew[No] = newloc'''
             else:
-                detected.append(1)
+                detected.append([1,0])
                 flistnew.append(newloc)
     if suspectpoint!=[]:
         for i in range(len(suspectpoint)):
-            if detected[suspectpoint[i][2]]==1:
-                detected.append(1)
+            if detected[suspectpoint[i][2]][0]==1:
+                detected.append([1,0])
                 flistnew.append(suspectpoint[i][0])
             else:
                 if suspectpoint[i][1]<=80:
                     No=suspectpoint[i][2]
-                    detected[No] = 1
+                    detected[No][0]=1
+                    detected[No][1] = min(detected[No][1]+1,3)
                     flistnew[No] = suspectpoint[i][0]
     if Kalman:
         for i in range(len(flistnew)):
             if i >=len(flist):
                 newKalman = CreateKalman()
                 n=0
+                #init
                 while (n<=20):
                     newloc1 = Update(flistnew[i], newKalman,input_image.shape[1],input_image.shape[0],first=True)
                     n=n+1
                 kalmangroup.append(newKalman)
                 flistnew[i]=newloc1
             else:
-                if detected[i]>=-5:
+                if detected[i][0]>=-5:
                     flistnew[i] = Update(flistnew[i], kalmangroup[i],input_image.shape[1],input_image.shape[0])
     for i in range(len(detected)):
         if i>=len(detected):
             break
-        item=detected[i]
-        if item<=-20:
+        item=detected[i][0]
+        if item<=-20 or (item<=0 and detected[i][1]<3):
             flistnew.remove(flistnew[i])
             detected.remove(detected[i])
             if Kalman:
                 kalmangroup.remove(kalmangroup[i])
             i=i-1
     for i in range(len(detected)):
-        detected[i]=detected[i]-1
+        detected[i][0]=detected[i][0]-1
     t5 = time.time()
+    lamap={2:3,3:1,0:5,4:4,1:2}
     for i in range(len(flistnew)):
         newloc=flistnew[i]
-        if detected[i]>=-5:
+        if detected[i][0]>=-5 and detected[i][1]>=3:
             lost = newloc[-1]
             if lost == 0:
                 loc = [(newloc[0], newloc[1]), (newloc[2], newloc[3])]
@@ -481,7 +519,7 @@ def process(input_image, f, params, model_params, tf_sess, flist, kalmangroup):
                 cv2.circle(canvas, loc[2], 4, colors[2], thickness=-1)
                 canvas = cv2.line(canvas, loc[1], loc[0], colors[0], 2)
                 canvas = cv2.line(canvas, loc[0], loc[2], colors[1], 2)
-            cv2.putText(canvas, str(i), loc[0], font, 0.8, (255, 255, 255), 2)
+            cv2.putText(canvas, str(lamap[i]), loc[0], font, 0.8, (255, 255, 255), 2)
     flist = flistnew
     t6 = time.time()
 
@@ -566,7 +604,7 @@ if __name__ == '__main__':
             tempb = mapx[:, 1:, :] < 0
             tempc = mapy[:, :, :-1] > 0
             tempd = mapy[:, :, 1:] < 0
-            tempe = map_ori > 0.3
+            tempe = map_ori > 0.15
             A = tf.expand_dims(tf.concat([tempa, padxb], 1), -1)
             B = tf.expand_dims(tf.concat([tempb, padxb], 1), -1)
             C = tf.expand_dims(tf.concat([tempc, padyb], 2), -1)
@@ -583,21 +621,28 @@ if __name__ == '__main__':
     i = 0 # default is 0
     flist = []
     kalmangroup=[]
+    datalist=[]
+    detected=[]
     while (cam.isOpened()) and ret_val == True and i < ending_frame:
         if i % frame_rate_ratio == 0 and i >= 0:
             tic = time.time()
             # generate image with body parts
             canvas, t1, t2, t3, t4, t5, t6, flist,kalmangroup = process(input_image, i, params, model_params, sess1_1,
                                                                          flist,kalmangroup)
+            datalist.append([])
+            for k in range(5):
+                for j in range(2):
+                    datalist[i].append(flist[k][j])
             print('processing frame is %d' % i)
             toc = time.time()
             print('processing time is %.5f' % (toc - tic))
             print('processing time is ' + str(t1 - tic) + str(t2 - t1) + str(t3 - t2) + str(t4 - t3) +
                   str(t5 - t4) + str(t6 - t5) + str(toc - t6))
             #if i>38:
-            cv2.imwrite('can.jpg', canvas)
+            #cv2.imwrite('can.jpg', canvas)
             out.write(canvas)
         ret_val, input_image = cam.read()
         i += 1
+    dataToCsv("dl.csv",datalist,[i for i in range(10)])
     sess1_1.close()
     sess2.close()

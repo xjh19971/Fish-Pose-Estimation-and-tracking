@@ -12,7 +12,7 @@ from config_reader import config_reader
 
 from scipy.ndimage.filters import gaussian_filter
 import pandas as pd
-
+import random
 # find connection in the specified sequence, center 29 is in the position 15
 limbSeq = [[1,2],[2,3]]
 
@@ -21,11 +21,11 @@ mapIdx = [[2,3],[4,5]]
 
 # visualize
 colors = [[255, 0, 0], [0, 255, 0],[0, 0, 255]]
-
+RANDOM=False
 g1 = tf.Graph()
 sess1 = tf.Session(graph=g1)
 input_names=['input_1']
-output_names= ['batch_normalization_12/FusedBatchNorm_1','batch_normalization_14/FusedBatchNorm_1']
+output_names= ['Output_5_1/BiasAdd', 'Output_5_2/BiasAdd']
 def process (input_image, params, model_params):
 
     oriImg = cv2.imread(input_image)  # B,G,R order
@@ -33,12 +33,15 @@ def process (input_image, params, model_params):
 
     heatmap_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
     paf_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], 4))
-
-    for m in range(len(multiplier)):
-        scale = multiplier[m]
+    if RANDOM:
+        sc=random.random()*0.5+1
+    else:
+        sc=1
+    for m in range(1):
+        scale = sc
 
         imageToTest = cv2.resize(oriImg, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
-        imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_params['stride'],
+        imageToTest_padded, pad = util.padRightDownCorner(imageToTest, 8,
                                                           model_params['padValue'])
 
         input_img = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,0,1,2)) # required shape (1, width, height, channels)
@@ -56,14 +59,14 @@ def process (input_image, params, model_params):
 
         # extract outputs, resize, and remove padding
         heatmap = np.squeeze(output_blobs[1])  # output 1 is heatmaps
-        heatmap = cv2.resize(heatmap, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+        heatmap = cv2.resize(heatmap, (0, 0), fx=4, fy=4,
                              interpolation=cv2.INTER_CUBIC)
         heatmap = heatmap[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3],
                   :]
         heatmap = cv2.resize(heatmap, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
 
         paf = np.squeeze(output_blobs[0])  # output 0 is PAFs
-        paf = cv2.resize(paf, (0, 0), fx=model_params['stride'], fy=model_params['stride'],
+        paf = cv2.resize(paf, (0, 0), fx=4, fy=4,
                          interpolation=cv2.INTER_CUBIC)
         paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
         paf = cv2.resize(paf, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
@@ -73,10 +76,20 @@ def process (input_image, params, model_params):
 
     all_peaks = []
     peak_counter = 0
-
+    ## for debugging
+    for j in range(3):
+        heatmap_nom=np.zeros_like(heatmap_avg[:,:,j])
+        cv2.normalize(heatmap_avg[:,:,j],heatmap_nom,255,0,cv2.NORM_MINMAX)
+        heatmap_nom=heatmap_nom.astype(np.uint8)
+        cv2.imwrite('heatmap'+str(j)+'.jpg',heatmap_nom)
+    for j in range(4):
+        paf_nom = np.zeros_like(paf_avg[:, :, j])
+        cv2.normalize(paf_avg[:, :, j], paf_nom, 255, 0, cv2.NORM_MINMAX)
+        paf_nom = paf_nom.astype(np.uint8)
+        cv2.imwrite('paf'+str(j)+'.jpg',paf_nom)
     for part in range(3):
         map_ori = heatmap_avg[:, :, part]
-        map = gaussian_filter(map_ori, sigma=3)
+        map = gaussian_filter(map_ori, sigma=3.5)
 
         map_left = np.zeros(map.shape)
         map_left[1:, :] = map[:-1, :]
@@ -88,7 +101,7 @@ def process (input_image, params, model_params):
         map_down[:, :-1] = map[:, 1:]
 
         peaks_binary = np.logical_and.reduce(
-            (map >= map_left, map >= map_right, map >= map_up, map >= map_down, map > params['thre1']))
+            (map >= map_left, map >= map_right, map >= map_up, map >= map_down, map > 0.15))
         peaks = list(zip(np.nonzero(peaks_binary)[1], np.nonzero(peaks_binary)[0]))  # note reverse
         peaks_with_score = [x + (map_ori[x[1], x[0]],) for x in peaks]
         id = range(peak_counter, peak_counter + len(peaks))
@@ -132,7 +145,7 @@ def process (input_image, params, model_params):
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
                     score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
                         0.5 * oriImg.shape[0] / norm - 1, 0)
-                    criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.8 * len(
+                    criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.6 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
                     if criterion1 and criterion2:
@@ -202,20 +215,31 @@ def process (input_image, params, model_params):
                     subset = np.vstack([subset, row])
 
     # delete some rows of subset which has few parts occur
-    deleteIdx = [];
+    deleteIdx = []
     for i in range(len(subset)):
         if subset[i][-1] < 2 or subset[i][-2] / subset[i][-1] < 0.4:
             deleteIdx.append(i)
     subset = np.delete(subset, deleteIdx, axis=0)
 
     canvas = cv2.imread(input_image)  # B,G,R order
-    tempdata=[[] for i in range(3)]
-    for i in range(3):
-        for j in range(len(all_peaks[i])):
-            cv2.circle(canvas, all_peaks[i][j][0:2], 1, colors[i], thickness=-1)
-            tempdata[i].append(all_peaks[i][j][0:2])
+    data=[]
+    for n in range(len(subset)):
+        peaks = []
+        tempdata=[]
+        for i in [0, 1, 2]:
+            idx = int(subset[n][i])
+            if int(subset[n][i]) != -1:
+                location = all_peaks[i][int(idx - all_peaks[i][0][3])][0:2]
+                cv2.circle(canvas, location, 4, colors[i], thickness=-1)
+                peaks.append([all_peaks[i][int(idx - all_peaks[i][0][3])][0:2], i])
+                tempdata.append(all_peaks[i][int(idx - all_peaks[i][0][3])][0:2])
+            else:
+                tempdata.append((-1,-1))
+        peaks.append(subset[n][3])
+        peaks.append(subset[n][4])
+        data.append(tempdata)
 
-    stickwidth = 1
+    stickwidth = 4
 
     for i in range(2):
         for n in range(len(subset)):
@@ -234,7 +258,7 @@ def process (input_image, params, model_params):
             cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
             canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
 
-    return  tempdata,canvas
+    return  data,canvas
 
 
 if __name__ == '__main__':
@@ -262,21 +286,31 @@ if __name__ == '__main__':
     params, model_params = config_reader()
     csv_data=[]
     n=0
-    mode=1
+    mode=0
     if mode==1:
+        total=0
+        f = open("dt.txt", "w+")
         for filename in os.listdir(input_image):
-            data = {}
             tic = time.time()
-            subset,canvas = process('E:\\xjh\\keras_Realtime_Multi-Person_Pose_Estimation\\'+input_image+'\\'+filename, params, model_params)
+            data,canvas = process('E:\\xjh\\keras_Realtime_Multi-Person_Pose_Estimation\\'+input_image+'\\'+filename, params, model_params)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
-            data['im_path']=filename[:-4]
-            data['joints1']=subset[0]
-            data['joints2'] = subset[1]
-            data['joints3'] = subset[2]
-            #cv2.imwrite('result.png',canvas)
-            csv_data.append(data)
+            fstr=filename[:-4]+'.jpg'
+            for ind in data:
+                fstr=fstr+' '
+                for i in range(3):
+                    x=ind[i][0]
+                    y=ind[i][1]
+                    fstr+=str(x)+','+str(y)
+                    if i!=2:
+                        fstr+=','
+            fstr=fstr+'\n'
+            f.write(fstr)
+            cv2.imwrite('result.png',canvas)
             n=n+1
+            total = total + toc - tic
+        f.close()
+        print(total/n)
     else:
         tic = time.time()
         subset, canvas = process(input_image, params, model_params)
@@ -284,6 +318,5 @@ if __name__ == '__main__':
         print('processing time is %.5f' % (toc - tic))
         cv2.imwrite('result.png', canvas)
     sess1.close()
-    df=pd.DataFrame(csv_data,columns=['im_path','joints1','joints2','joints3'])
-    df.to_csv("val.csv",index=False)
+
 
