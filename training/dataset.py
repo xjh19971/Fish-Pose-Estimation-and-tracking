@@ -27,14 +27,14 @@ AUGMENTORS_LIST = [
 
         ScaleAug(scale_min=1.1,
                  scale_max=0.9,
-                 target_dist=0.15,
+                 target_dist=0.2,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=360,
                   interp=cv2.INTER_CUBIC,
                   border=cv2.BORDER_CONSTANT,
                   border_value=(128, 128, 128), mask_border_val=1),
 
-        CropAug(320, 320, 120, 120, center_perterb_max=0, border_value=(128, 128, 128), #40
+        CropAug(368, 368, 368, 368, center_perterb_max=0, border_value=(128, 128, 128), #40
                  mask_border_val=1),
 
         FlipAug(num_parts=KEY_POINT_NUM-1, prob=0.5),
@@ -202,7 +202,7 @@ def get_dataflow(annot_path, img_dir):
     :param img_dir: path to the images
     :return: dataflow object
     """
-    df = CocoDataFlow((320, 320), annot_path, img_dir)
+    df = CocoDataFlow((368, 368), annot_path, img_dir)
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)
@@ -239,8 +239,8 @@ if __name__ == '__main__':
     """
     batch_size = 10
     curr_dir = os.path.dirname(__file__)
-    annot_path = os.path.join(curr_dir, '../dataset/annotations/person_keypoints_val2017.json')
-    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/val2017/'))
+    annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
+    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
     df = CocoDataFlow((320, 320), annot_path, img_dir)#, select_ids=[1000])
     df.prepare()
     df = MapData(df, read_img)

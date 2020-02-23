@@ -17,17 +17,14 @@ sess = tf.Session(config=config)
 K.set_session(sess)
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from keras.layers.convolutional import Conv2D
-from model.cmu_model_DenseNet_NotPre_RESIZE import get_training_model
+from model.cmu_model_DenseNet_NotPre_RESIZE_Loss import get_training_model
 from training.dataset import get_dataflow, batch_dataflow
 
 
 batch_size = 10
-base_lr = 0.01 # 2e-5
-weight_decay = 5e-4
-lr_policy ="step"
-gamma = 0.5
-stepsize =  100000 #   // after each stepsize iterations update learning rate: lr=lr*gamma
-max_iter = 2000 # 600000
+base_lr = 1e-3 # 2e-5
+weight_decay = 1e-3
+max_iter = 3000 # 600000
 
 weights_best_file = "weights.best.h5"
 training_log = "training.csv"
@@ -134,34 +131,21 @@ def get_loss_funcs():
         return K.sum(K.square(x - y)) / batch_size / 2
 
     losses = {}
-    losses["Outputbn_1_1"] = _eucl_loss
-    losses["Outputbn_1_2"] = _eucl_loss
-    losses["Outputbn_2_1"] = _eucl_loss
-    losses["Outputbn_2_2"] = _eucl_loss
-    losses["Outputbn_3_1"] = _eucl_loss
-    losses["Outputbn_3_2"] = _eucl_loss
-    losses["Outputbn_4_1"] = _eucl_loss
-    losses["Outputbn_4_2"] = _eucl_loss
-    losses["Outputbn_5_1"] = _eucl_loss
-    losses["Outputbn_5_2"] = _eucl_loss
+    losses["Output_1_1"] = _eucl_loss
+    losses["Output_1_2"] = _eucl_loss
+    losses["Output_2_1"] = _eucl_loss
+    losses["Output_2_2"] = _eucl_loss
+    losses["Output_3_1"] = _eucl_loss
+    losses["Output_3_2"] = _eucl_loss
+    losses["Output_4_1"] = _eucl_loss
+    losses["Output_4_2"] = _eucl_loss
+    losses["Output_5_1"] = _eucl_loss
+    losses["Output_5_2"] = _eucl_loss
 
     return losses
 
 
-def step_decay(epoch, iterations_per_epoch):
-    """
-    Learning rate schedule - equivalent of caffe lr_policy =  "step"
 
-    :param epoch:
-    :param iterations_per_epoch:
-    :return:
-    """
-    initial_lrate = base_lr
-    steps = epoch * iterations_per_epoch
-
-    lrate = initial_lrate * math.pow(gamma, math.floor(steps/stepsize))
-
-    return lrate
 
 
 def gen(df):
@@ -210,12 +194,9 @@ if __name__ == '__main__':
     # configure callbacks
 
     iterations_per_epoch = train_samples // batch_size
-    _step_decay = partial(step_decay,
-                          iterations_per_epoch=iterations_per_epoch
-                          )
-    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=20, mode='auto')
+    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=30, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
-                                 verbose=0, save_best_only=False,
+                                 verbose=0, save_best_only=True,
                                  save_weights_only=True, mode='min', period=1)
     csv_logger = CSVLogger(training_log, append=True)
     tb = TensorBoard(log_dir=logs_dir, histogram_freq=0, write_graph=True,
@@ -229,7 +210,7 @@ if __name__ == '__main__':
      #                   nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-    adam=optimizers.Nadam(lr=base_lr)
+    adam=optimizers.Adam(lr=base_lr)
     loss_funcs = get_loss_funcs()
     model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
     model.fit_generator(train_gen,
