@@ -63,7 +63,7 @@ if __name__ == '__main__':
     APthreall = [i for i in np.arange(0.50, 1, 0.05)]
     iousmaxall = []
     iousdemaxall = []
-    for i in range(len(dtslist)-1):
+    for i in range(len(dtslist)):
         gts = gtslist[i]
         dts = dtslist[i]
         if dts == []:

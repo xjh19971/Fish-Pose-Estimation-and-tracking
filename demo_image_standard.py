@@ -286,13 +286,13 @@ if __name__ == '__main__':
     params, model_params = config_reader()
     csv_data=[]
     n=0
-    mode=0
+    mode=1
     if mode==1:
         total=0
         f = open("dt.txt", "w+")
         for filename in os.listdir(input_image):
             tic = time.time()
-            data,canvas = process('E:\\xjh\\keras_Realtime_Multi-Person_Pose_Estimation\\'+input_image+'\\'+filename, params, model_params)
+            data,canvas = process('E:\\keras_Realtime_Multi-Person_Pose_Estimation\\'+input_image+'\\'+filename, params, model_params)
             toc = time.time()
             print ('processing time is %.5f' % (toc - tic))
             fstr=filename[:-4]+'.jpg'
