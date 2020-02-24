@@ -209,7 +209,7 @@ def get_dataflow(annot_path, img_dir):
     df = MapData(df, augment)
     df = MapData(df, apply_mask)
     df = MapData(df, build_sample)
-    df = PrefetchData(df, 2, 2) #df = PrefetchData(df, 2, 1)
+    df = PrefetchData(df, 4, 2) #df = PrefetchData(df, 2, 1)
 
     return df
 
