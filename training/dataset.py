@@ -25,8 +25,8 @@ ALL_HEATMAP_MASK = np.repeat(
 
 AUGMENTORS_LIST = [
 
-        ScaleAug(scale_min=1.1,
-                 scale_max=0.9,
+        ScaleAug(scale_min=1,
+                 scale_max=1,
                  target_dist=0.1,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=360,
