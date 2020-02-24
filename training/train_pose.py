@@ -1,14 +1,12 @@
-﻿import math
-import os
+﻿import os
 import re
 import sys
-from functools import partial
 
 import keras.backend as K
 import pandas
-from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, CSVLogger, TensorBoard
-from keras import optimizers
 import tensorflow as tf
+from keras import optimizers
+from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, CSVLogger, TensorBoard
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True  # 不全部占满显存, 按需分配
@@ -20,11 +18,10 @@ from keras.layers.convolutional import Conv2D
 from model.cmu_model_DenseNet_NotPre_RESIZE_Loss import get_training_model
 from training.dataset import get_dataflow, batch_dataflow
 
-
-batch_size = 10
-base_lr = 4e-3 # 2e-5
+batch_size = 12
+base_lr = 5e-4  # 2e-5
 weight_decay = 5e-4
-max_iter = 3000 # 600000
+max_iter = 3000  # 600000
 
 weights_best_file = "weights.best.h5"
 training_log = "training.csv"
@@ -82,10 +79,10 @@ def restore_weights(weights_best_file, model):
         print("Loaded VGG layer")
         '''
         print("Loading mobilenet weights...")
-        #base_model=MobileNetV2(include_top=False,weights='imagenet')
-        #WEIGHTS_PATH='./mobilenetv2_weight.h5'
-        #base_model.save_weights(WEIGHTS_PATH)
-        #model.load_weights(WEIGHTS_PATH,by_name=True)
+        # base_model=MobileNetV2(include_top=False,weights='imagenet')
+        # WEIGHTS_PATH='./mobilenetv2_weight.h5'
+        # base_model.save_weights(WEIGHTS_PATH)
+        # model.load_weights(WEIGHTS_PATH,by_name=True)
         print("Loaded mobilenet layer")
         return 0
 
@@ -117,7 +114,6 @@ def get_lr_multipliers(model):
                 kernel_name = layer.weights[0].name
                 lr_mult[kernel_name] = 1
 
-
     return lr_mult
 
 
@@ -127,6 +123,7 @@ def get_loss_funcs():
     https://github.com/BVLC/caffe/blob/master/src/caffe/layers/euclidean_loss_layer.cpp
     :return:
     """
+
     def _eucl_loss(x, y):
         return K.sum(K.square(x - y)) / batch_size / 2
 
@@ -143,9 +140,6 @@ def get_loss_funcs():
     losses["Output_5_2"] = _eucl_loss
 
     return losses
-
-
-
 
 
 def gen(df):
@@ -194,7 +188,7 @@ if __name__ == '__main__':
     # configure callbacks
 
     iterations_per_epoch = train_samples // batch_size
-    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5,patience=30, mode='auto')
+    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=30, mode='auto')
     checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
                                  verbose=0, save_best_only=True,
                                  save_weights_only=True, mode='min', period=1)
@@ -206,11 +200,11 @@ if __name__ == '__main__':
 
     # sgd optimizer with lr multipliers
 
-    #multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0,
-     #                   nesterov=False, lr_mult=lr_multipliers)
+    # multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0,
+    #                   nesterov=False, lr_mult=lr_multipliers)
 
     # start training
-    adam=optimizers.Adam(lr=base_lr)
+    adam = optimizers.Adam(lr=base_lr)
     loss_funcs = get_loss_funcs()
     model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
     model.fit_generator(train_gen,
