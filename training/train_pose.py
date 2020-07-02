@@ -18,12 +18,12 @@ from keras.layers.convolutional import Conv2D
 from model.cmu_model_DenseNet_NotPre_RESIZE_Loss import get_training_model
 from training.dataset import get_dataflow, batch_dataflow
 
-batch_size = 12
-base_lr = 5e-4  # 2e-5
+batch_size = 16
+base_lr = 1e-2  # 2e-5
 weight_decay = 5e-4
 max_iter = 3000  # 600000
 
-weights_best_file = "weights.best.h5"
+weights_best_file = "weights.best_final_train.h5"
 training_log = "training.csv"
 logs_dir = "./logs"
 
@@ -166,21 +166,26 @@ if __name__ == '__main__':
     # prepare generators
 
     curr_dir = os.path.dirname(__file__)
-    annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
-    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
-
+    train_annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
+    train_img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_tracking_data/'))
+    val_annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
+    val_img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_tracking_data/'))
     # get dataflow of samples
 
-    df = get_dataflow(
-        annot_path=annot_path,
-        img_dir=img_dir)
-    train_samples = df.size()
-
+    df1 = get_dataflow(
+        annot_path=train_annot_path,
+        img_dir=train_img_dir)
+    train_samples = df1.size()
+    df2 = get_dataflow(
+        annot_path=train_annot_path,
+        img_dir=train_img_dir)
+    val_samples = df2.size()
     # get generator of batches
 
-    batch_df = batch_dataflow(df, batch_size)
-    train_gen = gen(batch_df)
-
+    batch_df1 = batch_dataflow(df1, batch_size)
+    train_gen = gen(batch_df1)
+    batch_df2 = batch_dataflow(df2, batch_size)
+    val_gen = gen(batch_df2)
     # setup lr multipliers for conv layers
 
     lr_multipliers = get_lr_multipliers(model)
@@ -188,8 +193,8 @@ if __name__ == '__main__':
     # configure callbacks
 
     iterations_per_epoch = train_samples // batch_size
-    lrate = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=30, mode='auto')
-    checkpoint = ModelCheckpoint(weights_best_file, monitor='loss',
+    lrate = ReduceLROnPlateau(monitor='val_loss', factor=0.25, patience=30, mode='auto')
+    checkpoint = ModelCheckpoint(weights_best_file, monitor='val_loss',
                                  verbose=0, save_best_only=True,
                                  save_weights_only=True, mode='min', period=1)
     csv_logger = CSVLogger(training_log, append=True)
@@ -206,12 +211,12 @@ if __name__ == '__main__':
     # start training
     adam = optimizers.Adam(lr=base_lr)
     loss_funcs = get_loss_funcs()
-    model.compile(loss=loss_funcs, optimizer=adam, metrics=["accuracy"])
+    model.compile(loss=loss_funcs, optimizer=adam)
     model.fit_generator(train_gen,
                         steps_per_epoch=train_samples // batch_size,
                         epochs=max_iter,
                         callbacks=callbacks_list,
-                        # validation_data=val_di,
-                        # validation_steps=val_samples // batch_size,
-                        use_multiprocessing=False,
+                        validation_data=val_gen,
+                        validation_steps=val_samples // batch_size,
+                        use_multiprocessing=True,
                         initial_epoch=last_epoch)
