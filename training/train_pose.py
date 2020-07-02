@@ -166,9 +166,9 @@ if __name__ == '__main__':
     # prepare generators
 
     curr_dir = os.path.dirname(__file__)
-    train_annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
+    train_annot_path = os.path.join(curr_dir, '../dataset/my_keypoints_final_train.json')
     train_img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_tracking_data/'))
-    val_annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
+    val_annot_path = os.path.join(curr_dir, '../dataset/my_keypoints_final_test.json')
     val_img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_tracking_data/'))
     # get dataflow of samples
 
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         img_dir=train_img_dir)
     train_samples = df1.size()
     df2 = get_dataflow(
-        annot_path=train_annot_path,
+        annot_path=val_annot_path,
         img_dir=train_img_dir)
     val_samples = df2.size()
     # get generator of batches
@@ -218,5 +218,5 @@ if __name__ == '__main__':
                         callbacks=callbacks_list,
                         validation_data=val_gen,
                         validation_steps=val_samples // batch_size,
-                        use_multiprocessing=True,
+                        use_multiprocessing=False,
                         initial_epoch=last_epoch)

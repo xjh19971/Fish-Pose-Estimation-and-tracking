@@ -147,8 +147,8 @@ if __name__ == '__main__':
     batch_size = 1
     curr_dir = os.path.dirname(__file__)
     annot_path = os.path.join(curr_dir, '../dataset/my_person_keypoints.json')
-    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_data/'))
-    df = CocoDataFlow((480, 480), annot_path, img_dir)#, select_ids=[1000])
+    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/train_tracking_data/'))
+    df = CocoDataFlow((368, 368), annot_path, img_dir)#, select_ids=[1000])
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)

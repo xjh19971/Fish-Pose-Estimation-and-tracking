@@ -25,9 +25,9 @@ ALL_HEATMAP_MASK = np.repeat(
 
 AUGMENTORS_LIST = [
 
-        ScaleAug(scale_min=1,
-                 scale_max=1,
-                 target_dist=0.1,
+        ScaleAug(scale_min=0.8,
+                 scale_max=1.2,
+                 target_dist=0.15,
                  interp=cv2.INTER_CUBIC),
         RotateAug(rotate_max_deg=360,
                   interp=cv2.INTER_CUBIC,
@@ -209,7 +209,7 @@ def get_dataflow(annot_path, img_dir):
     df = MapData(df, augment)
     df = MapData(df, apply_mask)
     df = MapData(df, build_sample)
-    df = PrefetchData(df, 4, 2) #df = PrefetchData(df, 2, 1)
+    df = PrefetchData(df, 4, 4) #df = PrefetchData(df, 2, 1)
 
     return df
 
